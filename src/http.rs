@@ -53,7 +53,9 @@ use crate::errors::{Error, Result};
 pub fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) {
     cfg_if! {
         if #[cfg(feature = "smol")] {
-            smol::spawn(future).detach();
+            smol::spawn(future)
+                .detach();
+
         } else if #[cfg(feature = "tokio")] {
             tokio::spawn(future);
         }
