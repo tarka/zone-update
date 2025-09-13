@@ -26,13 +26,13 @@ impl Auth {
 }
 
 
-struct Gandi {
-    config: Config,
-    auth: Auth,
+pub struct Gandi {
+    pub config: Config,
+    pub auth: Auth,
 }
 
 impl Gandi {
-    fn new(config: Config, auth: Auth) -> Self {
+    pub fn new(config: Config, auth: Auth) -> Self {
         Gandi {
             config,
             auth,
