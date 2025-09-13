@@ -150,13 +150,13 @@ mod tests {
     const HOST: &str = "dummyjson.com";
 
     #[derive(Serialize, Deserialize, Debug, PartialEq)]
-    #[serde(rename_all = "lowercase")] 
+    #[serde(rename_all = "lowercase")]
     enum Status {
         Ok,
     }
 
     #[derive(Serialize, Deserialize, Debug)]
-    struct Test {
+    struct TestStatus {
         /* { status: 'ok', method: 'GET' } */
         status: Status,
         // Not worth mapping to enum
@@ -167,13 +167,28 @@ mod tests {
     struct TestError {
     }
 
+    #[derive(Serialize, Deserialize, Debug)]
+    struct TestData {
+        payload: String
+    }
+
     #[apply(test!)]
     #[traced_test]
+    #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
     async fn test_get() -> Result<()> {
-        let test = get::<Test, TestError>(HOST, "/test", None).await?.unwrap();
+        let test = get::<TestStatus, TestError>(HOST, "/test", None).await?.unwrap();
         assert_eq!(Status::Ok, test.status);
         assert_eq!("GET", test.method);
         Ok(())
     }
 
+
+    #[apply(test!)]
+    #[traced_test]
+    #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
+    async fn test_put() -> Result<()> {
+        let data = TestData { payload: "test".to_string() };
+        put::<TestData, TestError>(HOST, "/test", None, &data).await?;
+        Ok(())
+    }
 }

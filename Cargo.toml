@@ -18,6 +18,8 @@ webpki-roots = "1.0.2"
 
 [features]
 default = []
+# Disables http module tests that rely on external services
+test_offline = []
 test_gandi = []
 
 [dev-dependencies]
