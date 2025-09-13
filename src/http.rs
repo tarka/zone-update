@@ -25,25 +25,20 @@ use hyper::{
     header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HOST},
     Request, Response, StatusCode,
 };
+use rustls::{ClientConfig, RootCertStore, pki_types::ServerName};
 use serde::{de::DeserializeOwned, Serialize};
 
 cfg_if! {
     if #[cfg(feature = "smol")] {
-        use futures_rustls::{
-            pki_types::ServerName,
-            rustls::{ClientConfig, RootCertStore},
-            TlsConnector,
-        };
+        use futures_rustls::TlsConnector;
         use smol::net::TcpStream;
         use smol_hyper::rt::FuturesIo as HyperIo;
+
     } else if #[cfg(feature = "tokio")] {
         use tokio::net::TcpStream;
-        use rustls_pki_types::ServerName;
-        use tokio_rustls::{
-            rustls::{ClientConfig, RootCertStore},
-            TlsConnector,
-        };
+        use tokio_rustls::TlsConnector;
         use hyper_util::rt::tokio::TokioIo as HyperIo;
+
     } else {
         compile_error!("Either smol or tokio feature must be enabled");
     }
