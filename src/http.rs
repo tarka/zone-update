@@ -17,11 +17,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use std::{fmt::Debug, sync::Arc};
 
-use futures_rustls::{
-    pki_types::ServerName,
-    rustls::{ClientConfig, RootCertStore},
-    TlsConnector,
-};
+use cfg_if::cfg_if;
 use http_body_util::BodyExt;
 use hyper::{
     body::{Buf, Incoming},
@@ -30,11 +26,43 @@ use hyper::{
     Request, Response, StatusCode,
 };
 use serde::{de::DeserializeOwned, Serialize};
-use smol::net::TcpStream;
-use smol_hyper::rt::FuturesIo;
+
+cfg_if! {
+    if #[cfg(feature = "smol")] {
+        use futures_rustls::{
+            pki_types::ServerName,
+            rustls::{ClientConfig, RootCertStore},
+            TlsConnector,
+        };
+        use smol::net::TcpStream;
+        use smol_hyper::rt::FuturesIo as HyperIo;
+    } else if #[cfg(feature = "tokio")] {
+        use tokio::net::TcpStream;
+        use rustls_pki_types::ServerName;
+        use tokio_rustls::{
+            rustls::{ClientConfig, RootCertStore},
+            TlsConnector,
+        };
+        use hyper_util::rt::tokio::TokioIo as HyperIo;
+    } else {
+        compile_error!("Either smol or tokio feature must be enabled");
+    }
+}
+
 use tracing::{debug, error, warn};
 
 use crate::errors::{Error, Result};
+
+
+pub fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) {
+    cfg_if! {
+        if #[cfg(feature = "smol")] {
+            smol::spawn(future).detach();
+        } else if #[cfg(feature = "tokio")] {
+            tokio::spawn(future);
+        }
+    }
+}
 
 
 fn load_system_certs() -> RootCertStore {
@@ -56,13 +84,13 @@ pub async fn request(host: &'static str, req: Request<String>) -> Result<Respons
     let tlsconn = TlsConnector::from(Arc::new(tlsconf));
     let tlsstream = tlsconn.connect(tlsdomain, stream).await?;
 
-    let (mut sender, conn) = http1::handshake(FuturesIo::new(tlsstream)).await?;
+    let (mut sender, conn) = http1::handshake(HyperIo::new(tlsstream)).await?;
 
-    smol::spawn(async move {
+    spawn(async move {
         if let Err(e) = conn.await {
             error!("Connection failed: {:?}", e);
         }
-    }).detach();
+    });
 
     let res = sender.send_request(req).await?;
 
@@ -141,9 +169,7 @@ where
 mod tests {
     use super::*;
     use crate::errors::Result;
-    use macro_rules_attribute::apply;
     use serde::{Deserialize, Serialize};
-    use smol_macros::test;
     use tracing_test::traced_test;
 
     // See https://dummyjson.com/docs
@@ -172,9 +198,6 @@ mod tests {
         payload: String
     }
 
-    #[apply(test!)]
-    #[traced_test]
-    #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
     async fn test_get() -> Result<()> {
         let test = get::<TestStatus, TestError>(HOST, "/test", None).await?.unwrap();
         assert_eq!(Status::Ok, test.status);
@@ -183,12 +206,49 @@ mod tests {
     }
 
 
-    #[apply(test!)]
-    #[traced_test]
-    #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
     async fn test_put() -> Result<()> {
         let data = TestData { payload: "test".to_string() };
         put::<TestData, TestError>(HOST, "/test", None, &data).await?;
         Ok(())
+    }
+
+    #[cfg(feature = "smol")]
+    mod smol_tests {
+        use super::*;
+        use macro_rules_attribute::apply;
+        use smol_macros::test;
+
+        #[apply(test!)]
+        #[traced_test]
+        #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
+        async fn smol_get() -> Result<()> {
+            test_get().await
+        }
+
+        #[apply(test!)]
+        #[traced_test]
+        #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
+        async fn smol_put() -> Result<()> {
+            test_put().await
+        }
+    }
+
+    #[cfg(feature = "tokio")]
+    mod tokio_tests {
+        use super::*;
+
+        #[tokio::test]
+        #[traced_test]
+        #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
+        async fn tokio_get() -> Result<()> {
+            test_get().await
+        }
+
+        #[tokio::test]
+        #[traced_test]
+        #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
+        async fn tokio_put() -> Result<()> {
+            test_put().await
+        }
     }
 }
