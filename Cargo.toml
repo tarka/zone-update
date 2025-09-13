@@ -5,27 +5,30 @@ edition = "2024"
 
 [dependencies]
 cfg-if = "1.0.3"
-futures-rustls = "0.26.0"
 http-body-util = "0.1.3"
 hyper = { version = "1.7.0", default-features = false, features = ["client", "http1", "http2"] }
-hyper-util = { version = "0.1.16", features = ["tokio"] }
 rustls = "0.23.31"
-rustls-pki-types = "1.12.0"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.143"
-smol = "2.0.2"
-smol-hyper = "0.1.1"
 thiserror = "2.0.16"
-tokio = { version = "1.47.1", features = ["rt", "test-util", "net", "full"] }
-tokio-rustls = "0.26.2"
 tracing = "0.1.41"
 tracing-log = "0.2.0"
 webpki-roots = "1.0.2"
 
+# Smol support
+futures-rustls = { version = "0.26.0", optional = true }
+smol = { version = "2.0.2", optional = true }
+smol-hyper = { version = "0.1.1", optional = true }
+
+# Tokio support
+hyper-util = { version = "0.1.16", features = ["tokio"], optional = true }
+tokio = { version = "1.47.1", features = ["rt", "test-util", "net", "full"], optional = true }
+tokio-rustls = { version = "0.26.2", optional = true }
+
 [features]
 default = ["smol"]
-smol = []
-tokio = []
+smol = ["dep:smol", "dep:smol-hyper", "dep:futures-rustls"]
+tokio = ["dep:tokio", "dep:hyper-util", "dep:tokio-rustls"]
 
 # Test features
 # Disables http module tests that rely on external services

@@ -1,6 +1,6 @@
 
 use std::result;
-use futures_rustls::pki_types::InvalidDnsNameError;
+use rustls::pki_types::InvalidDnsNameError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

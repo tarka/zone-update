@@ -369,7 +369,6 @@ dependencies = [
  "hyper-util",
  "macro_rules_attribute",
  "rustls",
- "rustls-pki-types",
  "serde",
  "serde_json",
  "smol",
