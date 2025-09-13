@@ -1,0 +1,27 @@
+[package]
+name = "dns-edit"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+futures-rustls = "0.26.0"
+http-body-util = "0.1.3"
+hyper = { version = "1.7.0", default-features = false, features = ["client", "http1", "http2"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.143"
+smol = "2.0.2"
+smol-hyper = "0.1.1"
+thiserror = "2.0.16"
+tracing = "0.1.41"
+tracing-log = "0.2.0"
+webpki-roots = "1.0.2"
+
+[features]
+default = []
+test_gandi = []
+
+[dev-dependencies]
+macro_rules_attribute = "0.2.2"
+smol-macros = "0.1.1"
+test-log = { version = "0.2.18", features = ["trace"] }
+tracing-test = "0.2.5"
