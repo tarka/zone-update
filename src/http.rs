@@ -16,8 +16,8 @@ use serde::{de::DeserializeOwned, Serialize};
 
 cfg_if! {
     if #[cfg(feature = "smol")] {
-        use futures_rustls::TlsConnector;
         use smol::net::TcpStream;
+        use futures_rustls::TlsConnector;
         use smol_hyper::rt::FuturesIo as HyperIo;
 
     } else if #[cfg(feature = "tokio")] {
