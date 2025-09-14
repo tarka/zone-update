@@ -1,5 +1,10 @@
 # DNS Edit
 
+[![Crates.io](https://img.shields.io/crates/v/dns-edit)](https://crates.io/crates/dns-edit)
+[![Docs.rs](https://docs.rs/dns-edit/badge.svg)](https://docs.rs/dns-edit)
+[![GitHub CI](https://github.com/tarka/dns-edit/workflows/CI/badge.svg)](https://github.com/tarka/dns-edit/actions)
+[![License](https://img.shields.io/crates/l/dns-edit)](https://github.com/tarka/dns-edit/blob/main/README.md#License)
+
 A minimal Rust library for updating DNS records with various DNS providers.
 
 ## Overview
