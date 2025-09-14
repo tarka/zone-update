@@ -1,6 +1,7 @@
 mod http;
 pub mod errors;
 
+pub mod dnsimple;
 pub mod gandi;
 
 use std::net::Ipv4Addr;
