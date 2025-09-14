@@ -88,9 +88,8 @@ impl DnsProvider for Gandi {
 
 #[cfg(test)]
 mod tests {
-    use std::env;
-
     use super::*;
+    use std::env;
     use macro_rules_attribute::apply;
     use smol_macros::test;
     use tracing_test::traced_test;
@@ -105,7 +104,7 @@ mod tests {
         };
 
         let config = Config {
-            domain: "haltcondition.net".to_string(),
+            domain: env::var("GANDI_TEST_DOMAIN").unwrap(),
             dry_run: false,
         };
 
@@ -113,8 +112,6 @@ mod tests {
             config,
             auth,
         }
-
-
     }
 
     #[apply(test!)]
