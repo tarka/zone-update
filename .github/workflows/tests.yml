@@ -4,12 +4,12 @@ name: Tests
 on: [push]
 
 jobs:
-  strategy:
-    matrix:
-      runtime: [smol, tokio]
 
   test-runtime:
     runs-on: debian-latest
+    strategy:
+      matrix:
+        runtime: [smol, tokio]
     steps:
       - uses: actions/checkout@v4
 
