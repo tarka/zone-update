@@ -1,7 +1,7 @@
 // FIXME: Remove later
 #![allow(unused)]
 
-use std::{fmt::Debug, sync::Arc};
+use std::{fmt::Debug, io::Read, sync::Arc};
 
 use cfg_if::cfg_if;
 use http_body_util::BodyExt;
@@ -81,10 +81,9 @@ pub async fn request(host: &'static str, req: Request<String>) -> Result<Respons
 }
 
 
-pub async fn get<T, E>(host: &'static str, endpoint: &str, auth: Option<String>) -> Result<Option<T>>
+pub async fn get<T>(host: &'static str, endpoint: &str, auth: Option<String>) -> Result<Option<T>>
 where
     T: DeserializeOwned,
-    E: DeserializeOwned + Debug,
 {
     debug!("Request https://{host}{endpoint}");
     let mut req = Request::get(endpoint)
@@ -105,13 +104,15 @@ where
             Ok(Some(obj))
         }
         StatusCode::NOT_FOUND => {
-            warn!("Gandi record doesn't exist: {}", endpoint);
+            warn!("Record doesn't exist: {}", endpoint);
             Ok(None)
         }
         _ => {
+            let mut err = String::new();
             let body = res.collect().await?
-                .aggregate();
-            let err: E = serde_json::from_reader(body.reader())?;
+                .to_bytes()
+                .reader()
+                .read_to_string(&mut err)?;
             error!("GET failed: {err:?}");
             Err(Error::HttpError(format!("GET failed: {err:?}")))
         }
@@ -119,10 +120,9 @@ where
 }
 
 
-pub async fn put<T, E>(host: &'static str, url: &str, auth: Option<String>, obj: &T) -> Result<()>
+pub async fn put<T>(host: &'static str, url: &str, auth: Option<String>, obj: &T) -> Result<()>
 where
     T: Serialize,
-    E: DeserializeOwned + Debug,
 {
     let body = serde_json::to_string(obj)?;
     let mut req = Request::put(url)
@@ -137,11 +137,13 @@ where
 
     if !res.status().is_success() {
         let code = res.status();
+        let mut err = String::new();
         let body = res.collect().await?
-            .aggregate();
-        let err: E = serde_json::from_reader(body.reader())?;
-        error!("PUT failed: {code} {err:?}");
-        return Err(Error::HttpError(format!("PUT failed: {code} {err:?}")));
+            .to_bytes()
+            .reader()
+            .read_to_string(&mut err)?;
+        error!("GET failed: {err:?}");
+        return Err(Error::HttpError(format!("GET failed: {err:?}")));
     }
 
     Ok(())
@@ -173,27 +175,36 @@ mod tests {
     }
 
     #[derive(Serialize, Deserialize, Debug)]
-    struct TestError {
-    }
-
-    #[derive(Serialize, Deserialize, Debug)]
     struct TestData {
         payload: String
     }
 
     async fn test_get() -> Result<()> {
-        let test = get::<TestStatus, TestError>(HOST, "/test", None).await?.unwrap();
+        let test = get::<TestStatus>(HOST, "/test", None).await?.unwrap();
         assert_eq!(Status::Ok, test.status);
         assert_eq!("GET", test.method);
         Ok(())
     }
 
 
-    async fn test_put() -> Result<()> {
-        let data = TestData { payload: "test".to_string() };
-        put::<TestData, TestError>(HOST, "/test", None, &data).await?;
+    async fn test_get_418() -> Result<()> {
+        let result = get::<TestStatus>(HOST, "/http/418", None).await;
+        if let Err(Error::HttpError(msg)) = result {
+            assert!(msg.contains("I'm a teapot"))
+        } else {
+            panic!("Expected error: {result:?}");
+        }
+
         Ok(())
     }
+
+
+    async fn test_put() -> Result<()> {
+        let data = TestData { payload: "test".to_string() };
+        put::<TestData>(HOST, "/test", None, &data).await?;
+        Ok(())
+    }
+
 
     #[cfg(feature = "smol")]
     mod smol_tests {
@@ -206,6 +217,13 @@ mod tests {
         #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
         async fn smol_get() -> Result<()> {
             test_get().await
+        }
+
+        #[apply(test!)]
+        #[traced_test]
+        #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
+        async fn smol_get_418() -> Result<()> {
+            test_get_418().await
         }
 
         #[apply(test!)]

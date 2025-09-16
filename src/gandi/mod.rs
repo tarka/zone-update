@@ -45,7 +45,7 @@ impl DnsProvider for Gandi {
     async fn get_v4_record(&self, host: &str) -> Result<Option<Ipv4Addr>> {
         let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain);
         let auth = self.auth.get_header();
-        let rec: Record = match http::get::<Record, types::Error>(API_HOST, &url, Some(auth)).await? {
+        let rec: Record = match http::get::<Record>(API_HOST, &url, Some(auth)).await? {
             Some(rec) => rec,
             None => return Ok(None)
         };
@@ -79,7 +79,7 @@ impl DnsProvider for Gandi {
             info!("DRY-RUN: Would have sent {update:?} to {url}");
             return Ok(())
         }
-        http::put::<RecordUpdate, types::Error>(API_HOST, &url, Some(auth), &update).await?;
+        http::put::<RecordUpdate>(API_HOST, &url, Some(auth), &update).await?;
         Ok(())
 
     }
