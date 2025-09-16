@@ -15,8 +15,6 @@ pub struct DnSimple;
 
 impl DnSimple {
 
-    async fn get_account_id(&self) -> Result<
-
 }
 
 
