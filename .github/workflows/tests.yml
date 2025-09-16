@@ -6,7 +6,7 @@ on: [push]
 jobs:
 
   test-runtime:
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         runtime: [smol, tokio]
