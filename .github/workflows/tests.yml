@@ -1,0 +1,20 @@
+
+name: Tests
+
+on: [push]
+
+jobs:
+  strategy:
+    matrix:
+      runtime: [smol, tokio]
+
+  test-runtime:
+    runs-on: debian-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update Rust to latest
+        run: rustup update
+
+      - name: Run ${{ matrix.runtime }} tests
+        run: cargo test --no-default-features --features ${{ matrix.runtime }}
