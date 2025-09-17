@@ -11,6 +11,9 @@ pub enum Error {
     #[error("HTTP error: {0}")]
     HttpError(String),
 
+    #[error("URL error: {0}")]
+    UrlError(String),
+
     #[error("Unexpected record value: {0}")]
     UnexpectedRecord(String),
 
