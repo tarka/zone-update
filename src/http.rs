@@ -51,7 +51,6 @@ fn load_system_certs() -> RootCertStore {
 }
 
 
-//async fn request<In, Out>(method: Method, uri: Uri, obj: In, auth: Option<String>) -> Result<Option<Out>>
 async fn request<In>(method: Method, uri: &Uri, obj: Option<In>, auth: Option<String>) -> Result<Response<Incoming>>
 where
     In: Serialize,
