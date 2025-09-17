@@ -1,13 +1,11 @@
-// FIXME: Remove later
-#![allow(unused)]
 
-use std::{any::Any, fmt::Debug, io::Read, sync::Arc};
+use std::{io::Read, sync::Arc};
 
 use cfg_if::cfg_if;
 use http::request::Builder;
 use http_body_util::BodyExt;
 use hyper::{
-    body::{Buf, Incoming}, client::conn::http1, header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HOST}, Method, Request, Response, StatusCode, Uri
+    body::{Buf, Incoming}, client::conn::http1, header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HOST}, Method, Response, StatusCode, Uri
 };
 use rustls::{ClientConfig, RootCertStore, pki_types::ServerName};
 use serde::{de::DeserializeOwned, Serialize};
@@ -28,8 +26,7 @@ cfg_if! {
     }
 }
 
-use serde_json::Value;
-use tracing::{debug, error, warn};
+use tracing::{error, warn};
 
 use crate::errors::{Error, Result};
 
@@ -107,12 +104,12 @@ where
 async fn from_error(res: Response<Incoming>) -> Result<Error> {
     let code = res.status();
     let mut err = String::new();
-    let body = res.collect().await?
+    let _nr = res.collect().await?
         .to_bytes()
         .reader()
         .read_to_string(&mut err)?;
-        error!("REST op failed: {err:?}");
-    Ok(Error::HttpError(format!("REST op failed: {err:?}")))
+    error!("REST op failed: {code} {err:?}");
+    Ok(Error::HttpError(format!("REST op failed: {code} {err:?}")))
 }
 
 
