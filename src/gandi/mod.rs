@@ -82,7 +82,7 @@ impl DnsProvider for Gandi {
             info!("DRY-RUN: Would have sent {update:?} to {url}");
             return Ok(())
         }
-        http::put::<RecordUpdate>(url, Some(auth), &update).await?;
+        http::put::<RecordUpdate>(url, &update, Some(auth)).await?;
         Ok(())
 
     }

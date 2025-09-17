@@ -124,7 +124,6 @@ where
 
     match res.status() {
         StatusCode::OK => {
-            // Asynchronously aggregate the chunks of the body
             let body = res.collect().await?
                 .aggregate();
             let obj: T = serde_json::from_reader(body.reader())?;
@@ -142,7 +141,7 @@ where
 }
 
 
-pub async fn put<T>(uri: Uri, auth: Option<String>, obj: &T) -> Result<()>
+pub async fn put<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
 where
     T: Serialize,
 {
@@ -211,7 +210,7 @@ mod tests {
 
     async fn test_put() -> Result<()> {
         let data = TestData { payload: "test".to_string() };
-        put::<TestData>(uri("/test"), None, &data).await?;
+        put::<TestData>(uri("/test"), &data, None).await?;
         Ok(())
     }
 
