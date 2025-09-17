@@ -54,6 +54,7 @@ fn load_system_certs() -> RootCertStore {
 }
 
 
+//async fn request<In, Out>(method: Method, uri: Uri, obj: In, auth: Option<String>) -> Result<Option<Out>>
 async fn request<In>(method: Method, uri: &Uri, obj: Option<In>, auth: Option<String>) -> Result<Response<Incoming>>
 where
     In: Serialize,
@@ -103,6 +104,18 @@ where
 }
 
 
+async fn from_error(res: Response<Incoming>) -> Result<Error> {
+    let code = res.status();
+    let mut err = String::new();
+    let body = res.collect().await?
+        .to_bytes()
+        .reader()
+        .read_to_string(&mut err)?;
+        error!("REST op failed: {err:?}");
+    Ok(Error::HttpError(format!("REST op failed: {err:?}")))
+}
+
+
 pub async fn get<T>(uri: Uri, auth: Option<String>) -> Result<Option<T>>
 where
     T: DeserializeOwned,
@@ -123,13 +136,7 @@ where
             Ok(None)
         }
         _ => {
-            let mut err = String::new();
-            let body = res.collect().await?
-                .to_bytes()
-                .reader()
-                .read_to_string(&mut err)?;
-            error!("GET failed: {err:?}");
-            Err(Error::HttpError(format!("GET failed: {err:?}")))
+            Err(from_error(res).await?)
         }
     }
 }
@@ -142,14 +149,7 @@ where
     let res = request(Method::PUT, &uri, Some(obj), auth).await?;
 
     if !res.status().is_success() {
-        let code = res.status();
-        let mut err = String::new();
-        let body = res.collect().await?
-            .to_bytes()
-            .reader()
-            .read_to_string(&mut err)?;
-        error!("PUT failed: {err:?}");
-        return Err(Error::HttpError(format!("PUT failed: {err:?}")));
+        return Err(from_error(res).await?);
     }
 
     Ok(())
