@@ -1,15 +1,13 @@
 // FIXME: Remove later
 #![allow(unused)]
 
-use std::{fmt::Debug, io::Read, sync::Arc};
+use std::{any::Any, fmt::Debug, io::Read, sync::Arc};
 
 use cfg_if::cfg_if;
+use http::request::Builder;
 use http_body_util::BodyExt;
 use hyper::{
-    body::{Buf, Incoming},
-    client::conn::http1,
-    header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HOST},
-    Request, Response, StatusCode,
+    body::{Buf, Incoming}, client::conn::http1, header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HOST}, Method, Request, Response, StatusCode, Uri
 };
 use rustls::{ClientConfig, RootCertStore, pki_types::ServerName};
 use serde::{de::DeserializeOwned, Serialize};
@@ -30,6 +28,7 @@ cfg_if! {
     }
 }
 
+use serde_json::Value;
 use tracing::{debug, error, warn};
 
 use crate::errors::{Error, Result};
@@ -55,7 +54,30 @@ fn load_system_certs() -> RootCertStore {
 }
 
 
-pub async fn request(host: &'static str, req: Request<String>) -> Result<Response<Incoming>> {
+async fn request<In>(method: Method, uri: &Uri, obj: Option<In>, auth: Option<String>) -> Result<Response<Incoming>>
+where
+    In: Serialize,
+{
+    let host = uri.host()
+        .ok_or(Error::UrlError(format!("URL: {:?}", uri)))?
+        .to_owned();
+
+    let mut rb = Builder::new()
+        .method(method)
+        .uri(uri)
+        .header(HOST, &host)
+        .header(ACCEPT, "application/json");
+    if let Some(auth) = auth {
+        rb = rb.header(AUTHORIZATION, auth);
+    }
+    let req = if obj.is_some() {
+        rb = rb.header(CONTENT_TYPE, "application/json");
+        let body = serde_json::to_string(&obj)?;
+        rb.body(body)?
+    } else {
+        rb.body("".to_string())?
+    };
+
     let addr = format!("{host}:443");
     let stream = TcpStream::connect(addr).await?;
 
@@ -81,18 +103,11 @@ pub async fn request(host: &'static str, req: Request<String>) -> Result<Respons
 }
 
 
-pub async fn get<T>(host: &'static str, endpoint: &str, auth: Option<String>) -> Result<Option<T>>
+pub async fn get<T>(uri: Uri, auth: Option<String>) -> Result<Option<T>>
 where
     T: DeserializeOwned,
 {
-    debug!("Request https://{host}{endpoint}");
-    let mut req = Request::get(endpoint)
-        .header(HOST, host)
-        .header(ACCEPT, "application/json");
-    if let Some(auth) = auth {
-        req = req.header(AUTHORIZATION, auth);
-    }
-    let res = request(host, req.body(String::new())?).await?;
+    let res = request(Method::GET, &uri, None::<&str>, auth).await?;
 
     match res.status() {
         StatusCode::OK => {
@@ -104,7 +119,7 @@ where
             Ok(Some(obj))
         }
         StatusCode::NOT_FOUND => {
-            warn!("Record doesn't exist: {}", endpoint);
+            warn!("Record doesn't exist: {}", uri);
             Ok(None)
         }
         _ => {
@@ -120,20 +135,11 @@ where
 }
 
 
-pub async fn put<T>(host: &'static str, url: &str, auth: Option<String>, obj: &T) -> Result<()>
+pub async fn put<T>(uri: Uri, auth: Option<String>, obj: &T) -> Result<()>
 where
     T: Serialize,
 {
-    let body = serde_json::to_string(obj)?;
-    let mut req = Request::put(url)
-        .header(HOST, host)
-        .header(CONTENT_TYPE, "application/json")
-        .header(ACCEPT, "application/json");
-    if let Some(auth) = auth {
-        req = req.header(AUTHORIZATION, auth);
-    }
-
-    let res = request(host, req.body(body)?).await?;
+    let res = request(Method::PUT, &uri, Some(obj), auth).await?;
 
     if !res.status().is_success() {
         let code = res.status();
@@ -142,8 +148,8 @@ where
             .to_bytes()
             .reader()
             .read_to_string(&mut err)?;
-        error!("GET failed: {err:?}");
-        return Err(Error::HttpError(format!("GET failed: {err:?}")));
+        error!("PUT failed: {err:?}");
+        return Err(Error::HttpError(format!("PUT failed: {err:?}")));
     }
 
     Ok(())
@@ -158,7 +164,10 @@ mod tests {
     use tracing_test::traced_test;
 
     // See https://dummyjson.com/docs
-    const HOST: &str = "dummyjson.com";
+    fn uri(path: &str) -> Uri {
+        format!("https://dummyjson.com{path}")
+            .parse().unwrap()
+    }
 
     #[derive(Serialize, Deserialize, Debug, PartialEq)]
     #[serde(rename_all = "lowercase")]
@@ -179,8 +188,9 @@ mod tests {
         payload: String
     }
 
+
     async fn test_get() -> Result<()> {
-        let test = get::<TestStatus>(HOST, "/test", None).await?.unwrap();
+        let test = get::<TestStatus>(uri("/test"), None).await?.unwrap();
         assert_eq!(Status::Ok, test.status);
         assert_eq!("GET", test.method);
         Ok(())
@@ -188,7 +198,7 @@ mod tests {
 
 
     async fn test_get_418() -> Result<()> {
-        let result = get::<TestStatus>(HOST, "/http/418", None).await;
+        let result = get::<TestStatus>(uri("/http/418"), None).await;
         if let Err(Error::HttpError(msg)) = result {
             assert!(msg.contains("I'm a teapot"))
         } else {
@@ -201,12 +211,13 @@ mod tests {
 
     async fn test_put() -> Result<()> {
         let data = TestData { payload: "test".to_string() };
-        put::<TestData>(HOST, "/test", None, &data).await?;
+        put::<TestData>(uri("/test"), None, &data).await?;
         Ok(())
     }
 
 
     #[cfg(feature = "smol")]
+    #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
     mod smol_tests {
         use super::*;
         use macro_rules_attribute::apply;
@@ -214,40 +225,42 @@ mod tests {
 
         #[apply(test!)]
         #[traced_test]
-        #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
         async fn smol_get() -> Result<()> {
             test_get().await
         }
 
         #[apply(test!)]
         #[traced_test]
-        #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
         async fn smol_get_418() -> Result<()> {
             test_get_418().await
         }
 
         #[apply(test!)]
         #[traced_test]
-        #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
         async fn smol_put() -> Result<()> {
             test_put().await
         }
     }
 
     #[cfg(feature = "tokio")]
+    #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
     mod tokio_tests {
         use super::*;
 
         #[tokio::test]
         #[traced_test]
-        #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
         async fn tokio_get() -> Result<()> {
             test_get().await
         }
 
         #[tokio::test]
         #[traced_test]
-        #[cfg_attr(feature = "test_offline", ignore = "Online test skipped")]
+        async fn tokio_get_418() -> Result<()> {
+            test_get_418().await
+        }
+
+        #[tokio::test]
+        #[traced_test]
         async fn tokio_put() -> Result<()> {
             test_put().await
         }

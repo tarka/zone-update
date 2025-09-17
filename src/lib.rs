@@ -1,7 +1,7 @@
 mod http;
 pub mod errors;
 
-pub mod gandi;
+//pub mod gandi;
 
 use std::net::Ipv4Addr;
 
