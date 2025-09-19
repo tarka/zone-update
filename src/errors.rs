@@ -5,6 +5,9 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {
+    #[error("API usage error: {0}")]
+    ApiError(String),
+
     #[error("Auth error: {0}")]
     AuthError(String),
 
