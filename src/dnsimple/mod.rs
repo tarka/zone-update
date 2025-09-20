@@ -3,9 +3,24 @@
 
 mod types;
 
-use std::{net::Ipv4Addr, sync::{LazyLock, OnceLock}};
+use std::{net::Ipv4Addr, sync::Arc};
+use cfg_if::cfg_if;
 use hyper::Uri;
 use tracing::{error, info, warn};
+
+
+cfg_if! {
+    if #[cfg(feature = "smol")] {
+        use smol::lock::Mutex;
+
+    } else if #[cfg(feature = "tokio")] {
+        use tokio::sync::Mutex;
+
+    } else {
+        compile_error!("Either smol or tokio feature must be enabled");
+    }
+}
+
 
 use crate::{dnsimple::types::Accounts, errors::{Error, Result}, http, Config, DnsProvider};
 
@@ -27,7 +42,7 @@ struct DnSimple {
     config: Config,
     endpoint: &'static str,
     auth: Auth,
-    acc_id: OnceLock<u32>,
+    acc_id: Arc<Mutex<Option<u32>>>,
 }
 
 impl DnSimple {
@@ -36,10 +51,7 @@ impl DnSimple {
     }
 
     fn new_with_endpoint(config: Config, auth: Auth, acc: Option<u32>, endpoint: &'static str) -> Self {
-        let acc_id = match acc {
-            Some(id) => OnceLock::from(id),
-            None => OnceLock::new(),
-        };
+        let acc_id = Arc::new(Mutex::new(acc));
         DnSimple {
             config,
             endpoint,
@@ -69,9 +81,21 @@ impl DnSimple {
         }
     }
 
-    // async fn get_id(&self) -> Result<u32> {
-    //     self.acc_id.get_or_init()
-    // }
+    async fn get_id(&self) -> Result<u32> {
+        // This is roughly equivalent to OnceLock.get_or_init(), but
+        // is simpler than dealing with closure->Result and is more
+        // portable.
+        let mut id_p = self.acc_id.lock().await;
+
+        if let Some(id) = *id_p {
+            return Ok(id);
+        }
+
+        let id = self.get_upstream_id().await?;
+        *id_p = Some(id);
+
+        Ok(id)
+    }
 }
 
 
@@ -99,8 +123,8 @@ mod tests {
     fn get_client() -> DnSimple {
         let auth = Auth { key: env::var("DNSIMPLE_TOKEN").unwrap() };
         let config = Config {
-                domain: env::var("DNSIMPLE_TEST_DOMAIN").unwrap(),
-                dry_run: false,
+            domain: env::var("DNSIMPLE_TEST_DOMAIN").unwrap(),
+            dry_run: false,
         };
         DnSimple::new_with_endpoint(config, auth, None, TEST_API)
     }
