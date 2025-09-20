@@ -151,6 +151,46 @@ where
 }
 
 
+pub async fn post<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
+where
+    T: Serialize,
+{
+    let res = request(Method::POST, &uri, Some(obj), auth).await?;
+
+    println!("RES: {res:?}");
+    if !res.status().is_success() {
+        return Err(from_error(res).await?);
+    }
+
+    Ok(())
+}
+
+pub async fn patch<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
+where
+    T: Serialize,
+{
+    let res = request(Method::POST, &uri, Some(obj), auth).await?;
+
+    println!("RES: {res:?}");
+    if !res.status().is_success() {
+        return Err(from_error(res).await?);
+    }
+
+    Ok(())
+}
+
+pub async fn delete(uri: Uri, auth: Option<String>) -> Result<()>
+{
+    let res = request(Method::DELETE, &uri, None::<&str>, auth).await?;
+
+    if !res.status().is_success() {
+        return Err(from_error(res).await?);
+    }
+
+    Ok(())
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -191,7 +231,6 @@ mod tests {
         Ok(())
     }
 
-
     async fn test_get_418() -> Result<()> {
         let result = get::<TestStatus>(uri("/http/418"), None).await;
         if let Err(Error::HttpError(msg)) = result {
@@ -203,10 +242,15 @@ mod tests {
         Ok(())
     }
 
-
     async fn test_put() -> Result<()> {
         let data = TestData { payload: "test".to_string() };
         put::<TestData>(uri("/test"), &data, None).await?;
+        Ok(())
+    }
+
+    async fn test_post() -> Result<()> {
+        let data = TestData { payload: "test".to_string() };
+        post::<TestData>(uri("/test"), &data, None).await?;
         Ok(())
     }
 
@@ -235,6 +279,12 @@ mod tests {
         async fn smol_put() -> Result<()> {
             test_put().await
         }
+
+        #[apply(test!)]
+        #[traced_test]
+        async fn smol_post() -> Result<()> {
+            test_post().await
+        }
     }
 
     #[cfg(feature = "tokio")]
@@ -258,6 +308,12 @@ mod tests {
         #[traced_test]
         async fn tokio_put() -> Result<()> {
             test_put().await
+        }
+
+        #[tokio::test]
+        #[traced_test]
+        async fn tokio_post() -> Result<()> {
+            test_post().await
         }
     }
 }

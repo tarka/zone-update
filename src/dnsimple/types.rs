@@ -1,5 +1,5 @@
 
-use std::net::Ipv4Addr;
+use std::{any::Any, marker::PhantomData, net::Ipv4Addr};
 
 use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -60,7 +60,7 @@ pub struct Accounts {
 //   }
 // }
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Record {
+pub struct GetRecord {
     pub id: u64,
     pub zone_id: String,
     pub name: String,
@@ -76,5 +76,32 @@ pub struct Record {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Records {
     #[serde(rename = "data")]
-    pub records: Vec<Record>
+    pub records: Vec<GetRecord>
+}
+
+
+
+// {
+//   "name": "",
+//   "type": "MX",
+//   "content": "mxa.example.com",
+//   "ttl": 600,
+//   "priority": 10,
+//   "regions": ["SV1", "IAD"],
+//   "integrated_zones": [1, 2, "dnsimple"]
+// }
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CreateRecord {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub rtype: RecordType,
+    pub content: String,
+    pub ttl: u32,
+    // We can skip the rest; either not needed and/or unsupported on
+    // some plans.
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateRecord {
+    pub content: String,
 }

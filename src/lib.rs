@@ -37,5 +37,6 @@ pub enum RecordType {
 #[trait_variant::make(Send)]
 pub trait DnsProvider {
     async fn get_v4_record(&self, host: &str) -> Result<Option<Ipv4Addr>>;
-    async fn set_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()>;
+    async fn create_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()>;
+    async fn update_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()>;
 }

@@ -21,7 +21,7 @@ cfg_if! {
 }
 
 
-use crate::{dnsimple::types::{Accounts, Records}, errors::{Error, Result}, http, Config, DnsProvider};
+use crate::{dnsimple::types::{Accounts, CreateRecord, Records}, errors::{Error, Result}, http, Config, DnsProvider, RecordType};
 
 
 
@@ -100,6 +100,7 @@ impl DnSimple {
 
 
 impl DnsProvider for DnSimple {
+
     async  fn get_v4_record(&self, host: &str) -> Result<Option<Ipv4Addr> > {
         let acc_id = self.get_id().await?;
 
@@ -127,8 +128,30 @@ impl DnsProvider for DnSimple {
         Ok(Some(rec.records[0].content))
     }
 
-    async  fn set_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
+    async  fn create_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
+        let acc_id = self.get_id().await?;
 
+        let url = format!("{}/{acc_id}/zones/{}/records", self.endpoint, self.config.domain)
+            .parse()
+            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
+        let auth = self.auth.get_header();
+
+        let rec = CreateRecord {
+            name: host.to_string(),
+            rtype: RecordType::A,
+            content: ip.to_string(),
+            ttl: 300,
+        };
+        if self.config.dry_run {
+            info!("DRY-RUN: Would have sent {rec:?} to {url}");
+            return Ok(())
+        }
+        http::post::<CreateRecord>(url, &rec, Some(auth)).await?;
+
+        Ok(())
+    }
+
+    async  fn update_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
 
         Ok(())
     }
@@ -137,10 +160,10 @@ impl DnsProvider for DnSimple {
 
 
 #[cfg(test)]
-#[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
 mod tests {
     use super::*;
     use std::env;
+    use random_string::charsets::ALPHANUMERIC;
     use tracing_test::traced_test;
 
     const TEST_API: &str = "https://api.sandbox.dnsimple.com/v2";
@@ -172,6 +195,22 @@ mod tests {
         Ok(())
     }
 
+    async fn test_create_delete_ipv4() -> Result<()> {
+        let client = get_client();
+
+        let host = random_string::generate(16, ALPHANUMERIC);
+
+        let ip = "1.1.1.1".parse()?;
+        client.create_v4_record(&host, &ip).await?;
+
+        let cur = client.get_v4_record(&host).await?;
+        assert_eq!(Some(ip), cur);
+
+
+        Ok(())
+    }
+
+
     #[cfg(feature = "smol")]
     mod smol {
         use super::*;
@@ -180,13 +219,23 @@ mod tests {
 
         #[apply(test!)]
         #[traced_test]
+        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn smol_id_fetch() -> Result<()> {
             test_id_fetch().await
         }
+
         #[apply(test!)]
         #[traced_test]
+        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn smol_get_record() -> Result<()> {
             test_get_record().await
+        }
+
+        #[apply(test!)]
+        #[traced_test]
+        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+        async fn smol_create_update() -> Result<()> {
+            test_create_delete_ipv4().await
         }
     }
 
@@ -196,15 +245,26 @@ mod tests {
 
         #[tokio::test]
         #[traced_test]
+        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn tokio_id_fetch() -> Result<()> {
             test_id_fetch().await
         }
+
         #[tokio::test]
         #[traced_test]
+        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn tokio_get_record() -> Result<()> {
             test_get_record().await
+        }
+
+        #[tokio::test]
+        #[traced_test]
+        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+        async fn tokio_create_update() -> Result<()> {
+            test_create_delete_ipv4().await
         }
     }
 
 
 }
+

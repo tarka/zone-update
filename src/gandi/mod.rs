@@ -67,7 +67,12 @@ impl DnsProvider for Gandi {
 
     }
 
-    async fn set_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
+    async  fn create_v4_record(&self, host: &str,ip: &Ipv4Addr) -> Result<()> {
+        // PUT works for both operations
+        self.update_v4_record(host, ip).await
+    }
+
+    async fn update_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
         let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
@@ -83,7 +88,6 @@ impl DnsProvider for Gandi {
         }
         http::put::<RecordUpdate>(url, &update, Some(auth)).await?;
         Ok(())
-
     }
 
 }
@@ -138,7 +142,7 @@ mod tests {
             .wrapping_add(1);
 
         let nip = Ipv4Addr::new(next,next,next,next);
-        client.set_v4_record("test", &nip).await?;
+        client.create_v4_record("test", &nip).await?;
 
         let ip = client.get_v4_record("test").await?;
         if let Some(ip) = ip {
