@@ -21,7 +21,7 @@ cfg_if! {
 }
 
 
-use crate::{dnsimple::types::Accounts, errors::{Error, Result}, http, Config, DnsProvider};
+use crate::{dnsimple::types::{Accounts, Records}, errors::{Error, Result}, http, Config, DnsProvider};
 
 
 
@@ -60,6 +60,7 @@ impl DnSimple {
     }
 
     async fn get_upstream_id(&self) -> Result<u32> {
+        info!("Fetching account ID from upstream");
         let endpoint = format!("{}/accounts", self.endpoint);
         let uri = endpoint.parse()
             .map_err(|e| Error::UrlError(format!("Error: {endpoint} -> {e}")))?;
@@ -98,14 +99,40 @@ impl DnSimple {
 }
 
 
+impl DnsProvider for DnSimple {
+    async  fn get_v4_record(&self, host: &str) -> Result<Option<Ipv4Addr> > {
+        let acc_id = self.get_id().await?;
 
-// impl DnsProvider for DnSimple {
-//     async  fn get_v4_record(&self,host: &str) -> Result<Option<Ipv4Addr> > {
-//     }
+        let url = format!("{}/{acc_id}/zones/{}/records?name={host}", self.endpoint, self.config.domain)
+            .parse()
+            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
 
-//     async  fn set_v4_record(&self,host: &str,ip: &Ipv4Addr) -> Result<()> {
-//     }
-// }
+        let auth = self.auth.get_header();
+        let rec: Records = match http::get(url, Some(auth)).await? {
+            Some(rec) => rec,
+            None => return Ok(None)
+        };
+
+        // FIXME: Assumes no or single address (which probably makes sense
+        // for DDNS, but may cause issues with malformed zones.
+        let nr = rec.records.len();
+        if nr > 1 {
+            error!("Returned number of IPs is {}, should be 1", nr);
+            return Err(Error::UnexpectedRecord(format!("Returned number of IPs is {nr}, should be 1")));
+        } else if nr == 0 {
+            warn!("No IP returned for {host}, continuing");
+            return Ok(None);
+        }
+
+        Ok(Some(rec.records[0].content))
+    }
+
+    async  fn set_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
+
+
+        Ok(())
+    }
+}
 
 
 
@@ -136,6 +163,15 @@ mod tests {
         Ok(())
     }
 
+    async fn test_get_record() -> Result<()> {
+        let client = get_client();
+
+        let ip = client.get_v4_record("test").await?;
+        assert_eq!(Some("1.2.3.4".parse()?), ip);
+
+        Ok(())
+    }
+
     #[cfg(feature = "smol")]
     mod smol {
         use super::*;
@@ -147,6 +183,11 @@ mod tests {
         async fn smol_id_fetch() -> Result<()> {
             test_id_fetch().await
         }
+        #[apply(test!)]
+        #[traced_test]
+        async fn smol_get_record() -> Result<()> {
+            test_get_record().await
+        }
     }
 
     #[cfg(feature = "tokio")]
@@ -155,8 +196,13 @@ mod tests {
 
         #[tokio::test]
         #[traced_test]
-        async fn smol_id_fetch() -> Result<()> {
+        async fn tokio_id_fetch() -> Result<()> {
             test_id_fetch().await
+        }
+        #[tokio::test]
+        #[traced_test]
+        async fn tokio_get_record() -> Result<()> {
+            test_get_record().await
         }
     }
 
