@@ -8,7 +8,6 @@ use cfg_if::cfg_if;
 use hyper::Uri;
 use tracing::{error, info, warn};
 
-
 cfg_if! {
     if #[cfg(feature = "smol")] {
         use smol::lock::Mutex;
@@ -42,7 +41,7 @@ struct DnSimple {
     config: Config,
     endpoint: &'static str,
     auth: Auth,
-    acc_id: Arc<Mutex<Option<u32>>>,
+    acc_id: Mutex<Option<u32>>,
 }
 
 impl DnSimple {
@@ -51,7 +50,7 @@ impl DnSimple {
     }
 
     fn new_with_endpoint(config: Config, auth: Auth, acc: Option<u32>, endpoint: &'static str) -> Self {
-        let acc_id = Arc::new(Mutex::new(acc));
+        let acc_id = Mutex::new(acc);
         DnSimple {
             config,
             endpoint,
@@ -111,11 +110,10 @@ impl DnSimple {
 
 
 #[cfg(test)]
+#[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
 mod tests {
     use super::*;
     use std::env;
-    use macro_rules_attribute::apply;
-    use smol_macros::test;
     use tracing_test::traced_test;
 
     const TEST_API: &str = "https://api.sandbox.dnsimple.com/v2";
@@ -129,9 +127,6 @@ mod tests {
         DnSimple::new_with_endpoint(config, auth, None, TEST_API)
     }
 
-    #[apply(test!)]
-    #[traced_test]
-    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
     async fn test_id_fetch() -> Result<()> {
         let client = get_client();
 
@@ -139,6 +134,30 @@ mod tests {
         assert_eq!(2602, id);
 
         Ok(())
+    }
+
+    #[cfg(feature = "smol")]
+    mod smol {
+        use super::*;
+        use macro_rules_attribute::apply;
+        use smol_macros::test;
+
+        #[apply(test!)]
+        #[traced_test]
+        async fn smol_id_fetch() -> Result<()> {
+            test_id_fetch().await
+        }
+    }
+
+    #[cfg(feature = "tokio")]
+    mod smol {
+        use super::*;
+
+        #[tokio::test]
+        #[traced_test]
+        async fn smol_id_fetch() -> Result<()> {
+            test_id_fetch().await
+        }
     }
 
 
