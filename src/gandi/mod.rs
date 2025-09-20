@@ -46,7 +46,7 @@ impl DnsProvider for Gandi {
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
         let auth = self.auth.get_header();
-        let rec: Record = match http::get::<Record>(url, Some(auth)).await? {
+        let rec: Record = match http::get(url, Some(auth)).await? {
             Some(rec) => rec,
             None => return Ok(None)
         };
@@ -63,8 +63,7 @@ impl DnsProvider for Gandi {
             return Ok(None);
         }
 
-        let ip = rec.rrset_values[0].parse()?;
-        Ok(Some(ip))
+        Ok(Some(rec.rrset_values[0]))
 
     }
 
@@ -75,7 +74,7 @@ impl DnsProvider for Gandi {
         let auth = self.auth.get_header();
 
         let update = RecordUpdate {
-            rrset_values: vec![ip.to_string()],
+            rrset_values: vec![*ip],
             rrset_ttl: Some(300),
         };
         if self.config.dry_run {
