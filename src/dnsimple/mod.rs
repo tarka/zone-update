@@ -6,6 +6,7 @@ mod types;
 use std::{net::Ipv4Addr, sync::Arc};
 use cfg_if::cfg_if;
 use hyper::Uri;
+use serde::de::DeserializeOwned;
 use tracing::{error, info, warn};
 
 cfg_if! {
@@ -21,7 +22,7 @@ cfg_if! {
 }
 
 
-use crate::{dnsimple::types::{Accounts, CreateRecord, Records}, errors::{Error, Result}, http, Config, DnsProvider, RecordType};
+use crate::{dnsimple::types::{Accounts, CreateRecord, GetRecord, Records}, errors::{Error, Result}, http, Config, DnsProvider, RecordType};
 
 
 
@@ -96,27 +97,24 @@ impl DnSimple {
 
         Ok(id)
     }
-}
 
-
-impl DnsProvider for DnSimple {
-
-    async  fn get_v4_record(&self, host: &str) -> Result<Option<Ipv4Addr> > {
+    async fn get_record(&self, host: &str, rtype: RecordType) -> Result<Option<GetRecord>>
+    {
         let acc_id = self.get_id().await?;
 
-        let url = format!("{}/{acc_id}/zones/{}/records?name={host}", self.endpoint, self.config.domain)
+        let url = format!("{}/{acc_id}/zones/{}/records?name={host}&type={rtype}", self.endpoint, self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
 
         let auth = self.auth.get_header();
-        let rec: Records = match http::get(url, Some(auth)).await? {
+        let recs: Records = match http::get(url, Some(auth)).await? {
             Some(rec) => rec,
             None => return Ok(None)
         };
 
         // FIXME: Assumes no or single address (which probably makes sense
         // for DDNS, but may cause issues with malformed zones.
-        let nr = rec.records.len();
+        let nr = recs.records.len();
         if nr > 1 {
             error!("Returned number of IPs is {}, should be 1", nr);
             return Err(Error::UnexpectedRecord(format!("Returned number of IPs is {nr}, should be 1")));
@@ -125,7 +123,43 @@ impl DnsProvider for DnSimple {
             return Ok(None);
         }
 
-        Ok(Some(rec.records[0].content))
+        Ok(Some(recs.records[0].clone()))
+    }
+
+    pub async fn delete_all(&self) -> Result<()> {
+        let acc_id = self.get_id().await?;
+
+        let url = format!("{}/{acc_id}/zones/{}/records?type=A", self.endpoint, self.config.domain)
+            .parse()
+            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
+
+        let auth = self.auth.get_header();
+        let recs: Records = match http::get(url, Some(auth)).await? {
+            Some(rec) => rec,
+            None => panic!("NO RECORDS")
+        };
+
+        for rec in recs.records {
+            let host = rec.name;
+            println!("DELETEING {host}");
+            self.delete_v4_record(&host).await?;
+        }
+
+        Ok(())
+    }
+}
+
+
+impl DnsProvider for DnSimple {
+
+    async  fn get_v4_record(&self, host: &str) -> Result<Option<Ipv4Addr> > {
+        let rec: GetRecord = match self.get_record(host, RecordType::A).await? {
+            Some(recs) => recs,
+            None => return Ok(None)
+        };
+
+
+        Ok(Some(rec.content))
     }
 
     async  fn create_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
@@ -152,6 +186,31 @@ impl DnsProvider for DnSimple {
     }
 
     async  fn update_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
+        Ok(())
+    }
+
+    async  fn delete_v4_record(&self, host: &str) -> Result<()> {
+        let rec = match self.get_record(host, RecordType::A).await? {
+            Some(rec) => rec,
+            None => {
+                warn!("DELETE: Record {host} doesn't exist");
+                return Ok(());
+            }
+        };
+
+        let acc_id = self.get_id().await?;
+        let rid = rec.id;
+
+        let url = format!("{}/{acc_id}/zones/{}/records/{rid}", self.endpoint, self.config.domain)
+            .parse()
+            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
+        if self.config.dry_run {
+            info!("DRY-RUN: Would have sent DELETE to {url}");
+            return Ok(())
+        }
+
+        let auth = self.auth.get_header();
+        http::delete(url, Some(auth)).await?;
 
         Ok(())
     }
@@ -186,16 +245,7 @@ mod tests {
         Ok(())
     }
 
-    async fn test_get_record() -> Result<()> {
-        let client = get_client();
-
-        let ip = client.get_v4_record("test").await?;
-        assert_eq!(Some("1.2.3.4".parse()?), ip);
-
-        Ok(())
-    }
-
-    async fn test_create_delete_ipv4() -> Result<()> {
+    async fn test_create_update_delete_ipv4() -> Result<()> {
         let client = get_client();
 
         let host = random_string::generate(16, ALPHANUMERIC);
@@ -206,6 +256,7 @@ mod tests {
         let cur = client.get_v4_record(&host).await?;
         assert_eq!(Some(ip), cur);
 
+        client.delete_v4_record(&host).await?;
 
         Ok(())
     }
@@ -224,18 +275,12 @@ mod tests {
             test_id_fetch().await
         }
 
-        #[apply(test!)]
-        #[traced_test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn smol_get_record() -> Result<()> {
-            test_get_record().await
-        }
 
         #[apply(test!)]
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn smol_create_update() -> Result<()> {
-            test_create_delete_ipv4().await
+            test_create_update_delete_ipv4().await
         }
     }
 
@@ -253,15 +298,8 @@ mod tests {
         #[tokio::test]
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn tokio_get_record() -> Result<()> {
-            test_get_record().await
-        }
-
-        #[tokio::test]
-        #[traced_test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn tokio_create_update() -> Result<()> {
-            test_create_delete_ipv4().await
+            test_create_update_delete_ipv4().await
         }
     }
 

@@ -90,6 +90,10 @@ impl DnsProvider for Gandi {
         Ok(())
     }
 
+    async  fn delete_v4_record(&self,host: &str) -> Result<()> {
+        Ok(())
+    }
+
 }
 
 #[cfg(test)]

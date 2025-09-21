@@ -59,7 +59,7 @@ pub struct Accounts {
 //     "total_pages": 1
 //   }
 // }
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetRecord {
     pub id: u64,
     pub zone_id: String,
