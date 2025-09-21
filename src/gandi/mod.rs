@@ -192,39 +192,4 @@ mod tests {
         }
     }
 
-
-    // #[apply(test!)]
-    // #[traced_test]
-    // #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
-    // async fn test_fetch_ipv4() -> Result<()> {
-    //     let client = get_client();
-    //     let ip = client.get_v4_record("janus").await?;
-    //     assert!(ip.is_some());
-    //     assert_eq!(Ipv4Addr::new(192,168,42,1), ip.unwrap());
-    //     Ok(())
-    // }
-
-    // #[apply(test!)]
-    // #[traced_test]
-    // #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
-    // async fn test_update_ipv4() -> Result<()> {
-    //     let client = get_client();
-
-    //     let cur = client.get_v4_record("test").await?
-    //         .unwrap_or(Ipv4Addr::new(1,1,1,1));
-    //     let next = cur.octets()[0]
-    //         .wrapping_add(1);
-
-    //     let nip = Ipv4Addr::new(next,next,next,next);
-    //     client.create_v4_record("test", &nip).await?;
-
-    //     let ip = client.get_v4_record("test").await?;
-    //     if let Some(ip) = ip {
-    //         assert_eq!(nip, ip);
-    //     } else {
-    //         assert!(false, "No updated IP found");
-    //     }
-    //     Ok(())
-    // }
-
 }
