@@ -157,7 +157,6 @@ where
 {
     let res = request(Method::POST, &uri, Some(obj), auth).await?;
 
-    println!("RES: {res:?}");
     if !res.status().is_success() {
         return Err(from_error(res).await?);
     }
@@ -169,9 +168,8 @@ pub async fn patch<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
 where
     T: Serialize,
 {
-    let res = request(Method::POST, &uri, Some(obj), auth).await?;
+    let res = request(Method::PATCH, &uri, Some(obj), auth).await?;
 
-    println!("RES: {res:?}");
     if !res.status().is_success() {
         return Err(from_error(res).await?);
     }

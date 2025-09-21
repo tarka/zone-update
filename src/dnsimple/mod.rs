@@ -22,7 +22,7 @@ cfg_if! {
 }
 
 
-use crate::{dnsimple::types::{Accounts, CreateRecord, GetRecord, Records}, errors::{Error, Result}, http, Config, DnsProvider, RecordType};
+use crate::{dnsimple::types::{Accounts, CreateRecord, GetRecord, Records, UpdateRecord}, errors::{Error, Result}, http, Config, DnsProvider, RecordType};
 
 
 
@@ -164,6 +164,32 @@ impl DnsProvider for DnSimple {
     }
 
     async  fn update_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
+        let rec = match self.get_record(host, RecordType::A).await? {
+            Some(rec) => rec,
+            None => {
+                warn!("DELETE: Record {host} doesn't exist");
+                return Ok(());
+            }
+        };
+
+        let acc_id = self.get_id().await?;
+        let rid = rec.id;
+
+        let update = UpdateRecord {
+            content: ip.to_string(),
+        };
+
+        let url = format!("{}/{acc_id}/zones/{}/records/{rid}", self.endpoint, self.config.domain)
+            .parse()
+            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
+        if self.config.dry_run {
+            info!("DRY-RUN: Would have sent DELETE to {url}");
+            return Ok(())
+        }
+
+        let auth = self.auth.get_header();
+        http::patch(url, &update, Some(auth)).await?;
+
         Ok(())
     }
 
@@ -223,18 +249,30 @@ mod tests {
         Ok(())
     }
 
+    // TODO: This is generic, we could move it up to top-level testing.
     async fn test_create_update_delete_ipv4() -> Result<()> {
         let client = get_client();
 
         let host = random_string::generate(16, ALPHANUMERIC);
 
+        // Create
         let ip = "1.1.1.1".parse()?;
         client.create_v4_record(&host, &ip).await?;
-
         let cur = client.get_v4_record(&host).await?;
         assert_eq!(Some(ip), cur);
 
+
+        // Update
+        let ip = "2.2.2.2".parse()?;
+        client.update_v4_record(&host, &ip).await?;
+        let cur = client.get_v4_record(&host).await?;
+        assert_eq!(Some(ip), cur);
+
+
+        // Delete
         client.delete_v4_record(&host).await?;
+        let del = client.get_v4_record(&host).await?;
+        assert!(del.is_none());
 
         Ok(())
     }
