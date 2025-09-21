@@ -1,9 +1,12 @@
 mod http;
 pub mod errors;
 
+pub mod dnsimple;
 pub mod gandi;
 
-use std::net::Ipv4Addr;
+use std::{fmt::{self, Debug, Display, Formatter}, net::Ipv4Addr};
+
+use serde::{Deserialize, Serialize};
 
 use crate::errors::Result;
 
@@ -13,9 +16,34 @@ pub struct Config {
     pub dry_run: bool,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum RecordType {
+    A,
+    AAAA,
+    CAA,
+    CNAME,
+    HINFO,
+    MX,
+    NAPTR,
+    NS,
+    PTR,
+    SRV,
+    SPF,
+    SSHFP,
+    TXT,
+}
+
+impl Display for RecordType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[allow(unused)]
 #[trait_variant::make(Send)]
 pub trait DnsProvider {
     async fn get_v4_record(&self, host: &str) -> Result<Option<Ipv4Addr>>;
-    async fn set_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()>;
+    async fn create_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()>;
+    async fn update_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()>;
+    async fn delete_v4_record(&self, host: &str) -> Result<()>;
 }
