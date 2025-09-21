@@ -183,7 +183,7 @@ impl DnsProvider for DnSimple {
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
         if self.config.dry_run {
-            info!("DRY-RUN: Would have sent DELETE to {url}");
+            info!("DRY-RUN: Would have sent PATCH to {url}");
             return Ok(())
         }
 
