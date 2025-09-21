@@ -125,28 +125,6 @@ impl DnSimple {
 
         Ok(Some(recs.records[0].clone()))
     }
-
-    pub async fn delete_all(&self) -> Result<()> {
-        let acc_id = self.get_id().await?;
-
-        let url = format!("{}/{acc_id}/zones/{}/records?type=A", self.endpoint, self.config.domain)
-            .parse()
-            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
-
-        let auth = self.auth.get_header();
-        let recs: Records = match http::get(url, Some(auth)).await? {
-            Some(rec) => rec,
-            None => panic!("NO RECORDS")
-        };
-
-        for rec in recs.records {
-            let host = rec.name;
-            println!("DELETEING {host}");
-            self.delete_v4_record(&host).await?;
-        }
-
-        Ok(())
-    }
 }
 
 
