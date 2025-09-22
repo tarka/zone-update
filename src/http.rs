@@ -75,8 +75,7 @@ where
         rb.body("".to_string())?
     };
 
-    let addr = format!("{host}:443");
-    let stream = TcpStream::connect(addr).await?;
+    let stream = TcpStream::connect((host.clone(), 443)).await?;
 
     let cert_store = load_system_certs();
     let tlsdomain = ServerName::try_from(host)?;
