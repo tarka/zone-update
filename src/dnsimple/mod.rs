@@ -4,26 +4,14 @@
 mod types;
 
 use std::{net::Ipv4Addr, sync::Arc};
+use async_lock::Mutex;
 use cfg_if::cfg_if;
 use hyper::Uri;
 use serde::de::DeserializeOwned;
 use tracing::{error, info, warn};
 
-cfg_if! {
-    if #[cfg(feature = "smol")] {
-        use smol::lock::Mutex;
-
-    } else if #[cfg(feature = "tokio")] {
-        use tokio::sync::Mutex;
-
-    } else {
-        compile_error!("Either smol or tokio feature must be enabled");
-    }
-}
-
 
 use crate::{dnsimple::types::{Accounts, CreateRecord, GetRecord, Records, UpdateRecord}, errors::{Error, Result}, http, Config, DnsProvider, RecordType};
-
 
 
 const API_BASE: &str = "https:://api.dnsimple.com/v2";
