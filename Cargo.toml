@@ -1,6 +1,6 @@
 [package]
 name = "dns-edit"
-version = "0.1.1"
+version = "0.2.0"
 description = "A minimal library of DNS provider utilities"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/tarka/dns-edit"
