@@ -31,7 +31,7 @@ use tracing::{error, warn};
 use crate::errors::{Error, Result};
 
 
-pub fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) {
+fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) {
     cfg_if! {
         if #[cfg(feature = "smol")] {
             smol::spawn(future)
