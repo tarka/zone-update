@@ -33,7 +33,10 @@ chrono = { version = "0.4.42", features = ["serde"], default-features = false }
 async-lock = "3.4.1"
 
 [features]
-default = ["smol"]
+default = ["smol", "all-providers"]
+all-providers = ["gandi", "dnsimple"]
+gandi = []
+dnsimple = []
 smol = ["dep:smol", "dep:smol-hyper", "dep:futures-rustls"]
 tokio = ["dep:tokio", "dep:hyper-util", "dep:tokio-rustls"]
 

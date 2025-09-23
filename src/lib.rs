@@ -1,7 +1,10 @@
 mod http;
 pub mod errors;
 
+
+#[cfg(feature = "dnsimple")]
 pub mod dnsimple;
+#[cfg(feature = "gandi")]
 pub mod gandi;
 
 use std::{fmt::{self, Debug, Display, Formatter}, net::Ipv4Addr};
