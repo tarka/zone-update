@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/tarka/zone-edit/compare/v0.2.1...v0.2.2) - 2025-09-24
+
+### Other
+
+- Change README to point to renamed project.
+- spawn() shouldn't be pub
+
 ## [0.2.1](https://github.com/tarka/dns-edit/compare/v0.2.0...v0.2.1) - 2025-09-23
 
 ### Other
