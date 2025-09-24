@@ -1,6 +1,6 @@
 [package]
 name = "zone-edit"
-version = "0.2.2"
+version = "0.2.3"
 description = "A minimal library of DNS provider utilities"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/tarka/zone-edit"
