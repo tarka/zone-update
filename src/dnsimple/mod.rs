@@ -14,7 +14,7 @@ use tracing::{error, info, warn};
 use crate::{dnsimple::types::{Accounts, CreateRecord, GetRecord, Records, UpdateRecord}, errors::{Error, Result}, http, Config, DnsProvider, RecordType};
 
 
-const API_BASE: &str = "https:://api.dnsimple.com/v2";
+const API_BASE: &str = "https://api.dnsimple.com/v2";
 
 pub struct Auth {
     key: String,
