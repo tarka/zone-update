@@ -2,7 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/zone-edit)](https://crates.io/crates/zone-edit)
 [![Docs.rs](https://docs.rs/zone-edit/badge.svg)](https://docs.rs/zone-edit)
-[![GitHub CI](https://github.com/tarka/zone-edit/workflows/CI/badge.svg)](https://github.com/tarka/zone-edit/actions)
+[![GitHub CI](https://github.com/tarka/zone-edit/actions/workflows/tests.yml/badge.svg)](https://github.com/tarka/zone-edit/actions)
 [![License](https://img.shields.io/crates/l/zone-edit)](https://github.com/tarka/zone-edit/blob/main/README.md#License)
 
 A minimal Rust library for updating DNS records with various DNS providers.
