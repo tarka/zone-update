@@ -9,6 +9,9 @@ use hyper::{
 };
 use rustls::{ClientConfig, RootCertStore, pki_types::ServerName};
 use serde::{de::DeserializeOwned, Serialize};
+use tracing::{error, warn};
+
+use crate::errors::{Error, Result};
 
 cfg_if! {
     if #[cfg(feature = "smol")] {
@@ -26,9 +29,6 @@ cfg_if! {
     }
 }
 
-use tracing::{error, warn};
-
-use crate::errors::{Error, Result};
 
 
 fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) {
@@ -45,6 +45,8 @@ fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) {
 
 
 fn load_system_certs() -> RootCertStore {
+    // FIXME: Could go in a once-lock? Maybe not worth it (would need
+    // to be cloned each call)?
     let mut root_store = RootCertStore::empty();
     root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     root_store
