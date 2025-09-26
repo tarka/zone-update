@@ -7,7 +7,7 @@ pub mod dnsimple;
 #[cfg(feature = "gandi")]
 pub mod gandi;
 
-use std::{fmt::{self, Debug, Display, Formatter}};
+use std::{fmt::{self, Debug, Display, Formatter}, net::Ipv4Addr};
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::warn;
@@ -83,6 +83,26 @@ pub trait DnsProvider {
     #[allow(async_fn_in_trait)]
     async fn delete_txt_record(&self, host: &str) -> Result<()> {
         self.delete_record(RecordType::TXT, host).await
+    }
+
+    #[allow(async_fn_in_trait)]
+    async fn get_a_record(&self, host: &str) -> Result<Option<Ipv4Addr>> {
+        self.get_record(RecordType::A, host).await
+    }
+
+    #[allow(async_fn_in_trait)]
+    async fn create_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()> {
+        self.create_record(RecordType::A, host, record).await
+    }
+
+    #[allow(async_fn_in_trait)]
+    async fn update_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()> {
+        self.update_record(RecordType::A, host, record).await
+    }
+
+    #[allow(async_fn_in_trait)]
+    async fn delete_a_record(&self, host: &str) -> Result<()> {
+        self.delete_record(RecordType::A, host).await
     }
 }
 
