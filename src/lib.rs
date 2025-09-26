@@ -10,8 +10,9 @@ pub mod gandi;
 use std::{fmt::{self, Debug, Display, Formatter}};
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use tracing::warn;
 
-use crate::errors::{Error, Result};
+use crate::errors::Result;
 
 
 pub struct Config {
@@ -43,43 +44,65 @@ impl Display for RecordType {
 }
 
 #[allow(unused)]
-#[trait_variant::make(Send)]
 pub trait DnsProvider {
-    async fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
+    fn get_record<T>(&self, rtype: RecordType, host: &str) -> impl Future<Output = Result<Option<T>>>
     where
         T: DeserializeOwned;
 
-    async fn create_record<T>(&self, rtype: RecordType, host: &str, ip: &T) -> Result<()>
+    fn create_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> impl Future<Output = Result<()>>
     where
         T: Serialize + DeserializeOwned + Display + Clone + Send + Sync;
 
-    async fn update_record<T>(&self, rtype: RecordType, host: &str, ip: &T) -> Result<()>
+    fn update_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> impl Future<Output = Result<()>>
     where
         T: Serialize + DeserializeOwned + Display + Clone + Send + Sync;
 
-    async fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>;
+    fn delete_record(&self, rtype: RecordType, host: &str) -> impl Future<Output = Result<()>>;
 
+
+    // Default helper impls
+
+    // We know all the types, and they're enforced above, so this lint
+    // doesn't apply here(?)
+    #[allow(async_fn_in_trait)]
+    async fn get_txt_record(&self, host: &str) -> Result<Option<String>> {
+        self.get_record::<String>(RecordType::TXT, host).await
+            .map(|opt| opt.map(|s| strip_quotes(&s)))
+    }
+
+    #[allow(async_fn_in_trait)]
+    async fn create_txt_record(&self, host: &str, record: &String) -> Result<()> {
+        self.create_record(RecordType::TXT, host, record).await
+    }
+
+    #[allow(async_fn_in_trait)]
+    async fn update_txt_record(&self, host: &str, record: &String) -> Result<()> {
+        self.update_record(RecordType::TXT, host, record).await
+    }
+
+    #[allow(async_fn_in_trait)]
+    async fn delete_txt_record(&self, host: &str) -> Result<()> {
+        self.delete_record(RecordType::TXT, host).await
+    }
 }
 
 
-fn strip_quotes(record: &str) -> Result<String> {
+fn strip_quotes(record: &str) -> String {
     let chars = record.chars();
     let mut check = chars.clone();
 
-    let first = check.nth(0)
-        .ok_or(Error::UnexpectedRecord("Empty string".to_string()))?;
-    let last = check.last()
-        .ok_or(Error::UnexpectedRecord("Empty string".to_string()))?;
+    let first = check.nth(0);
+    let last = check.last();
 
-    if first != '"' || last != '"' {
-        return Err(Error::UnexpectedRecord("Quotes not found".to_string()));
+    if let Some('"') = first && let Some('"') = last {
+        let stripped = chars.skip(1)
+            .take(record.len() - 2)
+            .collect();
+        stripped
+    } else {
+        warn!("Double quotes not found in record string, using whole record.");
+        record.to_string()
     }
-
-    let stripped = chars.skip(1)
-        .take(record.len() - 2)
-        .collect();
-
-    Ok(stripped)
 }
 
 
@@ -89,12 +112,12 @@ mod tests {
 
     #[test]
     fn test_strip_quotes() -> Result<()> {
-        assert_eq!("abc123".to_string(), strip_quotes("\"abc123\"")?);
-        assert!(strip_quotes("abc123\"").is_err());
-        assert!(strip_quotes("\"abc123").is_err());
+        assert_eq!("abc123".to_string(), strip_quotes("\"abc123\""));
+        assert_eq!("abc123\"", strip_quotes("abc123\""));
+        assert_eq!("\"abc123", strip_quotes("\"abc123"));
+        assert_eq!("abc123", strip_quotes("abc123"));
 
         Ok(())
     }
-
 
 }

@@ -289,19 +289,46 @@ mod tests {
         let txt = "a text reference".to_string();
         client.create_record(RecordType::TXT, &host, &txt).await?;
         let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap())?);
+        assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
 
         // Update
         let txt = "another text reference".to_string();
         client.update_record(RecordType::TXT, &host, &txt).await?;
         let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap())?);
+        assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
 
         // Delete
         client.delete_record(RecordType::TXT, &host).await?;
         let del: Option<String> = client.get_record(RecordType::TXT, &host).await?;
+        assert!(del.is_none());
+
+        Ok(())
+    }
+
+    async fn test_create_update_delete_txt_default() -> Result<()> {
+        let client = get_client();
+
+        let host = random_string::generate(16, ALPHANUMERIC);
+
+        // Create
+        let txt = "a text reference".to_string();
+        client.create_txt_record(&host, &txt).await?;
+        let cur = client.get_txt_record(&host).await?;
+        assert_eq!(txt, strip_quotes(&cur.unwrap()));
+
+
+        // Update
+        let txt = "another text reference".to_string();
+        client.update_txt_record(&host, &txt).await?;
+        let cur = client.get_txt_record(&host).await?;
+        assert_eq!(txt, strip_quotes(&cur.unwrap()));
+
+
+        // Delete
+        client.delete_txt_record(&host).await?;
+        let del = client.get_txt_record(&host).await?;
         assert!(del.is_none());
 
         Ok(())
@@ -326,9 +353,24 @@ mod tests {
         #[apply(test!)]
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn smol_create_update() -> Result<()> {
+        async fn smol_create_update_v4() -> Result<()> {
             test_create_update_delete_ipv4().await?;
+            Ok(())
+        }
+
+        #[apply(test!)]
+        #[traced_test]
+        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+        async fn smol_create_update_txt() -> Result<()> {
             test_create_update_delete_txt().await?;
+            Ok(())
+        }
+
+        #[apply(test!)]
+        #[traced_test]
+        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+        async fn smol_create_update_default() -> Result<()> {
+            test_create_update_delete_txt_default().await?;
             Ok(())
         }
     }

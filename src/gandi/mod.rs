@@ -185,14 +185,14 @@ mod tests {
         let txt = "a text reference".to_string();
         client.create_record(RecordType::TXT, &host, &txt).await?;
         let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap())?);
+        assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
 
         // Update
         let txt = "another text reference".to_string();
         client.update_record(RecordType::TXT, &host, &txt).await?;
         let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap())?);
+        assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
 
         // Delete
