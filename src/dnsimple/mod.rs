@@ -3,11 +3,11 @@
 
 mod types;
 
-use std::{net::Ipv4Addr, sync::Arc};
+use std::{fmt::Display, sync::Arc};
 use async_lock::Mutex;
 use cfg_if::cfg_if;
 use hyper::Uri;
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 use tracing::{error, info, warn};
 
 
@@ -86,7 +86,9 @@ impl DnSimple {
         Ok(id)
     }
 
-    async fn get_upstream_record(&self, rtype: RecordType, host: &str) -> Result<Option<GetRecord>>
+    async fn get_upstream_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<GetRecord<T>>>
+    where
+        T: DeserializeOwned
     {
         let acc_id = self.get_id().await?;
 
@@ -95,7 +97,7 @@ impl DnSimple {
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
 
         let auth = self.auth.get_header();
-        let recs: Records = match http::get(url, Some(auth)).await? {
+        let mut recs: Records<T> = match http::get(url, Some(auth)).await? {
             Some(rec) => rec,
             None => return Ok(None)
         };
@@ -111,15 +113,19 @@ impl DnSimple {
             return Ok(None);
         }
 
-        Ok(Some(recs.records[0].clone()))
+
+        Ok(Some(recs.records.remove(0)))
     }
 }
 
 
 impl DnsProvider for DnSimple {
 
-    async  fn get_record(&self, rtype: RecordType, host: &str) -> Result<Option<Ipv4Addr> > {
-        let rec: GetRecord = match self.get_upstream_record(rtype, host).await? {
+    async fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T> >
+    where
+        T: DeserializeOwned
+    {
+        let rec: GetRecord<T> = match self.get_upstream_record(rtype, host).await? {
             Some(recs) => recs,
             None => return Ok(None)
         };
@@ -128,7 +134,10 @@ impl DnsProvider for DnSimple {
         Ok(Some(rec.content))
     }
 
-    async  fn create_record(&self, rtype: RecordType, host: &str, ip: &Ipv4Addr) -> Result<()> {
+    async  fn create_record<T>(&self, rtype: RecordType, host: &str, rec: &T) -> Result<()>
+    where
+        T: Display + Sync,
+    {
         let acc_id = self.get_id().await?;
 
         let url = format!("{}/{acc_id}/zones/{}/records", self.endpoint, self.config.domain)
@@ -139,7 +148,7 @@ impl DnsProvider for DnSimple {
         let rec = CreateRecord {
             name: host.to_string(),
             rtype,
-            content: ip.to_string(),
+            content: rec.to_string(),
             ttl: 300,
         };
         if self.config.dry_run {
@@ -151,8 +160,11 @@ impl DnsProvider for DnSimple {
         Ok(())
     }
 
-    async  fn update_record(&self, rtype: RecordType, host: &str, ip: &Ipv4Addr) -> Result<()> {
-        let rec = match self.get_upstream_record(rtype, host).await? {
+    async  fn update_record<T>(&self, rtype: RecordType, host: &str, urec: &T) -> Result<()>
+    where
+        T: DeserializeOwned + Display + Sync + Send,
+    {
+        let rec: GetRecord<T> = match self.get_upstream_record(rtype, host).await? {
             Some(rec) => rec,
             None => {
                 warn!("DELETE: Record {host} doesn't exist");
@@ -164,7 +176,7 @@ impl DnsProvider for DnSimple {
         let rid = rec.id;
 
         let update = UpdateRecord {
-            content: ip.to_string(),
+            content: urec.to_string(),
         };
 
         let url = format!("{}/{acc_id}/zones/{}/records/{rid}", self.endpoint, self.config.domain)
@@ -182,7 +194,7 @@ impl DnsProvider for DnSimple {
     }
 
     async  fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()> {
-        let rec = match self.get_upstream_record(rtype, host).await? {
+        let rec: GetRecord<String> = match self.get_upstream_record(rtype, host).await? {
             Some(rec) => rec,
             None => {
                 warn!("DELETE: Record {host} doesn't exist");
@@ -213,7 +225,7 @@ impl DnsProvider for DnSimple {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
+    use std::{env, net::Ipv4Addr};
     use random_string::charsets::ALPHANUMERIC;
     use tracing_test::traced_test;
 
@@ -244,14 +256,14 @@ mod tests {
         let host = random_string::generate(16, ALPHANUMERIC);
 
         // Create
-        let ip = "1.1.1.1".parse()?;
+        let ip: Ipv4Addr = "1.1.1.1".parse()?;
         client.create_record(RecordType::A, &host, &ip).await?;
         let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
 
 
         // Update
-        let ip = "2.2.2.2".parse()?;
+        let ip: Ipv4Addr = "2.2.2.2".parse()?;
         client.update_record(RecordType::A, &host, &ip).await?;
         let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
@@ -259,7 +271,7 @@ mod tests {
 
         // Delete
         client.delete_record(RecordType::A, &host).await?;
-        let del = client.get_record(RecordType::A, &host).await?;
+        let del: Option<Ipv4Addr> = client.get_record(RecordType::A, &host).await?;
         assert!(del.is_none());
 
         Ok(())

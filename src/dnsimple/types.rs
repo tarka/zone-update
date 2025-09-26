@@ -2,7 +2,7 @@
 use std::{any::Any, marker::PhantomData, net::Ipv4Addr};
 
 use chrono::{DateTime, NaiveDateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::RecordType;
 
@@ -60,11 +60,12 @@ pub struct Accounts {
 //   }
 // }
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct GetRecord {
+pub struct GetRecord<T>
+{
     pub id: u64,
     pub zone_id: String,
     pub name: String,
-    pub content: Ipv4Addr,
+    pub content: T,
     pub ttl: u32,
     #[serde(rename = "type")]
     pub rtype: RecordType,
@@ -74,9 +75,10 @@ pub struct GetRecord {
 
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Records {
+pub struct Records<T>
+{
     #[serde(rename = "data")]
-    pub records: Vec<GetRecord>
+    pub records: Vec<GetRecord<T>>
 }
 
 

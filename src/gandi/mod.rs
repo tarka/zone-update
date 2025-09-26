@@ -2,7 +2,8 @@
 
 mod types;
 
-use std::net::Ipv4Addr;
+use std::{fmt::Display};
+use serde::{de::DeserializeOwned, Serialize};
 use tracing::{error, info, warn};
 
 use types::{Record, RecordUpdate};
@@ -41,12 +42,15 @@ impl Gandi {
 
 impl DnsProvider for Gandi {
 
-    async fn get_record(&self, rtype: RecordType, host: &str) -> Result<Option<Ipv4Addr>> {
+    async fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
+    where
+        T: DeserializeOwned
+    {
         let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
         let auth = self.auth.get_header();
-        let rec: Record = match http::get(url, Some(auth)).await? {
+        let mut rec: Record<T> = match http::get(url, Some(auth)).await? {
             Some(rec) => rec,
             None => return Ok(None)
         };
@@ -63,30 +67,36 @@ impl DnsProvider for Gandi {
             return Ok(None);
         }
 
-        Ok(Some(rec.rrset_values[0]))
+        Ok(Some(rec.rrset_values.remove(0)))
 
     }
 
-    async  fn create_record(&self, rtype: RecordType, host: &str,ip: &Ipv4Addr) -> Result<()> {
+    async fn create_record<T>(&self, rtype: RecordType, host: &str, rec: &T) -> Result<()>
+    where
+        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync
+    {
         // PUT works for both operations
-        self.update_record(rtype, host, ip).await
+        self.update_record(rtype, host, rec).await
     }
 
-    async fn update_record(&self, rtype: RecordType, host: &str, ip: &Ipv4Addr) -> Result<()> {
+    async fn update_record<T>(&self, rtype: RecordType, host: &str, ip: &T) -> Result<()>
+    where
+        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync
+    {
         let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
         let auth = self.auth.get_header();
 
         let update = RecordUpdate {
-            rrset_values: vec![*ip],
+            rrset_values: vec![(*ip).clone()],
             rrset_ttl: Some(300),
         };
         if self.config.dry_run {
-            info!("DRY-RUN: Would have sent {update:?} to {url}");
+            info!("DRY-RUN: Would have sent PUT to {url}");
             return Ok(())
         }
-        http::put::<RecordUpdate>(url, &update, Some(auth)).await?;
+        http::put::<RecordUpdate<T>>(url, &update, Some(auth)).await?;
         Ok(())
     }
 
@@ -110,7 +120,7 @@ impl DnsProvider for Gandi {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
+    use std::{env, net::Ipv4Addr};
     use macro_rules_attribute::apply;
     use random_string::charsets::ALPHANUMERIC;
     use smol_macros::test;
@@ -144,14 +154,14 @@ mod tests {
         let host = random_string::generate(16, ALPHANUMERIC);
 
         // Create
-        let ip = "1.1.1.1".parse()?;
+        let ip: Ipv4Addr = "1.1.1.1".parse()?;
         client.create_record(RecordType::A, &host, &ip).await?;
         let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
 
 
         // Update
-        let ip = "2.2.2.2".parse()?;
+        let ip: Ipv4Addr = "2.2.2.2".parse()?;
         client.update_record(RecordType::A, &host, &ip).await?;
         let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
@@ -159,7 +169,7 @@ mod tests {
 
         // Delete
         client.delete_record(RecordType::A, &host).await?;
-        let del = client.get_record(RecordType::A, &host).await?;
+        let del: Option<Ipv4Addr> = client.get_record(RecordType::A, &host).await?;
         assert!(del.is_none());
 
         Ok(())

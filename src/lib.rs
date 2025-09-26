@@ -7,9 +7,9 @@ pub mod dnsimple;
 #[cfg(feature = "gandi")]
 pub mod gandi;
 
-use std::{fmt::{self, Debug, Display, Formatter}, net::Ipv4Addr};
+use std::{fmt::{self, Debug, Display, Formatter}};
 
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::errors::Result;
 
@@ -45,8 +45,19 @@ impl Display for RecordType {
 #[allow(unused)]
 #[trait_variant::make(Send)]
 pub trait DnsProvider {
-    async fn get_record(&self, rtype: RecordType, host: &str) -> Result<Option<Ipv4Addr>>;
-    async fn create_record(&self, rtype: RecordType, host: &str, ip: &Ipv4Addr) -> Result<()>;
-    async fn update_record(&self, rtype: RecordType, host: &str, ip: &Ipv4Addr) -> Result<()>;
-    async fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>;
+    async fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
+    where
+        T: DeserializeOwned;
+
+    async fn create_record<T>(&self, rtype: RecordType, host: &str, ip: &T) -> Result<()>
+    where
+        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync;
+
+    async fn update_record<T>(&self, rtype: RecordType, host: &str, ip: &T) -> Result<()>
+    where
+        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync;
+
+    async fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>
+;
+
 }
