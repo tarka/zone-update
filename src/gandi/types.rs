@@ -1,6 +1,6 @@
 use std::net::Ipv4Addr;
 
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 // See https://api.gandi.net/docs/livedns/
 
@@ -30,10 +30,11 @@ pub struct Error {
 //   },
 // ]
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Record {
+pub struct Record<T>
+{
     pub rrset_name: String,
     pub rrset_type: String,
-    pub rrset_values: Vec<Ipv4Addr>,
+    pub rrset_values: Vec<T>,
     pub rrset_href: String,
     pub rrset_ttl: Option<u32>,
 }
@@ -45,7 +46,7 @@ pub struct Record {
 //   "rrset_ttl": 320
 // }
 #[derive(Serialize, Deserialize, Debug)]
-pub struct RecordUpdate {
-    pub rrset_values: Vec<Ipv4Addr>,
+pub struct RecordUpdate<T> {
+    pub rrset_values: Vec<T>,
     pub rrset_ttl: Option<u32>,
 }

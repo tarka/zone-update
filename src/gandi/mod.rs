@@ -2,11 +2,12 @@
 
 mod types;
 
-use std::net::Ipv4Addr;
+use std::{fmt::Display};
+use serde::{de::DeserializeOwned, Serialize};
 use tracing::{error, info, warn};
 
 use types::{Record, RecordUpdate};
-use crate::{errors::{Error, Result}, http, Config, DnsProvider};
+use crate::{errors::{Error, Result}, http, Config, DnsProvider, RecordType};
 
 const API_BASE: &str = "https://api.gandi.net/v5/livedns";
 
@@ -41,12 +42,15 @@ impl Gandi {
 
 impl DnsProvider for Gandi {
 
-    async fn get_v4_record(&self, host: &str) -> Result<Option<Ipv4Addr>> {
+    async fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
+    where
+        T: DeserializeOwned
+    {
         let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
         let auth = self.auth.get_header();
-        let rec: Record = match http::get(url, Some(auth)).await? {
+        let mut rec: Record<T> = match http::get(url, Some(auth)).await? {
             Some(rec) => rec,
             None => return Ok(None)
         };
@@ -63,34 +67,40 @@ impl DnsProvider for Gandi {
             return Ok(None);
         }
 
-        Ok(Some(rec.rrset_values[0]))
+        Ok(Some(rec.rrset_values.remove(0)))
 
     }
 
-    async  fn create_v4_record(&self, host: &str,ip: &Ipv4Addr) -> Result<()> {
+    async fn create_record<T>(&self, rtype: RecordType, host: &str, rec: &T) -> Result<()>
+    where
+        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync
+    {
         // PUT works for both operations
-        self.update_v4_record(host, ip).await
+        self.update_record(rtype, host, rec).await
     }
 
-    async fn update_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
+    async fn update_record<T>(&self, rtype: RecordType, host: &str, ip: &T) -> Result<()>
+    where
+        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync
+    {
         let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
         let auth = self.auth.get_header();
 
         let update = RecordUpdate {
-            rrset_values: vec![*ip],
+            rrset_values: vec![(*ip).clone()],
             rrset_ttl: Some(300),
         };
         if self.config.dry_run {
-            info!("DRY-RUN: Would have sent {update:?} to {url}");
+            info!("DRY-RUN: Would have sent PUT to {url}");
             return Ok(())
         }
-        http::put::<RecordUpdate>(url, &update, Some(auth)).await?;
+        http::put::<RecordUpdate<T>>(url, &update, Some(auth)).await?;
         Ok(())
     }
 
-    async  fn delete_v4_record(&self,host: &str) -> Result<()> {
+    async  fn delete_record(&self,rtype: RecordType, host: &str) -> Result<()> {
         let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
@@ -109,8 +119,10 @@ impl DnsProvider for Gandi {
 
 #[cfg(test)]
 mod tests {
+    use crate::strip_quotes;
+
     use super::*;
-    use std::env;
+    use std::{env, net::Ipv4Addr};
     use macro_rules_attribute::apply;
     use random_string::charsets::ALPHANUMERIC;
     use smol_macros::test;
@@ -144,22 +156,49 @@ mod tests {
         let host = random_string::generate(16, ALPHANUMERIC);
 
         // Create
-        let ip = "1.1.1.1".parse()?;
-        client.create_v4_record(&host, &ip).await?;
-        let cur = client.get_v4_record(&host).await?;
+        let ip: Ipv4Addr = "1.1.1.1".parse()?;
+        client.create_record(RecordType::A, &host, &ip).await?;
+        let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
 
 
         // Update
-        let ip = "2.2.2.2".parse()?;
-        client.update_v4_record(&host, &ip).await?;
-        let cur = client.get_v4_record(&host).await?;
+        let ip: Ipv4Addr = "2.2.2.2".parse()?;
+        client.update_record(RecordType::A, &host, &ip).await?;
+        let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
 
 
         // Delete
-        client.delete_v4_record(&host).await?;
-        let del = client.get_v4_record(&host).await?;
+        client.delete_record(RecordType::A, &host).await?;
+        let del: Option<Ipv4Addr> = client.get_record(RecordType::A, &host).await?;
+        assert!(del.is_none());
+
+        Ok(())
+    }
+
+    async fn test_create_update_delete_txt() -> Result<()> {
+        let client = get_client();
+
+        let host = random_string::generate(16, ALPHANUMERIC);
+
+        // Create
+        let txt = "a text reference".to_string();
+        client.create_record(RecordType::TXT, &host, &txt).await?;
+        let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
+        assert_eq!(txt, strip_quotes(&cur.unwrap())?);
+
+
+        // Update
+        let txt = "another text reference".to_string();
+        client.update_record(RecordType::TXT, &host, &txt).await?;
+        let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
+        assert_eq!(txt, strip_quotes(&cur.unwrap())?);
+
+
+        // Delete
+        client.delete_record(RecordType::TXT, &host).await?;
+        let del: Option<String> = client.get_record(RecordType::TXT, &host).await?;
         assert!(del.is_none());
 
         Ok(())
@@ -175,8 +214,17 @@ mod tests {
         #[apply(test!)]
         #[traced_test]
         #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
-        async fn smol_create_update() -> Result<()> {
-            test_create_update_delete_ipv4().await
+        async fn smol_create_update_a() -> Result<()> {
+            test_create_update_delete_ipv4().await?;
+            Ok(())
+        }
+
+        #[apply(test!)]
+        #[traced_test]
+        #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
+        async fn smol_create_update_txt() -> Result<()> {
+            test_create_update_delete_ipv4().await?;
+            Ok(())
         }
     }
 
@@ -188,7 +236,9 @@ mod tests {
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn tokio_create_update() -> Result<()> {
-            test_create_update_delete_ipv4().await
+            test_create_update_delete_ipv4().await?;
+            test_create_update_delete_txt().await?;
+            Ok(())
         }
     }
 
