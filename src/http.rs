@@ -1,6 +1,7 @@
 
 use std::{io::Read, sync::Arc};
 
+use async_lock::OnceCell;
 use cfg_if::cfg_if;
 use http::request::Builder;
 use http_body_util::BodyExt;
@@ -50,12 +51,14 @@ fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) {
 }
 
 
-fn load_system_certs() -> RootCertStore {
-    // FIXME: Could go in a once-lock? Maybe not worth it (would need
-    // to be cloned each call)?
-    let mut root_store = RootCertStore::empty();
-    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    root_store
+const ROOT_STORE: OnceCell<Arc<RootCertStore>> = OnceCell::new();
+
+async fn load_system_certs() -> Arc<RootCertStore> {
+    ROOT_STORE.get_or_init(|| async {
+        let mut root_store = RootCertStore::empty();
+        root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+        Arc::new(root_store)
+    }).await.clone()
 }
 
 
@@ -88,7 +91,7 @@ where
     let cert_store = load_system_certs();
     let tlsdomain = ServerName::try_from(host)?;
     let tlsconf = ClientConfig::builder()
-        .with_root_certificates(cert_store)
+        .with_root_certificates(cert_store.await)
         .with_no_client_auth();
     let tlsconn = TlsConnector::from(Arc::new(tlsconf));
     let tlsstream = tlsconn.connect(tlsdomain, stream).await?;
