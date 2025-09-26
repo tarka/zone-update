@@ -134,7 +134,7 @@ impl DnsProvider for DnSimple {
         Ok(Some(rec.content))
     }
 
-    async  fn create_record<T>(&self, rtype: RecordType, host: &str, rec: &T) -> Result<()>
+    async fn create_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
     where
         T: Display + Sync,
     {
@@ -148,9 +148,10 @@ impl DnsProvider for DnSimple {
         let rec = CreateRecord {
             name: host.to_string(),
             rtype,
-            content: rec.to_string(),
+            content: record.to_string(),
             ttl: 300,
         };
+
         if self.config.dry_run {
             info!("DRY-RUN: Would have sent {rec:?} to {url}");
             return Ok(())
@@ -160,7 +161,7 @@ impl DnsProvider for DnSimple {
         Ok(())
     }
 
-    async  fn update_record<T>(&self, rtype: RecordType, host: &str, urec: &T) -> Result<()>
+    async fn update_record<T>(&self, rtype: RecordType, host: &str, urec: &T) -> Result<()>
     where
         T: DeserializeOwned + Display + Sync + Send,
     {
@@ -193,7 +194,7 @@ impl DnsProvider for DnSimple {
         Ok(())
     }
 
-    async  fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()> {
+    async fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()> {
         let rec: GetRecord<String> = match self.get_upstream_record(rtype, host).await? {
             Some(rec) => rec,
             None => {
@@ -224,6 +225,8 @@ impl DnsProvider for DnSimple {
 
 #[cfg(test)]
 mod tests {
+    use crate::strip_quotes;
+
     use super::*;
     use std::{env, net::Ipv4Addr};
     use random_string::charsets::ALPHANUMERIC;
@@ -277,6 +280,33 @@ mod tests {
         Ok(())
     }
 
+    async fn test_create_update_delete_txt() -> Result<()> {
+        let client = get_client();
+
+        let host = random_string::generate(16, ALPHANUMERIC);
+
+        // Create
+        let txt = "a text reference".to_string();
+        client.create_record(RecordType::TXT, &host, &txt).await?;
+        let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
+        assert_eq!(txt, strip_quotes(&cur.unwrap())?);
+
+
+        // Update
+        let txt = "another text reference".to_string();
+        client.update_record(RecordType::TXT, &host, &txt).await?;
+        let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
+        assert_eq!(txt, strip_quotes(&cur.unwrap())?);
+
+
+        // Delete
+        client.delete_record(RecordType::TXT, &host).await?;
+        let del: Option<String> = client.get_record(RecordType::TXT, &host).await?;
+        assert!(del.is_none());
+
+        Ok(())
+    }
+
 
     #[cfg(feature = "smol")]
     mod smol {
@@ -288,7 +318,8 @@ mod tests {
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn smol_id_fetch() -> Result<()> {
-            test_id_fetch().await
+            test_id_fetch().await?;
+            Ok(())
         }
 
 
@@ -296,7 +327,9 @@ mod tests {
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn smol_create_update() -> Result<()> {
-            test_create_update_delete_ipv4().await
+            test_create_update_delete_ipv4().await?;
+            test_create_update_delete_txt().await?;
+            Ok(())
         }
     }
 
