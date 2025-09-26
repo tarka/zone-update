@@ -30,8 +30,6 @@ cfg_if! {
     }
 }
 
-
-
 fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) {
     cfg_if! {
         if #[cfg(feature = "smol")] {

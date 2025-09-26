@@ -86,7 +86,7 @@ impl DnSimple {
         Ok(id)
     }
 
-    async fn get_record(&self, host: &str, rtype: RecordType) -> Result<Option<GetRecord>>
+    async fn get_upstream_record(&self, rtype: RecordType, host: &str) -> Result<Option<GetRecord>>
     {
         let acc_id = self.get_id().await?;
 
@@ -118,8 +118,8 @@ impl DnSimple {
 
 impl DnsProvider for DnSimple {
 
-    async  fn get_v4_record(&self, host: &str) -> Result<Option<Ipv4Addr> > {
-        let rec: GetRecord = match self.get_record(host, RecordType::A).await? {
+    async  fn get_record(&self, rtype: RecordType, host: &str) -> Result<Option<Ipv4Addr> > {
+        let rec: GetRecord = match self.get_upstream_record(rtype, host).await? {
             Some(recs) => recs,
             None => return Ok(None)
         };
@@ -128,7 +128,7 @@ impl DnsProvider for DnSimple {
         Ok(Some(rec.content))
     }
 
-    async  fn create_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
+    async  fn create_record(&self, rtype: RecordType, host: &str, ip: &Ipv4Addr) -> Result<()> {
         let acc_id = self.get_id().await?;
 
         let url = format!("{}/{acc_id}/zones/{}/records", self.endpoint, self.config.domain)
@@ -138,7 +138,7 @@ impl DnsProvider for DnSimple {
 
         let rec = CreateRecord {
             name: host.to_string(),
-            rtype: RecordType::A,
+            rtype,
             content: ip.to_string(),
             ttl: 300,
         };
@@ -151,8 +151,8 @@ impl DnsProvider for DnSimple {
         Ok(())
     }
 
-    async  fn update_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
-        let rec = match self.get_record(host, RecordType::A).await? {
+    async  fn update_record(&self, rtype: RecordType, host: &str, ip: &Ipv4Addr) -> Result<()> {
+        let rec = match self.get_upstream_record(rtype, host).await? {
             Some(rec) => rec,
             None => {
                 warn!("DELETE: Record {host} doesn't exist");
@@ -181,8 +181,8 @@ impl DnsProvider for DnSimple {
         Ok(())
     }
 
-    async  fn delete_v4_record(&self, host: &str) -> Result<()> {
-        let rec = match self.get_record(host, RecordType::A).await? {
+    async  fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()> {
+        let rec = match self.get_upstream_record(rtype, host).await? {
             Some(rec) => rec,
             None => {
                 warn!("DELETE: Record {host} doesn't exist");
@@ -245,21 +245,21 @@ mod tests {
 
         // Create
         let ip = "1.1.1.1".parse()?;
-        client.create_v4_record(&host, &ip).await?;
-        let cur = client.get_v4_record(&host).await?;
+        client.create_record(RecordType::A, &host, &ip).await?;
+        let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
 
 
         // Update
         let ip = "2.2.2.2".parse()?;
-        client.update_v4_record(&host, &ip).await?;
-        let cur = client.get_v4_record(&host).await?;
+        client.update_record(RecordType::A, &host, &ip).await?;
+        let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
 
 
         // Delete
-        client.delete_v4_record(&host).await?;
-        let del = client.get_v4_record(&host).await?;
+        client.delete_record(RecordType::A, &host).await?;
+        let del = client.get_record(RecordType::A, &host).await?;
         assert!(del.is_none());
 
         Ok(())

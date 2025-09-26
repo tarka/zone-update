@@ -6,7 +6,7 @@ use std::net::Ipv4Addr;
 use tracing::{error, info, warn};
 
 use types::{Record, RecordUpdate};
-use crate::{errors::{Error, Result}, http, Config, DnsProvider};
+use crate::{errors::{Error, Result}, http, Config, DnsProvider, RecordType};
 
 const API_BASE: &str = "https://api.gandi.net/v5/livedns";
 
@@ -41,7 +41,7 @@ impl Gandi {
 
 impl DnsProvider for Gandi {
 
-    async fn get_v4_record(&self, host: &str) -> Result<Option<Ipv4Addr>> {
+    async fn get_record(&self, rtype: RecordType, host: &str) -> Result<Option<Ipv4Addr>> {
         let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
@@ -67,12 +67,12 @@ impl DnsProvider for Gandi {
 
     }
 
-    async  fn create_v4_record(&self, host: &str,ip: &Ipv4Addr) -> Result<()> {
+    async  fn create_record(&self, rtype: RecordType, host: &str,ip: &Ipv4Addr) -> Result<()> {
         // PUT works for both operations
-        self.update_v4_record(host, ip).await
+        self.update_record(rtype, host, ip).await
     }
 
-    async fn update_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()> {
+    async fn update_record(&self, rtype: RecordType, host: &str, ip: &Ipv4Addr) -> Result<()> {
         let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
@@ -90,7 +90,7 @@ impl DnsProvider for Gandi {
         Ok(())
     }
 
-    async  fn delete_v4_record(&self,host: &str) -> Result<()> {
+    async  fn delete_record(&self,rtype: RecordType, host: &str) -> Result<()> {
         let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
@@ -145,21 +145,21 @@ mod tests {
 
         // Create
         let ip = "1.1.1.1".parse()?;
-        client.create_v4_record(&host, &ip).await?;
-        let cur = client.get_v4_record(&host).await?;
+        client.create_record(RecordType::A, &host, &ip).await?;
+        let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
 
 
         // Update
         let ip = "2.2.2.2".parse()?;
-        client.update_v4_record(&host, &ip).await?;
-        let cur = client.get_v4_record(&host).await?;
+        client.update_record(RecordType::A, &host, &ip).await?;
+        let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
 
 
         // Delete
-        client.delete_v4_record(&host).await?;
-        let del = client.get_v4_record(&host).await?;
+        client.delete_record(RecordType::A, &host).await?;
+        let del = client.get_record(RecordType::A, &host).await?;
         assert!(del.is_none());
 
         Ok(())

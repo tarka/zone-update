@@ -45,8 +45,8 @@ impl Display for RecordType {
 #[allow(unused)]
 #[trait_variant::make(Send)]
 pub trait DnsProvider {
-    async fn get_v4_record(&self, host: &str) -> Result<Option<Ipv4Addr>>;
-    async fn create_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()>;
-    async fn update_v4_record(&self, host: &str, ip: &Ipv4Addr) -> Result<()>;
-    async fn delete_v4_record(&self, host: &str) -> Result<()>;
+    async fn get_record(&self, rtype: RecordType, host: &str) -> Result<Option<Ipv4Addr>>;
+    async fn create_record(&self, rtype: RecordType, host: &str, ip: &Ipv4Addr) -> Result<()>;
+    async fn update_record(&self, rtype: RecordType, host: &str, ip: &Ipv4Addr) -> Result<()>;
+    async fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>;
 }
