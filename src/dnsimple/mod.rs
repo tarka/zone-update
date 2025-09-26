@@ -309,7 +309,7 @@ mod tests {
 
 
     #[cfg(feature = "smol")]
-    mod smol {
+    mod smol_tests {
         use super::*;
         use macro_rules_attribute::apply;
         use smol_macros::test;
@@ -334,7 +334,7 @@ mod tests {
     }
 
     #[cfg(feature = "tokio")]
-    mod smol {
+    mod tokio_tests {
         use super::*;
 
         #[tokio::test]

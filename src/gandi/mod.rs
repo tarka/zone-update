@@ -46,7 +46,7 @@ impl DnsProvider for Gandi {
     where
         T: DeserializeOwned
     {
-        let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
+        let url = format!("{API_BASE}/domains/{}/records/{host}/{rtype}", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
         let auth = self.auth.get_header();
@@ -83,7 +83,7 @@ impl DnsProvider for Gandi {
     where
         T: Serialize + DeserializeOwned + Display + Clone + Send + Sync
     {
-        let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
+        let url = format!("{API_BASE}/domains/{}/records/{host}/{rtype}", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
         let auth = self.auth.get_header();
@@ -100,8 +100,8 @@ impl DnsProvider for Gandi {
         Ok(())
     }
 
-    async  fn delete_record(&self,rtype: RecordType, host: &str) -> Result<()> {
-        let url = format!("{API_BASE}/domains/{}/records/{host}/A", self.config.domain)
+    async  fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()> {
+        let url = format!("{API_BASE}/domains/{}/records/{host}/{rtype}", self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
         let auth = self.auth.get_header();
@@ -125,7 +125,6 @@ mod tests {
     use std::{env, net::Ipv4Addr};
     use macro_rules_attribute::apply;
     use random_string::charsets::ALPHANUMERIC;
-    use smol_macros::test;
     use tracing_test::traced_test;
 
     fn get_client() -> Gandi {
@@ -206,7 +205,7 @@ mod tests {
 
 
     #[cfg(feature = "smol")]
-    mod smol {
+    mod smol_tests {
         use super::*;
         use macro_rules_attribute::apply;
         use smol_macros::test;
@@ -229,7 +228,7 @@ mod tests {
     }
 
     #[cfg(feature = "tokio")]
-    mod smol {
+    mod tokio_tests {
         use super::*;
 
         #[tokio::test]
