@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/tarka/zone-edit/compare/v0.2.3...v0.3.0) - 2025-09-26
+
+### Other
+
+- Add helper functions for common operations.
+- Fix gandi record type.
+- Add support and testing for TXT types.
+- Move API entirely to generics
+- Start moving to multiple record types
+- Use async OnceCell/Arc for root store to save regenerating it.
+- Add a note about using pollster+thread for fallback.
+- Minor import cleanups.
+- Fix base URL.
+- Fix CI badge.
+
 ## [0.2.3](https://github.com/tarka/zone-edit/compare/v0.2.2...v0.2.3) - 2025-09-24
 
 ### Other

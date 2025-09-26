@@ -1726,7 +1726,7 @@ checksum = "ced3678a2879b30306d323f4542626697a464a97c0a07c9aebf7ebca65cd4dde"
 
 [[package]]
 name = "zone-edit"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "async-lock",
  "cfg-if",
