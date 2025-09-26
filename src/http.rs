@@ -41,6 +41,12 @@ fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) {
             tokio::spawn(future);
         }
     }
+
+    // NOTE: This also works, and could be a fallback for other runtimes?
+    //
+    // let _join = thread::spawn(|| {
+    //     pollster::block_on(future);
+    // });
 }
 
 
