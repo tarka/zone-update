@@ -1,6 +1,5 @@
-use std::net::Ipv4Addr;
 
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 // See https://api.gandi.net/docs/livedns/
 

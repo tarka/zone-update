@@ -111,14 +111,14 @@ fn strip_quotes(record: &str) -> String {
     let chars = record.chars();
     let mut check = chars.clone();
 
-    let first = check.nth(0);
+    let first = check.next();
     let last = check.last();
 
     if let Some('"') = first && let Some('"') = last {
-        let stripped = chars.skip(1)
+        chars.skip(1)
             .take(record.len() - 2)
-            .collect();
-        stripped
+            .collect()
+
     } else {
         warn!("Double quotes not found in record string, using whole record.");
         record.to_string()

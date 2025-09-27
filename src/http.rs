@@ -49,7 +49,7 @@ fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) {
 }
 
 
-const ROOT_STORE: OnceCell<Arc<RootCertStore>> = OnceCell::new();
+static ROOT_STORE: OnceCell<Arc<RootCertStore>> = OnceCell::new();
 
 async fn load_system_certs() -> Arc<RootCertStore> {
     ROOT_STORE.get_or_init(|| async {

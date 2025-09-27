@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 mod types;
 
 use std::{fmt::Display};
@@ -123,7 +121,6 @@ mod tests {
 
     use super::*;
     use std::{env, net::Ipv4Addr};
-    use macro_rules_attribute::apply;
     use random_string::charsets::ALPHANUMERIC;
     use tracing_test::traced_test;
 
@@ -222,7 +219,7 @@ mod tests {
         #[traced_test]
         #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
         async fn smol_create_update_txt() -> Result<()> {
-            test_create_update_delete_ipv4().await?;
+            test_create_update_delete_txt().await?;
             Ok(())
         }
     }
