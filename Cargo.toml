@@ -59,3 +59,4 @@ tracing-test = "0.2.5"
 
 [[example]]
 name = "acme-dns"
+required-features = ["gandi"]
