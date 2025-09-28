@@ -37,6 +37,9 @@ pub enum Error {
 
     #[error(transparent)]
     JsonError(#[from] serde_json::Error),
+
+    #[error(transparent)]
+    RustlsError(#[from] rustls::Error),
 }
 
 pub type Result<T> = result::Result<T, Error>;

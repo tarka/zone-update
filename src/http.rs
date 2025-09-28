@@ -8,7 +8,7 @@ use http_body_util::BodyExt;
 use hyper::{
     body::{Buf, Incoming}, client::conn::http1, header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HOST}, Method, Response, StatusCode, Uri
 };
-use rustls::{ClientConfig, RootCertStore, pki_types::ServerName};
+use rustls::{crypto::aws_lc_rs, pki_types::ServerName, ClientConfig, RootCertStore};
 use serde::{de::DeserializeOwned, Serialize};
 use tracing::{error, warn};
 
@@ -88,7 +88,9 @@ where
 
     let cert_store = load_system_certs();
     let tlsdomain = ServerName::try_from(host)?;
-    let tlsconf = ClientConfig::builder()
+    let crypto = aws_lc_rs::default_provider();
+    let tlsconf = ClientConfig::builder_with_provider(crypto.into())
+        .with_safe_default_protocol_versions()?
         .with_root_certificates(cert_store.await)
         .with_no_client_auth();
     let tlsconn = TlsConnector::from(Arc::new(tlsconf));
