@@ -2,6 +2,7 @@ use std::{env, time::Duration};
 
 use acme_micro::{create_p384_key, Certificate, Directory, DirectoryUrl};
 use anyhow::Result;
+use random_string::charsets::ALPHANUMERIC;
 use zone_edit::{gandi::{Auth, Gandi}, Config, DnsProvider};
 
 
@@ -31,19 +32,23 @@ async fn get_cert() -> Result<Certificate> {
 
     let dns_client = get_dns_client()?;
 
+    let hostname = random_string::generate(16, ALPHANUMERIC);
+    let domain = env::var("EXAMPLE_DOMAIN").unwrap();
+    let email = format!("mailto:{}", env::var("EXAMPLE_EMAIL").unwrap());
+
     // The following is based on the acme-micro example. In practice
-    // most of the operations should be wrapped in `blocking()` (as
-    // acme-micro uses the synchronous ureq crate).
+    // most of the operations should be wrapped in `blocking()` as
+    // acme-micro uses the synchronous ureq crate, but it doesn't
+    // matter here.
 
     let dir = Directory::from_url(DirectoryUrl::LetsEncryptStaging)?;
-    let contact = vec!["mailto:ssmith@haltcondition.net".to_string()];
 
     println!("Registering account");
-    let acc = dir.register_account(contact.clone())?;
+    let acc = dir.register_account(vec![email])?;
 
     println!("Place order");
-    let mut ord_new = acc.new_order("test.haltcondition.net", &[])?;
-    let host = format!("_acme-challenge.test");
+    let mut ord_new = acc.new_order(&format!("{hostname}.{domain}"), &[])?;
+    let txt_name = format!("_acme-challenge.{hostname}");
 
     let ord_csr = loop {
 
@@ -55,17 +60,15 @@ async fn get_cert() -> Result<Certificate> {
 
         let chall = auths[0].dns_challenge().unwrap();
 
-        // The token is the filename.
         let token = chall.dns_proof()?;
         println!("Challenge string is {token}");
 
-        println!("Creating challenge TXT record");
-        dns_client.create_txt_record(&host, &token).await?;
+        println!("Creating challenge TXT record {txt_name}");
+        dns_client.create_txt_record(&txt_name, &token).await?;
 
         println!("Validating");
         chall.validate(Duration::from_millis(5000))?;
 
-        // Update the state against the ACME API.
         ord_new.refresh()?;
     };
 
@@ -74,11 +77,11 @@ async fn get_cert() -> Result<Certificate> {
 
     // Finally download the certificate.
     let cert = ord_cert.download_cert()?;
-    println!("{cert:?}");
+    println!("{}", cert.certificate());
 
     println!("Deleting acme challenge");
 
-    dns_client.delete_txt_record(&host).await?;
+    dns_client.delete_txt_record(&txt_name).await?;
 
     println!("Done");
 
