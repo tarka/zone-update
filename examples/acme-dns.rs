@@ -77,7 +77,10 @@ async fn get_cert() -> Result<Certificate> {
 
     // Finally download the certificate.
     let cert = ord_cert.download_cert()?;
+    println!("======================= Cert ===============================\n");
     println!("{}", cert.certificate());
+    println!("====================== Private =============================\n");
+    println!("{}", cert.private_key());
 
     println!("Deleting acme challenge");
 
