@@ -7,7 +7,7 @@ use zone_edit::{gandi::{Auth, Gandi}, Config, DnsProvider};
 
 
 fn get_dns_client() -> Result<impl DnsProvider> {
-
+    // Gandi supports 2 types of API key
     let auth = if let Some(key) = env::var("GANDI_APIKEY").ok() {
         Auth::ApiKey(key)
     } else if let Some(key) = env::var("GANDI_PATKEY").ok() {
