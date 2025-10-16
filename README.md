@@ -16,6 +16,8 @@ supports the following DNS providers:
 * Gandi LiveDNS API
 * Dnsimple
 
+See the [DNS providers matrix](docs/PROVIDERS.md) for more details.
+
 The library is async and supports both `smol` and `tokio`.
 
 ## Installation
