@@ -56,7 +56,7 @@ async fn update_gandi_record() -> Result<()> {
 
 ## DNS Provider Matrix
 
-See [docs/PROVIDERS.md].
+See [PROVIDERS.md](docs/PROVIDERS.md).
 
 
 ## License
