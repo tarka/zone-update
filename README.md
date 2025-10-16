@@ -10,15 +10,18 @@ A minimal Rust library for updating DNS records with various DNS providers.
 ## Overview
 
 Zone Edit is a lightweight library that provides a simple interface for
-programmatically managing DNS records through provider APIs. Currently, it
-supports the following DNS providers:
+programmatically managing DNS records through provider APIs.
+The library is async and supports both `smol` and `tokio`.
+
+### Supported DNS providers
+
+Currently, Zone Edit supports the following DNS providers:
 
 * Gandi LiveDNS API
 * Dnsimple
 
 See the [DNS providers matrix](docs/PROVIDERS.md) for more details.
 
-The library is async and supports both `smol` and `tokio`.
 
 ## Installation
 
@@ -56,10 +59,7 @@ async fn update_gandi_record() -> Result<()> {
 }
 ```
 
-## DNS Provider Matrix
-
-See [PROVIDERS.md](docs/PROVIDERS.md).
-
+See the `examples` directory for other use-cases.
 
 ## License
 
