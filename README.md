@@ -57,12 +57,12 @@ async fn update_gandi_record() -> Result<()> {
 ## DNS Provider Matrix
 
 | Provider     | Supported? | Sandbox? | Author   | Maintainer | Notes |
-| ---          | ---        | ---      | ---      | ---        | --- |
-| Cloudflare   | (x)        | (/)      |          |            | |
-| DnSimple     | (/)        | (/)      | @tarka   | @tarka     | |
-| Gandi        | (/)        | (x)      | @tarka   | @tarka     | Has sandbox but is not usable in practice due to inability to create test domains? |
-| Namecheap    | (x)        | (?)      |          |            | |
-| Porkbun      | (x)        | (x)      |          |            | |
+| ---          | :---:      | :---:    | ---      | ---        | --- |
+| Cloudflare   | ❌         | ✅       |          |            | |
+| DnSimple     | ✅         | ✅       | @tarka   | @tarka     | |
+| Gandi        | ✅         | ‼️       | @tarka   | @tarka     | Has sandbox but is not usable in practice due to inability to create test domains? |
+| Namecheap    | ❌         | ❔       |          |            | |
+| Porkbun      | ❌         | ❌       |          |            | |
 
 
 ## License
