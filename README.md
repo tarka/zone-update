@@ -60,7 +60,7 @@ async fn update_gandi_record() -> Result<()> {
 | ---          | :---:      | :---:    | ---      | ---        | --- |
 | Cloudflare   | ❌         | ✅       |          |            | |
 | DnSimple     | ✅         | ✅       | @tarka   | @tarka     | |
-| Gandi        | ✅         | ‼️       | @tarka   | @tarka     | Has sandbox but is not usable in practice due to inability to create test domains? |
+| Gandi        | ✅         | ‼️       | @tarka   | @tarka     | Has a sandbox but is not usable in practice due to inability to create test domains? |
 | Namecheap    | ❌         | ❔       |          |            | |
 | Porkbun      | ❌         | ❌       |          |            | |
 
