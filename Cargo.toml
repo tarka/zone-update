@@ -34,17 +34,19 @@ tokio-rustls = { version = "0.26.3", optional = true }
 
 [features]
 default = ["smol", "all-providers"]
-all-providers = ["gandi", "dnsimple"]
+all-providers = ["dnsmadeeasy", "gandi", "dnsimple"]
 gandi = []
 dnsimple = []
+dnsmadeeasy = []
 smol = ["dep:smol", "dep:smol-hyper", "dep:futures-rustls"]
 tokio = ["dep:tokio", "dep:hyper-util", "dep:tokio-rustls"]
 
 # Test features
 # Disables http module tests that rely on external services
 test_offline = []
-test_gandi = []
-test_dnsimple = []
+test_gandi = ["gandi"]
+test_dnsimple = ["dnsimple"]
+test_dnsmadeeasy = ["dnsmadeeasy"]
 
 [dev-dependencies]
 acme-micro = "0.13.0"

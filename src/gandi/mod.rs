@@ -230,7 +230,7 @@ mod tests {
 
         #[tokio::test]
         #[traced_test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+        #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
         async fn tokio_create_update() -> Result<()> {
             test_create_update_delete_ipv4().await?;
             test_create_update_delete_txt().await?;
