@@ -6,7 +6,7 @@ entirely accurate. Corrections and updates welcome.
 | Provider                  | Supported? | Sandbox? | Author | Maintainer | Notes                                                                                |
 |---------------------------|:----------:|:--------:|--------|------------|--------------------------------------------------------------------------------------|
 | DnSimple                  | ✅         | ✅       | @tarka | @tarka     |                                                                                      |
-| Gandi                     | ✅         | ‼️       | @tarka | @tarka     | Has a sandbox but is unusable in practice due to inability to create test domains?   |
+| Gandi                     | ✅         | ‼️        | @tarka | @tarka     | Tested manually. (Has a sandbox but is unusable in practice?)                        |
 | DNSMadeEasy               | ❌         | ✅       |        |            |                                                                                      |
 | easyDNS.net               | ❌         | ✅       |        |            |                                                                                      |
 | Namecheap                 | ❌         | ✅       |        |            |                                                                                      |
