@@ -7,8 +7,9 @@ entirely accurate. Corrections and updates welcome.
 |---------------------------|:----------:|:--------:|--------|------------|--------------------------------------------------------------------------------------|
 | DnSimple                  | ✅         | ✅       | @tarka | @tarka     |                                                                                      |
 | Gandi                     | ✅         | ‼️       | @tarka | @tarka     | Has a sandbox but is unusable in practice due to inability to create test domains?   |
-| Cloudflare                | ❌         | ✅       |        |            |                                                                                      |
-| Namecheap                 | ❌         | ❔       |        |            |                                                                                      |
+| DNSMadeEasy               | ❌         | ✅       |        |            |                                                                                      |
+| easyDNS.net               | ❌         | ✅       |        |            |                                                                                      |
+| Namecheap                 | ❌         | ✅       |        |            |                                                                                      |
 | Porkbun                   | ❌         | ❌       |        |            |                                                                                      |
 | 1984Hosting               | ❌         | ❔       |        |            |                                                                                      |
 | ACME                      | ❌         | ❔       |        |            |                                                                                      |
@@ -32,6 +33,7 @@ entirely accurate. Corrections and updates welcome.
 | Bunny                     | ❌         | ❔       |        |            |                                                                                      |
 | CloudDNS                  | ❌         | ❔       |        |            |                                                                                      |
 | ClouDNS.net               | ❌         | ❔       |        |            |                                                                                      |
+| Cloudflare                | ❌         | ❌       |        |            |                                                                                      |
 | ConoHa                    | ❌         | ❔       |        |            |                                                                                      |
 | Constellix                | ❌         | ❔       |        |            |                                                                                      |
 | cPanel                    | ❌         | ❔       |        |            |                                                                                      |
@@ -43,7 +45,6 @@ entirely accurate. Corrections and updates welcome.
 | DNS.Services              | ❌         | ❔       |        |            |                                                                                      |
 | DNSExit                   | ❌         | ❔       |        |            |                                                                                      |
 | dnsHome.de                | ❌         | ❔       |        |            |                                                                                      |
-| DNSMadeEasy               | ❌         | ❔       |        |            |                                                                                      |
 | DNSPod.com                | ❌         | ❔       |        |            |                                                                                      |
 | do.de                     | ❌         | ❔       |        |            |                                                                                      |
 | Domeneshop                | ❌         | ❔       |        |            |                                                                                      |
@@ -55,7 +56,6 @@ entirely accurate. Corrections and updates welcome.
 | dyndnsfree                | ❌         | ❔       |        |            |                                                                                      |
 | Dynu                      | ❌         | ❔       |        |            |                                                                                      |
 | dynv6                     | ❌         | ❔       |        |            |                                                                                      |
-| easyDNS.net               | ❌         | ❔       |        |            |                                                                                      |
 | Euserv.eu                 | ❌         | ❔       |        |            |                                                                                      |
 | Exoscale                  | ❌         | ❔       |        |            |                                                                                      |
 | fornex.com                | ❌         | ❔       |        |            |                                                                                      |
