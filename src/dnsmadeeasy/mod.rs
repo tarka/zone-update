@@ -1,10 +1,14 @@
 
+mod types;
+
 use std::fmt::Display;
 
 use serde::de::DeserializeOwned;
 use tracing::{error, info, warn};
 
 use crate::{
+    http,
+    dnsmadeeasy::types::Domain,
     errors::{Error, Result},
     Config,
     DnsProvider,
@@ -43,6 +47,32 @@ impl DnsMadeEasy {
             auth,
         }
     }
+
+    async fn get_domain<T>(&self) -> Result<Domain>
+    where
+        T: DeserializeOwned
+    {
+
+        let url = format!("{}/dns/managed/name?domainname={}", self.endpoint, self.config.domain)
+            .parse()
+            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
+        let domain = http::get::<Domain>(url, Some(self.auth.get_header())).await?
+            .ok_or(Error::ApiError("No accounts returned from upstream".to_string()))?;
+
+        Ok(domain)
+    }
+
+    // async fn get_upstream_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<GetRecord<T>>>
+    // where
+    //     T: DeserializeOwned
+    // {
+
+    //     let url = format!("{}/{acc_id}/zones/{}/records?name={host}&type={rtype}", self.endpoint, self.config.domain)
+    //         .parse()
+    //         .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
+
+    // }
+
 }
 
 
