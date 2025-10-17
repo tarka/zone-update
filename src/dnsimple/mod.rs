@@ -237,6 +237,7 @@ mod tests {
     use crate::strip_quotes;
 
     use super::*;
+    use crate::tests::*;
     use std::{env, net::Ipv4Addr};
     use random_string::charsets::ALPHANUMERIC;
     use tracing_test::traced_test;
@@ -261,88 +262,6 @@ mod tests {
         Ok(())
     }
 
-    // TODO: This is generic, we could move it up to top-level testing.
-    async fn test_create_update_delete_ipv4() -> Result<()> {
-        let client = get_client();
-
-        let host = random_string::generate(16, ALPHANUMERIC);
-
-        // Create
-        let ip: Ipv4Addr = "1.1.1.1".parse()?;
-        client.create_record(RecordType::A, &host, &ip).await?;
-        let cur = client.get_record(RecordType::A, &host).await?;
-        assert_eq!(Some(ip), cur);
-
-
-        // Update
-        let ip: Ipv4Addr = "2.2.2.2".parse()?;
-        client.update_record(RecordType::A, &host, &ip).await?;
-        let cur = client.get_record(RecordType::A, &host).await?;
-        assert_eq!(Some(ip), cur);
-
-
-        // Delete
-        client.delete_record(RecordType::A, &host).await?;
-        let del: Option<Ipv4Addr> = client.get_record(RecordType::A, &host).await?;
-        assert!(del.is_none());
-
-        Ok(())
-    }
-
-    async fn test_create_update_delete_txt() -> Result<()> {
-        let client = get_client();
-
-        let host = random_string::generate(16, ALPHANUMERIC);
-
-        // Create
-        let txt = "a text reference".to_string();
-        client.create_record(RecordType::TXT, &host, &txt).await?;
-        let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap()));
-
-
-        // Update
-        let txt = "another text reference".to_string();
-        client.update_record(RecordType::TXT, &host, &txt).await?;
-        let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap()));
-
-
-        // Delete
-        client.delete_record(RecordType::TXT, &host).await?;
-        let del: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-        assert!(del.is_none());
-
-        Ok(())
-    }
-
-    async fn test_create_update_delete_txt_default() -> Result<()> {
-        let client = get_client();
-
-        let host = random_string::generate(16, ALPHANUMERIC);
-
-        // Create
-        let txt = "a text reference".to_string();
-        client.create_txt_record(&host, &txt).await?;
-        let cur = client.get_txt_record(&host).await?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap()));
-
-
-        // Update
-        let txt = "another text reference".to_string();
-        client.update_txt_record(&host, &txt).await?;
-        let cur = client.get_txt_record(&host).await?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap()));
-
-
-        // Delete
-        client.delete_txt_record(&host).await?;
-        let del = client.get_txt_record(&host).await?;
-        assert!(del.is_none());
-
-        Ok(())
-    }
-
 
     #[cfg(feature = "smol")]
     mod smol_tests {
@@ -363,7 +282,7 @@ mod tests {
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn smol_create_update_v4() -> Result<()> {
-            test_create_update_delete_ipv4().await?;
+            test_create_update_delete_ipv4(get_client()).await?;
             Ok(())
         }
 
@@ -371,7 +290,7 @@ mod tests {
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn smol_create_update_txt() -> Result<()> {
-            test_create_update_delete_txt().await?;
+            test_create_update_delete_txt(get_client()).await?;
             Ok(())
         }
 
@@ -379,7 +298,7 @@ mod tests {
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn smol_create_update_default() -> Result<()> {
-            test_create_update_delete_txt_default().await?;
+            test_create_update_delete_txt_default(get_client()).await?;
             Ok(())
         }
     }
@@ -399,7 +318,7 @@ mod tests {
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn tokio_create_update() -> Result<()> {
-            test_create_update_delete_ipv4().await
+            test_create_update_delete_ipv4(get_client()).await
         }
     }
 
