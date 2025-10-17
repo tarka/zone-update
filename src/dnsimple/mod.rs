@@ -1,17 +1,26 @@
-// FIXME
-#![allow(unused)]
 
 mod types;
 
-use std::{fmt::Display, sync::Arc};
+use std::fmt::Display;
 use async_lock::Mutex;
-use cfg_if::cfg_if;
-use hyper::Uri;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::de::DeserializeOwned;
 use tracing::{error, info, warn};
 
 
-use crate::{dnsimple::types::{Accounts, CreateRecord, GetRecord, Records, UpdateRecord}, errors::{Error, Result}, http, Config, DnsProvider, RecordType};
+use crate::{
+    dnsimple::types::{
+        Accounts,
+        CreateRecord,
+        GetRecord,
+        Records,
+        UpdateRecord
+    },
+    errors::{Error, Result},
+    http,
+    Config,
+    DnsProvider,
+    RecordType
+};
 
 
 const API_BASE: &str = "https://api.dnsimple.com/v2";

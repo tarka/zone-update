@@ -60,3 +60,7 @@ tracing-test = "0.2.5"
 [[example]]
 name = "acme-dns01"
 required-features = ["gandi"]
+
+[lints.rust]
+# FIXME: For early dev, remove before public release
+dead_code = "allow"
