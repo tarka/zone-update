@@ -1,7 +1,6 @@
 mod http;
 pub mod errors;
 
-
 #[cfg(feature = "dnsimple")]
 pub mod dnsimple;
 #[cfg(feature = "gandi")]

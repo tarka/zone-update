@@ -48,7 +48,7 @@ impl DnsProvider for Gandi {
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
         let auth = self.auth.get_header();
-        let mut rec: Record<T> = match http::get(url, Some(auth)).await? {
+        let mut rec: Record<T> = match http::get(url, auth).await? {
             Some(rec) => rec,
             None => return Ok(None)
         };
@@ -94,7 +94,7 @@ impl DnsProvider for Gandi {
             info!("DRY-RUN: Would have sent PUT to {url}");
             return Ok(())
         }
-        http::put::<RecordUpdate<T>>(url, &update, Some(auth)).await?;
+        http::put::<RecordUpdate<T>>(url, &update, auth).await?;
         Ok(())
     }
 
@@ -108,7 +108,7 @@ impl DnsProvider for Gandi {
             info!("DRY-RUN: Would have sent DELETE to {url}");
             return Ok(())
         }
-        http::delete(url, Some(auth)).await?;
+        http::delete(url, auth).await?;
 
         Ok(())
     }
@@ -230,7 +230,7 @@ mod tests {
 
         #[tokio::test]
         #[traced_test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+        #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
         async fn tokio_create_update() -> Result<()> {
             test_create_update_delete_ipv4().await?;
             test_create_update_delete_txt().await?;

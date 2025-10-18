@@ -63,7 +63,7 @@ impl DnSimple {
         let uri = endpoint.parse()
             .map_err(|e| Error::UrlError(format!("Error: {endpoint} -> {e}")))?;
 
-        let accounts_p = http::get::<Accounts>(uri, Some(self.auth.get_header())).await?;
+        let accounts_p = http::get::<Accounts>(uri, self.auth.get_header()).await?;
 
         match accounts_p {
             Some(accounts) if accounts.accounts.len() == 1 => {
@@ -106,7 +106,7 @@ impl DnSimple {
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
 
         let auth = self.auth.get_header();
-        let mut recs: Records<T> = match http::get(url, Some(auth)).await? {
+        let mut recs: Records<T> = match http::get(url, auth).await? {
             Some(rec) => rec,
             None => return Ok(None)
         };
@@ -165,7 +165,7 @@ impl DnsProvider for DnSimple {
             info!("DRY-RUN: Would have sent {rec:?} to {url}");
             return Ok(())
         }
-        http::post::<CreateRecord>(url, &rec, Some(auth)).await?;
+        http::post::<CreateRecord>(url, &rec, auth).await?;
 
         Ok(())
     }
@@ -198,7 +198,7 @@ impl DnsProvider for DnSimple {
         }
 
         let auth = self.auth.get_header();
-        http::patch(url, &update, Some(auth)).await?;
+        http::patch(url, &update, auth).await?;
 
         Ok(())
     }
@@ -224,7 +224,7 @@ impl DnsProvider for DnSimple {
         }
 
         let auth = self.auth.get_header();
-        http::delete(url, Some(auth)).await?;
+        http::delete(url, auth).await?;
 
         Ok(())
     }
@@ -234,12 +234,9 @@ impl DnsProvider for DnSimple {
 
 #[cfg(test)]
 mod tests {
-    use crate::strip_quotes;
-
     use super::*;
     use crate::tests::*;
-    use std::{env, net::Ipv4Addr};
-    use random_string::charsets::ALPHANUMERIC;
+    use std::env;
     use tracing_test::traced_test;
 
     const TEST_API: &str = "https://api.sandbox.dnsimple.com/v2";
@@ -272,7 +269,7 @@ mod tests {
         #[apply(test!)]
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn smol_id_fetch() -> Result<()> {
+        async fn id_fetch() -> Result<()> {
             test_id_fetch().await?;
             Ok(())
         }
@@ -281,7 +278,7 @@ mod tests {
         #[apply(test!)]
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn smol_create_update_v4() -> Result<()> {
+        async fn create_update_v4() -> Result<()> {
             test_create_update_delete_ipv4(get_client()).await?;
             Ok(())
         }
@@ -289,7 +286,7 @@ mod tests {
         #[apply(test!)]
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn smol_create_update_txt() -> Result<()> {
+        async fn create_update_txt() -> Result<()> {
             test_create_update_delete_txt(get_client()).await?;
             Ok(())
         }
@@ -297,7 +294,7 @@ mod tests {
         #[apply(test!)]
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn smol_create_update_default() -> Result<()> {
+        async fn create_update_default() -> Result<()> {
             test_create_update_delete_txt_default(get_client()).await?;
             Ok(())
         }
@@ -307,19 +304,40 @@ mod tests {
     mod tokio_tests {
         use super::*;
 
+
         #[tokio::test]
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn tokio_id_fetch() -> Result<()> {
-            test_id_fetch().await
+        async fn id_fetch() -> Result<()> {
+            test_id_fetch().await?;
+            Ok(())
+        }
+
+
+        #[tokio::test]
+        #[traced_test]
+        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+        async fn create_update_v4() -> Result<()> {
+            test_create_update_delete_ipv4(get_client()).await?;
+            Ok(())
         }
 
         #[tokio::test]
         #[traced_test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn tokio_create_update() -> Result<()> {
-            test_create_update_delete_ipv4(get_client()).await
+        async fn create_update_txt() -> Result<()> {
+            test_create_update_delete_txt(get_client()).await?;
+            Ok(())
         }
+
+        #[tokio::test]
+        #[traced_test]
+        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+        async fn create_update_default() -> Result<()> {
+            test_create_update_delete_txt_default(get_client()).await?;
+            Ok(())
+        }
+
     }
 
 

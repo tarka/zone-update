@@ -9,7 +9,7 @@ edition = "2024"
 [dependencies]
 async-lock = "3.4.1"
 cfg-if = "1.0.3"
-chrono = { version = "0.4.42", features = ["serde"], default-features = false }
+chrono = { version = "0.4.42", features = ["now", "serde"], default-features = false }
 http = "1.3.1"
 http-body-util = "0.1.3"
 hyper = { version = "1.7.0", default-features = false, features = ["client", "http1", "http2"] }
@@ -17,7 +17,6 @@ rustls = { version = "0.23.32", features = ["aws-lc-rs"] }
 serde = { version = "1.0.226", features = ["derive"] }
 serde_json = "1.0.145"
 thiserror = "2.0.16"
-tracing = "0.1.41"
 tracing-log = "0.2.0"
 trait-variant = "0.1.2"
 webpki-roots = "1.0.2"
@@ -31,6 +30,10 @@ smol-hyper = { version = "0.1.1", optional = true }
 hyper-util = { version = "0.1.17", features = ["tokio"], optional = true }
 tokio = { version = "1.47.1", features = ["rt", "test-util", "net", "full"], optional = true }
 tokio-rustls = { version = "0.26.3", optional = true }
+sha1 = "0.10.6"
+hex = "0.4.3"
+tracing-test = "0.2.5"
+tracing = "0.1.41"
 
 [features]
 default = ["smol", "all-providers"]
@@ -43,8 +46,8 @@ tokio = ["dep:tokio", "dep:hyper-util", "dep:tokio-rustls"]
 # Test features
 # Disables http module tests that rely on external services
 test_offline = []
-test_gandi = []
-test_dnsimple = []
+test_gandi = ["gandi"]
+test_dnsimple = ["dnsimple"]
 
 [dev-dependencies]
 acme-micro = "0.13.0"
@@ -64,3 +67,4 @@ required-features = ["gandi"]
 [lints.rust]
 # FIXME: For early dev, remove before public release
 dead_code = "allow"
+unused = "allow"
