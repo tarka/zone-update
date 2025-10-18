@@ -3,12 +3,23 @@ use std::{io::Read, sync::Arc};
 
 use async_lock::OnceCell;
 use cfg_if::cfg_if;
-use http::request::Builder;
+use http::{request::Builder, HeaderName, HeaderValue};
 use http_body_util::BodyExt;
 use hyper::{
-    body::{Buf, Incoming}, client::conn::http1, header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HOST}, Method, Response, StatusCode, Uri
+    body::{Buf, Incoming},
+    client::conn::http1,
+    header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HOST},
+    Method,
+    Response,
+    StatusCode,
+    Uri
 };
-use rustls::{crypto::aws_lc_rs, pki_types::ServerName, ClientConfig, RootCertStore};
+use rustls::{
+    crypto::aws_lc_rs,
+    pki_types::ServerName,
+    ClientConfig,
+    RootCertStore
+};
 use serde::{de::DeserializeOwned, Serialize};
 use tracing::{error, warn};
 
@@ -60,7 +71,7 @@ async fn load_system_certs() -> Arc<RootCertStore> {
 }
 
 
-async fn request<In>(method: Method, uri: &Uri, obj: Option<In>, auth: Option<String>) -> Result<Response<Incoming>>
+async fn request<In>(method: Method, uri: &Uri, obj: Option<In>, headers: Vec<(HeaderName, HeaderValue)>) -> Result<Response<Incoming>>
 where
     In: Serialize,
 {
@@ -73,8 +84,10 @@ where
         .uri(uri)
         .header(HOST, &host)
         .header(ACCEPT, "application/json");
-    if let Some(auth) = auth {
-        rb = rb.header(AUTHORIZATION, auth);
+    let rheaders = rb.headers_mut()
+        .ok_or(Error::ApiError("Failed to retrieve HTTP builder headers".to_string()))?;
+    for (k, v) in headers {
+        rheaders.insert(k, v);
     }
     let req = if obj.is_some() {
         rb = rb.header(CONTENT_TYPE, "application/json");
@@ -122,11 +135,25 @@ async fn from_error(res: Response<Incoming>) -> Result<Error> {
 }
 
 
-pub async fn get<T>(uri: Uri, auth: Option<String>) -> Result<Option<T>>
+fn auth_header(auth: String) -> Result<Vec<(HeaderName, HeaderValue)>> {
+    let val = HeaderValue::from_str(&auth)
+        .map_err(|e| Error::HttpError(e.to_string()))?;
+    Ok(vec![(AUTHORIZATION, val)])
+}
+
+
+pub(crate) async fn get<T>(uri: Uri, auth: Option<String>) -> Result<Option<T>>
 where
     T: DeserializeOwned,
 {
-    let res = request(Method::GET, &uri, None::<&str>, auth).await?;
+    get_with_headers(uri, auth_header(auth.unwrap())?).await
+}
+
+pub(crate) async fn get_with_headers<T>(uri: Uri, headers: Vec<(HeaderName, HeaderValue)>) -> Result<Option<T>>
+where
+    T: DeserializeOwned,
+{
+    let res = request(Method::GET, &uri, None::<&str>, headers).await?;
 
     match res.status() {
         StatusCode::OK => {
@@ -144,14 +171,22 @@ where
             Err(from_error(res).await?)
         }
     }
+
 }
 
 
-pub async fn put<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
+pub(crate) async fn put<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
 where
     T: Serialize,
 {
-    let res = request(Method::PUT, &uri, Some(obj), auth).await?;
+    put_with_headers(uri, obj, auth_header(auth.unwrap())?).await
+}
+
+pub(crate) async fn put_with_headers<T>(uri: Uri, obj: &T, headers: Vec<(HeaderName, HeaderValue)>) -> Result<()>
+where
+    T: Serialize,
+{
+    let res = request(Method::PUT, &uri, Some(obj), headers).await?;
 
     if !res.status().is_success() {
         return Err(from_error(res).await?);
@@ -161,11 +196,18 @@ where
 }
 
 
-pub async fn post<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
+pub(crate) async fn post<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
 where
     T: Serialize,
 {
-    let res = request(Method::POST, &uri, Some(obj), auth).await?;
+    post_with_headers(uri, obj, auth_header(auth.unwrap())?).await
+}
+
+pub(crate) async fn post_with_headers<T>(uri: Uri, obj: &T, headers: Vec<(HeaderName, HeaderValue)>) -> Result<()>
+where
+    T: Serialize,
+{
+    let res = request(Method::POST, &uri, Some(obj), headers).await?;
 
     if !res.status().is_success() {
         return Err(from_error(res).await?);
@@ -174,11 +216,19 @@ where
     Ok(())
 }
 
-pub async fn patch<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
+
+pub(crate) async fn patch<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
 where
     T: Serialize,
 {
-    let res = request(Method::PATCH, &uri, Some(obj), auth).await?;
+    patch_with_headers(uri, obj, auth_header(auth.unwrap())?).await
+}
+
+pub(crate) async fn patch_with_headers<T>(uri: Uri, obj: &T, headers: Vec<(HeaderName, HeaderValue)>) -> Result<()>
+where
+    T: Serialize,
+{
+    let res = request(Method::PATCH, &uri, Some(obj), headers).await?;
 
     if !res.status().is_success() {
         return Err(from_error(res).await?);
@@ -187,9 +237,15 @@ where
     Ok(())
 }
 
-pub async fn delete(uri: Uri, auth: Option<String>) -> Result<()>
+
+pub(crate) async fn delete(uri: Uri, auth: Option<String>) -> Result<()>
 {
-    let res = request(Method::DELETE, &uri, None::<&str>, auth).await?;
+    delete_with_headers(uri, auth_header(auth.unwrap())?).await
+}
+
+pub(crate) async fn delete_with_headers(uri: Uri, headers: Vec<(HeaderName, HeaderValue)>) -> Result<()>
+{
+    let res = request(Method::DELETE, &uri, None::<&str>, headers).await?;
 
     if !res.status().is_success() {
         return Err(from_error(res).await?);
@@ -233,14 +289,14 @@ mod tests {
 
 
     async fn test_get() -> Result<()> {
-        let test = get::<TestStatus>(uri("/test"), None).await?.unwrap();
+        let test = get::<TestStatus>(uri("/test"), Some("auth".to_string())).await?.unwrap();
         assert_eq!(Status::Ok, test.status);
         assert_eq!("GET", test.method);
         Ok(())
     }
 
     async fn test_get_418() -> Result<()> {
-        let result = get::<TestStatus>(uri("/http/418"), None).await;
+        let result = get::<TestStatus>(uri("/http/418"), Some("auth".to_string())).await;
         if let Err(Error::HttpError(msg)) = result {
             assert!(msg.contains("I'm a teapot"))
         } else {
@@ -252,13 +308,13 @@ mod tests {
 
     async fn test_put() -> Result<()> {
         let data = TestData { payload: "test".to_string() };
-        put::<TestData>(uri("/test"), &data, None).await?;
+        put::<TestData>(uri("/test"), &data, Some("auth".to_string())).await?;
         Ok(())
     }
 
     async fn test_post() -> Result<()> {
         let data = TestData { payload: "test".to_string() };
-        post::<TestData>(uri("/test"), &data, None).await?;
+        post::<TestData>(uri("/test"), &data, Some("auth".to_string())).await?;
         Ok(())
     }
 
