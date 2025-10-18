@@ -63,7 +63,7 @@ impl DnSimple {
         let uri = endpoint.parse()
             .map_err(|e| Error::UrlError(format!("Error: {endpoint} -> {e}")))?;
 
-        let accounts_p = http::get::<Accounts>(uri, Some(self.auth.get_header())).await?;
+        let accounts_p = http::get::<Accounts>(uri, self.auth.get_header()).await?;
 
         match accounts_p {
             Some(accounts) if accounts.accounts.len() == 1 => {
@@ -106,7 +106,7 @@ impl DnSimple {
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
 
         let auth = self.auth.get_header();
-        let mut recs: Records<T> = match http::get(url, Some(auth)).await? {
+        let mut recs: Records<T> = match http::get(url, auth).await? {
             Some(rec) => rec,
             None => return Ok(None)
         };
@@ -165,7 +165,7 @@ impl DnsProvider for DnSimple {
             info!("DRY-RUN: Would have sent {rec:?} to {url}");
             return Ok(())
         }
-        http::post::<CreateRecord>(url, &rec, Some(auth)).await?;
+        http::post::<CreateRecord>(url, &rec, auth).await?;
 
         Ok(())
     }
@@ -198,7 +198,7 @@ impl DnsProvider for DnSimple {
         }
 
         let auth = self.auth.get_header();
-        http::patch(url, &update, Some(auth)).await?;
+        http::patch(url, &update, auth).await?;
 
         Ok(())
     }
@@ -224,7 +224,7 @@ impl DnsProvider for DnSimple {
         }
 
         let auth = self.auth.get_header();
-        http::delete(url, Some(auth)).await?;
+        http::delete(url, auth).await?;
 
         Ok(())
     }

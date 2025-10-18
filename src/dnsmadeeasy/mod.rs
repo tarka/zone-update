@@ -56,7 +56,7 @@ impl DnsMadeEasy {
         let url = format!("{}/dns/managed/name?domainname={}", self.endpoint, self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
-        let domain = http::get::<Domain>(url, Some(self.auth.get_header())).await?
+        let domain = http::get::<Domain>(url, self.auth.get_header()).await?
             .ok_or(Error::ApiError("No accounts returned from upstream".to_string()))?;
 
         Ok(domain)

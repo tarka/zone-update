@@ -142,11 +142,11 @@ fn auth_header(auth: String) -> Result<Vec<(HeaderName, HeaderValue)>> {
 }
 
 
-pub(crate) async fn get<T>(uri: Uri, auth: Option<String>) -> Result<Option<T>>
+pub(crate) async fn get<T>(uri: Uri, auth: String) -> Result<Option<T>>
 where
     T: DeserializeOwned,
 {
-    get_with_headers(uri, auth_header(auth.unwrap())?).await
+    get_with_headers(uri, auth_header(auth)?).await
 }
 
 pub(crate) async fn get_with_headers<T>(uri: Uri, headers: Vec<(HeaderName, HeaderValue)>) -> Result<Option<T>>
@@ -175,11 +175,11 @@ where
 }
 
 
-pub(crate) async fn put<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
+pub(crate) async fn put<T>(uri: Uri, obj: &T, auth: String) -> Result<()>
 where
     T: Serialize,
 {
-    put_with_headers(uri, obj, auth_header(auth.unwrap())?).await
+    put_with_headers(uri, obj, auth_header(auth)?).await
 }
 
 pub(crate) async fn put_with_headers<T>(uri: Uri, obj: &T, headers: Vec<(HeaderName, HeaderValue)>) -> Result<()>
@@ -196,11 +196,11 @@ where
 }
 
 
-pub(crate) async fn post<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
+pub(crate) async fn post<T>(uri: Uri, obj: &T, auth: String) -> Result<()>
 where
     T: Serialize,
 {
-    post_with_headers(uri, obj, auth_header(auth.unwrap())?).await
+    post_with_headers(uri, obj, auth_header(auth)?).await
 }
 
 pub(crate) async fn post_with_headers<T>(uri: Uri, obj: &T, headers: Vec<(HeaderName, HeaderValue)>) -> Result<()>
@@ -217,11 +217,11 @@ where
 }
 
 
-pub(crate) async fn patch<T>(uri: Uri, obj: &T, auth: Option<String>) -> Result<()>
+pub(crate) async fn patch<T>(uri: Uri, obj: &T, auth: String) -> Result<()>
 where
     T: Serialize,
 {
-    patch_with_headers(uri, obj, auth_header(auth.unwrap())?).await
+    patch_with_headers(uri, obj, auth_header(auth)?).await
 }
 
 pub(crate) async fn patch_with_headers<T>(uri: Uri, obj: &T, headers: Vec<(HeaderName, HeaderValue)>) -> Result<()>
@@ -238,9 +238,9 @@ where
 }
 
 
-pub(crate) async fn delete(uri: Uri, auth: Option<String>) -> Result<()>
+pub(crate) async fn delete(uri: Uri, auth: String) -> Result<()>
 {
-    delete_with_headers(uri, auth_header(auth.unwrap())?).await
+    delete_with_headers(uri, auth_header(auth)?).await
 }
 
 pub(crate) async fn delete_with_headers(uri: Uri, headers: Vec<(HeaderName, HeaderValue)>) -> Result<()>
@@ -289,14 +289,14 @@ mod tests {
 
 
     async fn test_get() -> Result<()> {
-        let test = get::<TestStatus>(uri("/test"), Some("auth".to_string())).await?.unwrap();
+        let test = get::<TestStatus>(uri("/test"), "auth".to_string()).await?.unwrap();
         assert_eq!(Status::Ok, test.status);
         assert_eq!("GET", test.method);
         Ok(())
     }
 
     async fn test_get_418() -> Result<()> {
-        let result = get::<TestStatus>(uri("/http/418"), Some("auth".to_string())).await;
+        let result = get::<TestStatus>(uri("/http/418"), "auth".to_string()).await;
         if let Err(Error::HttpError(msg)) = result {
             assert!(msg.contains("I'm a teapot"))
         } else {
@@ -308,13 +308,13 @@ mod tests {
 
     async fn test_put() -> Result<()> {
         let data = TestData { payload: "test".to_string() };
-        put::<TestData>(uri("/test"), &data, Some("auth".to_string())).await?;
+        put::<TestData>(uri("/test"), &data, "auth".to_string()).await?;
         Ok(())
     }
 
     async fn test_post() -> Result<()> {
         let data = TestData { payload: "test".to_string() };
-        post::<TestData>(uri("/test"), &data, Some("auth".to_string())).await?;
+        post::<TestData>(uri("/test"), &data, "auth".to_string()).await?;
         Ok(())
     }
 
