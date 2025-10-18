@@ -97,6 +97,7 @@ where
         rb.body("".to_string())?
     };
 
+
     let stream = TcpStream::connect((host.clone(), 443)).await?;
 
     let cert_store = load_system_certs();
@@ -108,6 +109,7 @@ where
         .with_no_client_auth();
     let tlsconn = TlsConnector::from(Arc::new(tlsconf));
     let tlsstream = tlsconn.connect(tlsdomain, stream).await?;
+    println!("tlsstream: {tlsstream:#?}");
 
     let (mut sender, conn) = http1::handshake(HyperIo::new(tlsstream)).await?;
 
@@ -153,7 +155,9 @@ pub(crate) async fn get_with_headers<T>(uri: Uri, headers: Vec<(HeaderName, Head
 where
     T: DeserializeOwned,
 {
-    let res = request(Method::GET, &uri, None::<&str>, headers).await?;
+    let res = request(Method::GET, &uri, None::<&str>, headers).await;
+    println!("RESP: {res:#?}");
+    let res = res?;
 
     match res.status() {
         StatusCode::OK => {

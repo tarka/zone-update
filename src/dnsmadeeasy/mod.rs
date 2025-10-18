@@ -1,9 +1,12 @@
 
 mod types;
 
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
+use chrono::Utc;
+use ::http::{HeaderName, HeaderValue};
 use serde::de::DeserializeOwned;
+use sha1::{Digest, Sha1};
 use tracing::{error, info, warn};
 
 use crate::{
@@ -23,9 +26,31 @@ pub struct Auth {
     secret: String,
 }
 
+// See https://api-docs.dnsmadeeasy.com/
+const KEY_HEADER: &str = "x-dnsme-apiKey";
+const SECRET_HEADER: &str = "x-dnsme-hmac";
+const TIME_HEADER: &str = "x-dnsme-requestDate";
+
+
 impl Auth {
-    fn get_header(&self) -> String {
-        format!("Bearer {}", self.key)
+    fn get_headers(&self) -> Result<Vec<(HeaderName, HeaderValue)>> {
+        let time = Utc::now()
+            .to_rfc2822();
+        println!("TIME: {time}");
+        let secret = {
+            let mut hash = Sha1::new();
+            hash.update(&self.secret);
+            hex::encode(hash.finalize())
+        };
+        println!("Secret: {secret}");
+
+        let headers = vec![
+            (HeaderName::from_str(KEY_HEADER)?, HeaderValue::from_str(&self.key)?),
+            (HeaderName::from_str(SECRET_HEADER)?, HeaderValue::from_str(&secret)?),
+            (HeaderName::from_str(TIME_HEADER)?, HeaderValue::from_str(&time)?),
+        ];
+
+        Ok(headers)
     }
 }
 
@@ -48,15 +73,13 @@ impl DnsMadeEasy {
         }
     }
 
-    async fn get_domain<T>(&self) -> Result<Domain>
-    where
-        T: DeserializeOwned
+    async fn get_domain(&self) -> Result<Domain>
     {
-
         let url = format!("{}/dns/managed/name?domainname={}", self.endpoint, self.config.domain)
             .parse()
             .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
-        let domain = http::get::<Domain>(url, self.auth.get_header()).await?
+        println!("URL: {url}");
+        let domain = http::get_with_headers::<Domain>(url, self.auth.get_headers()?).await?
             .ok_or(Error::ApiError("No accounts returned from upstream".to_string()))?;
 
         Ok(domain)
@@ -208,16 +231,26 @@ mod tests {
     }
 
 
-
     #[cfg(feature = "smol")]
     mod smol_tests {
         use super::*;
         use macro_rules_attribute::apply;
         use smol_macros::test;
 
+        #[apply(test!)]
+        #[test_log::test]
+        #[cfg_attr(not(feature = "test_dnsmadeeasy"), ignore = "Dnsmadeeasy API test")]
+        async fn test_get_domain() -> Result<()> {
+            let client = get_client();
+
+            let domain = client.get_domain().await?;
+            assert_eq!("testcondition.net".to_string(), domain.name);
+
+            Ok(())
+        }
 
         #[apply(test!)]
-        #[traced_test]
+        #[test_log::test]
         #[cfg_attr(not(feature = "test_dnsmadeeasy"), ignore = "Dnsmadeeasy API test")]
         async fn create_update_v4() -> Result<()> {
             test_create_update_delete_ipv4(get_client()).await?;
@@ -225,7 +258,7 @@ mod tests {
         }
 
         #[apply(test!)]
-        #[traced_test]
+        #[test_log::test]
         #[cfg_attr(not(feature = "test_dnsmadeeasy"), ignore = "Dnsmadeeasy API test")]
         async fn create_update_txt() -> Result<()> {
             test_create_update_delete_txt(get_client()).await?;
@@ -233,7 +266,7 @@ mod tests {
         }
 
         #[apply(test!)]
-        #[traced_test]
+        #[test_log::test]
         #[cfg_attr(not(feature = "test_dnsmadeeasy"), ignore = "Dnsmadeeasy API test")]
         async fn create_update_default() -> Result<()> {
             test_create_update_delete_txt_default(get_client()).await?;

@@ -3,6 +3,7 @@ use std::result;
 use rustls::pki_types::InvalidDnsNameError;
 use thiserror::Error;
 
+
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("API usage error: {0}")]
@@ -31,6 +32,12 @@ pub enum Error {
 
     #[error(transparent)]
     HyperHttpError(#[from] hyper::http::Error),
+
+    #[error(transparent)]
+    HeaderNameError(#[from] http::header::InvalidHeaderName),
+
+    #[error(transparent)]
+    HeaderValueError(#[from] http::header::InvalidHeaderValue),
 
     #[error(transparent)]
     IoError(#[from] std::io::Error),
