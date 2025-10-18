@@ -7,7 +7,6 @@ entirely accurate. Corrections and updates welcome.
 |---------------------------|:----------:|:--------:|--------|------------|--------------------------------------------------------------------------------------|
 | DnSimple                  | ✅         | ✅       | @tarka | @tarka     |                                                                                      |
 | Gandi                     | ✅         | ‼️        | @tarka | @tarka     | Tested manually. (Has a sandbox but is unusable in practice?)                        |
-| DNSMadeEasy               | ❌         | ✅       |        |            |                                                                                      |
 | easyDNS.net               | ❌         | ✅       |        |            |                                                                                      |
 | Namecheap                 | ❌         | ✅       |        |            |                                                                                      |
 | Porkbun                   | ❌         | ❌       |        |            |                                                                                      |
@@ -45,6 +44,7 @@ entirely accurate. Corrections and updates welcome.
 | DNS.Services              | ❌         | ❔       |        |            |                                                                                      |
 | DNSExit                   | ❌         | ❔       |        |            |                                                                                      |
 | dnsHome.de                | ❌         | ❔       |        |            |                                                                                      |
+| DNSMadeEasy               | ❌         | ‼️        |        |            | Sandbox uses legacy ciphers and fails with rustls.                                   |
 | DNSPod.com                | ❌         | ❔       |        |            |                                                                                      |
 | do.de                     | ❌         | ❔       |        |            |                                                                                      |
 | Domeneshop                | ❌         | ❔       |        |            |                                                                                      |
