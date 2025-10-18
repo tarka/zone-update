@@ -37,10 +37,9 @@ tracing = "0.1.41"
 
 [features]
 default = ["smol", "all-providers"]
-all-providers = ["dnsmadeeasy", "gandi", "dnsimple"]
+all-providers = ["gandi", "dnsimple"]
 gandi = []
 dnsimple = []
-dnsmadeeasy = []
 smol = ["dep:smol", "dep:smol-hyper", "dep:futures-rustls"]
 tokio = ["dep:tokio", "dep:hyper-util", "dep:tokio-rustls"]
 
@@ -49,7 +48,6 @@ tokio = ["dep:tokio", "dep:hyper-util", "dep:tokio-rustls"]
 test_offline = []
 test_gandi = ["gandi"]
 test_dnsimple = ["dnsimple"]
-test_dnsmadeeasy = ["dnsmadeeasy"]
 
 [dev-dependencies]
 acme-micro = "0.13.0"
