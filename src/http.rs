@@ -264,7 +264,6 @@ mod tests {
     use super::*;
     use crate::errors::Result;
     use serde::{Deserialize, Serialize};
-    use tracing_test::traced_test;
 
     // See https://dummyjson.com/docs
     fn uri(path: &str) -> Uri {
@@ -331,25 +330,25 @@ mod tests {
         use smol_macros::test;
 
         #[apply(test!)]
-        #[traced_test]
+        #[test_log::test]
         async fn smol_get() -> Result<()> {
             test_get().await
         }
 
         #[apply(test!)]
-        #[traced_test]
+        #[test_log::test]
         async fn smol_get_418() -> Result<()> {
             test_get_418().await
         }
 
         #[apply(test!)]
-        #[traced_test]
+        #[test_log::test]
         async fn smol_put() -> Result<()> {
             test_put().await
         }
 
         #[apply(test!)]
-        #[traced_test]
+        #[test_log::test]
         async fn smol_post() -> Result<()> {
             test_post().await
         }
@@ -361,25 +360,25 @@ mod tests {
         use super::*;
 
         #[tokio::test]
-        #[traced_test]
+        #[test_log::test]
         async fn tokio_get() -> Result<()> {
             test_get().await
         }
 
         #[tokio::test]
-        #[traced_test]
+        #[test_log::test]
         async fn tokio_get_418() -> Result<()> {
             test_get_418().await
         }
 
         #[tokio::test]
-        #[traced_test]
+        #[test_log::test]
         async fn tokio_put() -> Result<()> {
             test_put().await
         }
 
         #[tokio::test]
-        #[traced_test]
+        #[test_log::test]
         async fn tokio_post() -> Result<()> {
             test_post().await
         }
