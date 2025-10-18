@@ -8,7 +8,7 @@ entirely accurate. Corrections and updates welcome.
 | DnSimple                  | ✅         | ✅       | @tarka | @tarka     |                                                                                      |
 | Gandi                     | ✅         | ‼️        | @tarka | @tarka     | Tested manually. (Has a sandbox but is unusable in practice?)                        |
 | easyDNS.net               | ❌         | ✅       |        |            |                                                                                      |
-| Namecheap                 | ❌         | ✅       |        |            |                                                                                      |
+| Namecheap                 | ❌         | ✅       |        |            | Sandbox accepts test CC numbers.                                                     |
 | Porkbun                   | ❌         | ❌       |        |            |                                                                                      |
 | 1984Hosting               | ❌         | ❔       |        |            |                                                                                      |
 | ACME                      | ❌         | ❔       |        |            |                                                                                      |
