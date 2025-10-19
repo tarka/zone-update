@@ -123,94 +123,94 @@ mod tests {
     use std::net::Ipv4Addr;
     use random_string::charsets::ALPHANUMERIC;
 
-    // #[test]
-    // fn test_strip_quotes() -> Result<()> {
-    //     assert_eq!("abc123".to_string(), strip_quotes("\"abc123\""));
-    //     assert_eq!("abc123\"", strip_quotes("abc123\""));
-    //     assert_eq!("\"abc123", strip_quotes("\"abc123"));
-    //     assert_eq!("abc123", strip_quotes("abc123"));
+    #[test]
+    fn test_strip_quotes() -> Result<()> {
+        assert_eq!("abc123".to_string(), strip_quotes("\"abc123\""));
+        assert_eq!("abc123\"", strip_quotes("abc123\""));
+        assert_eq!("\"abc123", strip_quotes("\"abc123"));
+        assert_eq!("abc123", strip_quotes("abc123"));
 
-    //     Ok(())
-    // }
-
-
-    // pub async fn test_create_update_delete_ipv4(client: impl DnsProvider) -> Result<()> {
-
-    //     let host = random_string::generate(16, ALPHANUMERIC);
-
-    //     // Create
-    //     let ip: Ipv4Addr = "1.1.1.1".parse()?;
-    //     client.create_record(RecordType::A, &host, &ip).await?;
-    //     let cur = client.get_record(RecordType::A, &host).await?;
-    //     assert_eq!(Some(ip), cur);
+        Ok(())
+    }
 
 
-    //     // Update
-    //     let ip: Ipv4Addr = "2.2.2.2".parse()?;
-    //     client.update_record(RecordType::A, &host, &ip).await?;
-    //     let cur = client.get_record(RecordType::A, &host).await?;
-    //     assert_eq!(Some(ip), cur);
+    pub fn test_create_update_delete_ipv4(client: impl DnsProvider) -> Result<()> {
+
+        let host = random_string::generate(16, ALPHANUMERIC);
+
+        // Create
+        let ip: Ipv4Addr = "1.1.1.1".parse()?;
+        client.create_record(RecordType::A, &host, &ip)?;
+        let cur = client.get_record(RecordType::A, &host)?;
+        assert_eq!(Some(ip), cur);
 
 
-    //     // Delete
-    //     client.delete_record(RecordType::A, &host).await?;
-    //     let del: Option<Ipv4Addr> = client.get_record(RecordType::A, &host).await?;
-    //     assert!(del.is_none());
-
-    //     Ok(())
-    // }
-
-    // pub async fn test_create_update_delete_txt(client: impl DnsProvider) -> Result<()> {
-
-    //     let host = random_string::generate(16, ALPHANUMERIC);
-
-    //     // Create
-    //     let txt = "a text reference".to_string();
-    //     client.create_record(RecordType::TXT, &host, &txt).await?;
-    //     let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-    //     assert_eq!(txt, strip_quotes(&cur.unwrap()));
+        // Update
+        let ip: Ipv4Addr = "2.2.2.2".parse()?;
+        client.update_record(RecordType::A, &host, &ip)?;
+        let cur = client.get_record(RecordType::A, &host)?;
+        assert_eq!(Some(ip), cur);
 
 
-    //     // Update
-    //     let txt = "another text reference".to_string();
-    //     client.update_record(RecordType::TXT, &host, &txt).await?;
-    //     let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-    //     assert_eq!(txt, strip_quotes(&cur.unwrap()));
+        // Delete
+        client.delete_record(RecordType::A, &host)?;
+        let del: Option<Ipv4Addr> = client.get_record(RecordType::A, &host)?;
+        assert!(del.is_none());
+
+        Ok(())
+    }
+
+    pub fn test_create_update_delete_txt(client: impl DnsProvider) -> Result<()> {
+
+        let host = random_string::generate(16, ALPHANUMERIC);
+
+        // Create
+        let txt = "a text reference".to_string();
+        client.create_record(RecordType::TXT, &host, &txt)?;
+        let cur: Option<String> = client.get_record(RecordType::TXT, &host)?;
+        assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
 
-    //     // Delete
-    //     client.delete_record(RecordType::TXT, &host).await?;
-    //     let del: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-    //     assert!(del.is_none());
-
-    //     Ok(())
-    // }
-
-    // pub async fn test_create_update_delete_txt_default(client: impl DnsProvider) -> Result<()> {
-
-    //     let host = random_string::generate(16, ALPHANUMERIC);
-
-    //     // Create
-    //     let txt = "a text reference".to_string();
-    //     client.create_txt_record(&host, &txt).await?;
-    //     let cur = client.get_txt_record(&host).await?;
-    //     assert_eq!(txt, strip_quotes(&cur.unwrap()));
+        // Update
+        let txt = "another text reference".to_string();
+        client.update_record(RecordType::TXT, &host, &txt)?;
+        let cur: Option<String> = client.get_record(RecordType::TXT, &host)?;
+        assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
 
-    //     // Update
-    //     let txt = "another text reference".to_string();
-    //     client.update_txt_record(&host, &txt).await?;
-    //     let cur = client.get_txt_record(&host).await?;
-    //     assert_eq!(txt, strip_quotes(&cur.unwrap()));
+        // Delete
+        client.delete_record(RecordType::TXT, &host)?;
+        let del: Option<String> = client.get_record(RecordType::TXT, &host)?;
+        assert!(del.is_none());
+
+        Ok(())
+    }
+
+    pub fn test_create_update_delete_txt_default(client: impl DnsProvider) -> Result<()> {
+
+        let host = random_string::generate(16, ALPHANUMERIC);
+
+        // Create
+        let txt = "a text reference".to_string();
+        client.create_txt_record(&host, &txt)?;
+        let cur = client.get_txt_record(&host)?;
+        assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
 
-    //     // Delete
-    //     client.delete_txt_record(&host).await?;
-    //     let del = client.get_txt_record(&host).await?;
-    //     assert!(del.is_none());
+        // Update
+        let txt = "another text reference".to_string();
+        client.update_txt_record(&host, &txt)?;
+        let cur = client.get_txt_record(&host)?;
+        assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
-    //     Ok(())
-    // }
+
+        // Delete
+        client.delete_txt_record(&host)?;
+        let del = client.get_txt_record(&host)?;
+        assert!(del.is_none());
+
+        Ok(())
+    }
 
 
 }

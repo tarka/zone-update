@@ -310,7 +310,10 @@ mod tests {
         DnSimple::new_with_endpoint(config, auth, None, TEST_API)
     }
 
-    async fn test_id_fetch() -> Result<()> {
+    #[test]
+    #[test_log::test]
+    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+    fn test_id_fetch() -> Result<()> {
         let client = get_client();
 
         let id = client.get_upstream_id()?;
@@ -320,7 +323,41 @@ mod tests {
     }
 
 
-    #[cfg(feature = "smol")]
+    #[test]
+    #[test_log::test]
+    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+    fn id_fetch() -> Result<()> {
+        test_id_fetch()?;
+        Ok(())
+    }
+
+
+    #[test]
+    #[test_log::test]
+    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+    fn create_update_v4() -> Result<()> {
+        test_create_update_delete_ipv4(get_client())?;
+        Ok(())
+    }
+
+    #[test]
+    #[test_log::test]
+    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+    fn create_update_txt() -> Result<()> {
+        test_create_update_delete_txt(get_client())?;
+        Ok(())
+    }
+
+    #[test]
+    #[test_log::test]
+    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+    fn create_update_default() -> Result<()> {
+        test_create_update_delete_txt_default(get_client())?;
+        Ok(())
+    }
+
+
+    #[cfg(feature = "test_smol")]
     mod smol_tests {
         use super::*;
         use macro_rules_attribute::apply;
@@ -360,7 +397,7 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "tokio")]
+    #[cfg(feature = "test_tokio")]
     mod tokio_tests {
         use super::*;
 

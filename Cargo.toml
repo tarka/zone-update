@@ -11,6 +11,7 @@ cfg-if = "1.0.3"
 chrono = { version = "0.4.42", features = ["now", "serde"], default-features = false }
 serde = { version = "1.0.226", features = ["derive"] }
 serde_json = "1.0.145"
+smol = { version = "2.0.2", optional = true }
 thiserror = "2.0.16"
 tracing = "0.1.41"
 ureq = { version = "3.1.2" }
@@ -20,14 +21,14 @@ default = ["all-providers"]
 all-providers = ["gandi", "dnsimple"]
 gandi = []
 dnsimple = []
-# smol = ["dep:smol", "dep:smol-hyper", "dep:futures-rustls"]
-# tokio = ["dep:tokio", "dep:hyper-util", "dep:tokio-rustls"]
 
 # Test features
 # Disables http module tests that rely on external services
 test_offline = []
 test_gandi = ["gandi"]
 test_dnsimple = ["dnsimple"]
+test_smol = []
+test_tokio = []
 
 [dev-dependencies]
 acme-micro = "0.13.0"
