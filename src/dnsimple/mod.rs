@@ -2,9 +2,12 @@
 mod types;
 
 use std::{fmt::Display, sync::{LazyLock, Mutex, OnceLock}};
+
 use serde::de::DeserializeOwned;
 use tracing::{error, info, warn};
 use ureq::{config::ConfigBuilder, http::{header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, Response, StatusCode}, Agent, Body, ResponseExt};
+
+use crate::http::{self, ResponseToOption};
 
 
 use crate::{
@@ -41,59 +44,6 @@ struct DnSimple {
     acc_id: Mutex<Option<u32>>,
 }
 
-
-trait ToOption {
-    fn to_option<T>(&mut self) -> Result<Option<T>>
-    where
-        T: DeserializeOwned;
-
-    fn from_error(&mut self) -> Result<Error>;
-}
-
-
-
-impl ToOption for Response<Body> {
-    fn to_option<T>(&mut self) -> Result<Option<T>>
-    where
-        T: DeserializeOwned
-    {
-        match self.status() {
-            StatusCode::OK => {
-                let body = self.body_mut().read_to_string()?;
-                let obj: T = serde_json::from_str(&body)?;
-                Ok(Some(obj))
-            }
-            StatusCode::NOT_FOUND => {
-                warn!("Record doesn't exist: {}", self.get_uri());
-                Ok(None)
-            }
-            _ => {
-                //Err(self.from_error()?)
-                Err(Error::ApiError("TEST".to_string()))
-            }
-        }
-    }
-
-    fn from_error(&mut self) -> Result<Error> {
-        let code = self.status();
-        let mut err = String::new();
-        let _nr = self.body_mut()
-            .read_to_string()?;
-        error!("REST op failed: {code} {err:?}");
-        Ok(Error::HttpError(format!("REST op failed: {code} {err:?}")))
-    }
-
-}
-
-
-fn client() -> Agent {
-    Agent::config_builder()
-        .http_status_as_error(false)
-        .build()
-        .new_agent()
-}
-
-
 impl DnSimple {
     pub fn new(config: Config, auth: Auth, acc: Option<u32>) -> Self {
         Self::new_with_endpoint(config, auth, acc, API_BASE)
@@ -113,7 +63,7 @@ impl DnSimple {
         info!("Fetching account ID from upstream");
         let url = format!("{}/accounts", self.endpoint);
 
-        let accounts_p = client().get(url)
+        let accounts_p = http::client().get(url)
             .header(AUTHORIZATION, self.auth.get_header())
             .call()?
             .to_option::<Accounts>()?;
@@ -156,7 +106,7 @@ impl DnSimple {
         let acc_id = self.get_id()?;
         let url = format!("{}/{acc_id}/zones/{}/records?name={host}&type={rtype}", self.endpoint, self.config.domain);
 
-        let response = client().get(url)
+        let response = http::client().get(url)
             .header(ACCEPT, "application/json")
             .header(AUTHORIZATION, self.auth.get_header())
             .call()?
@@ -219,7 +169,7 @@ impl DnsProvider for DnSimple {
         }
 
         let body = serde_json::to_string(&rec)?;
-        client().post(url)
+        http::client().post(url)
             .header(ACCEPT, "application/json")
             .header(CONTENT_TYPE, "application/json")
             .header(AUTHORIZATION, self.auth.get_header())
@@ -255,7 +205,7 @@ impl DnsProvider for DnSimple {
 
 
         let body = serde_json::to_string(&update)?;
-        client().patch(url)
+        http::client().patch(url)
             .header(ACCEPT, "application/json")
             .header(CONTENT_TYPE, "application/json")
             .header(AUTHORIZATION, self.auth.get_header())
@@ -282,7 +232,7 @@ impl DnsProvider for DnSimple {
             return Ok(())
         }
 
-        client().delete(url)
+        http::client().delete(url)
             .header(ACCEPT, "application/json")
             .header(AUTHORIZATION, self.auth.get_header())
             .call()?;

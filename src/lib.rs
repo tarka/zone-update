@@ -1,5 +1,6 @@
 
 pub mod errors;
+mod http;
 
 #[cfg(feature = "dnsimple")]
 pub mod dnsimple;
