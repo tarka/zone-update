@@ -1,10 +1,10 @@
 
 mod types;
 
-use std::fmt::Display;
-use async_lock::Mutex;
+use std::{fmt::Display, sync::{LazyLock, Mutex, OnceLock}};
 use serde::de::DeserializeOwned;
 use tracing::{error, info, warn};
+use ureq::{config::ConfigBuilder, http::{header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, Response, StatusCode}, Agent, Body, ResponseExt};
 
 
 use crate::{
@@ -16,7 +16,6 @@ use crate::{
         UpdateRecord
     },
     errors::{Error, Result},
-    http,
     Config,
     DnsProvider,
     RecordType
@@ -42,6 +41,59 @@ struct DnSimple {
     acc_id: Mutex<Option<u32>>,
 }
 
+
+trait ToOption {
+    fn to_option<T>(&mut self) -> Result<Option<T>>
+    where
+        T: DeserializeOwned;
+
+    fn from_error(&mut self) -> Result<Error>;
+}
+
+
+
+impl ToOption for Response<Body> {
+    fn to_option<T>(&mut self) -> Result<Option<T>>
+    where
+        T: DeserializeOwned
+    {
+        match self.status() {
+            StatusCode::OK => {
+                let body = self.body_mut().read_to_string()?;
+                let obj: T = serde_json::from_str(&body)?;
+                Ok(Some(obj))
+            }
+            StatusCode::NOT_FOUND => {
+                warn!("Record doesn't exist: {}", self.get_uri());
+                Ok(None)
+            }
+            _ => {
+                //Err(self.from_error()?)
+                Err(Error::ApiError("TEST".to_string()))
+            }
+        }
+    }
+
+    fn from_error(&mut self) -> Result<Error> {
+        let code = self.status();
+        let mut err = String::new();
+        let _nr = self.body_mut()
+            .read_to_string()?;
+        error!("REST op failed: {code} {err:?}");
+        Ok(Error::HttpError(format!("REST op failed: {code} {err:?}")))
+    }
+
+}
+
+
+fn client() -> Agent {
+    Agent::config_builder()
+        .http_status_as_error(false)
+        .build()
+        .new_agent()
+}
+
+
 impl DnSimple {
     pub fn new(config: Config, auth: Auth, acc: Option<u32>) -> Self {
         Self::new_with_endpoint(config, auth, acc, API_BASE)
@@ -57,13 +109,14 @@ impl DnSimple {
         }
     }
 
-    async fn get_upstream_id(&self) -> Result<u32> {
+    fn get_upstream_id(&self) -> Result<u32> {
         info!("Fetching account ID from upstream");
-        let endpoint = format!("{}/accounts", self.endpoint);
-        let uri = endpoint.parse()
-            .map_err(|e| Error::UrlError(format!("Error: {endpoint} -> {e}")))?;
+        let url = format!("{}/accounts", self.endpoint);
 
-        let accounts_p = http::get::<Accounts>(uri, self.auth.get_header()).await?;
+        let accounts_p = client().get(url)
+            .header(AUTHORIZATION, self.auth.get_header())
+            .call()?
+            .to_option::<Accounts>()?;
 
         match accounts_p {
             Some(accounts) if accounts.accounts.len() == 1 => {
@@ -79,34 +132,36 @@ impl DnSimple {
         }
     }
 
-    async fn get_id(&self) -> Result<u32> {
+    fn get_id(&self) -> Result<u32> {
         // This is roughly equivalent to OnceLock.get_or_init(), but
         // is simpler than dealing with closure->Result and is more
         // portable.
-        let mut id_p = self.acc_id.lock().await;
+        let mut id_p = self.acc_id.lock()
+            .map_err(|e| Error::LockingError(e.to_string()))?;
 
         if let Some(id) = *id_p {
             return Ok(id);
         }
 
-        let id = self.get_upstream_id().await?;
+        let id = self.get_upstream_id()?;
         *id_p = Some(id);
 
         Ok(id)
     }
 
-    async fn get_upstream_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<GetRecord<T>>>
+    fn get_upstream_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<GetRecord<T>>>
     where
         T: DeserializeOwned
     {
-        let acc_id = self.get_id().await?;
+        let acc_id = self.get_id()?;
+        let url = format!("{}/{acc_id}/zones/{}/records?name={host}&type={rtype}", self.endpoint, self.config.domain);
 
-        let url = format!("{}/{acc_id}/zones/{}/records?name={host}&type={rtype}", self.endpoint, self.config.domain)
-            .parse()
-            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
-
-        let auth = self.auth.get_header();
-        let mut recs: Records<T> = match http::get(url, auth).await? {
+        let response = client().get(url)
+            .header(ACCEPT, "application/json")
+            .header(AUTHORIZATION, self.auth.get_header())
+            .call()?
+            .to_option::<Records<T>>()?;
+        let mut recs: Records<T> = match response {
             Some(rec) => rec,
             None => return Ok(None)
         };
@@ -130,11 +185,11 @@ impl DnSimple {
 
 impl DnsProvider for DnSimple {
 
-    async fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T> >
+    fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T> >
     where
         T: DeserializeOwned
     {
-        let rec: GetRecord<T> = match self.get_upstream_record(rtype, host).await? {
+        let rec: GetRecord<T> = match self.get_upstream_record(rtype, host)? {
             Some(recs) => recs,
             None => return Ok(None)
         };
@@ -143,16 +198,13 @@ impl DnsProvider for DnSimple {
         Ok(Some(rec.content))
     }
 
-    async fn create_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
+    fn create_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
     where
         T: Display + Sync,
     {
-        let acc_id = self.get_id().await?;
+        let acc_id = self.get_id()?;
 
-        let url = format!("{}/{acc_id}/zones/{}/records", self.endpoint, self.config.domain)
-            .parse()
-            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
-        let auth = self.auth.get_header();
+        let url = format!("{}/{acc_id}/zones/{}/records", self.endpoint, self.config.domain);
 
         let rec = CreateRecord {
             name: host.to_string(),
@@ -165,16 +217,22 @@ impl DnsProvider for DnSimple {
             info!("DRY-RUN: Would have sent {rec:?} to {url}");
             return Ok(())
         }
-        http::post::<CreateRecord>(url, &rec, auth).await?;
+
+        let body = serde_json::to_string(&rec)?;
+        client().post(url)
+            .header(ACCEPT, "application/json")
+            .header(CONTENT_TYPE, "application/json")
+            .header(AUTHORIZATION, self.auth.get_header())
+            .send(body)?;
 
         Ok(())
     }
 
-    async fn update_record<T>(&self, rtype: RecordType, host: &str, urec: &T) -> Result<()>
+    fn update_record<T>(&self, rtype: RecordType, host: &str, urec: &T) -> Result<()>
     where
         T: DeserializeOwned + Display + Sync + Send,
     {
-        let rec: GetRecord<T> = match self.get_upstream_record(rtype, host).await? {
+        let rec: GetRecord<T> = match self.get_upstream_record(rtype, host)? {
             Some(rec) => rec,
             None => {
                 warn!("DELETE: Record {host} doesn't exist");
@@ -182,29 +240,32 @@ impl DnsProvider for DnSimple {
             }
         };
 
-        let acc_id = self.get_id().await?;
+        let acc_id = self.get_id()?;
         let rid = rec.id;
 
         let update = UpdateRecord {
             content: urec.to_string(),
         };
 
-        let url = format!("{}/{acc_id}/zones/{}/records/{rid}", self.endpoint, self.config.domain)
-            .parse()
-            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
+        let url = format!("{}/{acc_id}/zones/{}/records/{rid}", self.endpoint, self.config.domain);
         if self.config.dry_run {
             info!("DRY-RUN: Would have sent PATCH to {url}");
             return Ok(())
         }
 
-        let auth = self.auth.get_header();
-        http::patch(url, &update, auth).await?;
+
+        let body = serde_json::to_string(&update)?;
+        client().patch(url)
+            .header(ACCEPT, "application/json")
+            .header(CONTENT_TYPE, "application/json")
+            .header(AUTHORIZATION, self.auth.get_header())
+            .send(body)?;
 
         Ok(())
     }
 
-    async fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()> {
-        let rec: GetRecord<String> = match self.get_upstream_record(rtype, host).await? {
+    fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()> {
+        let rec: GetRecord<String> = match self.get_upstream_record(rtype, host)? {
             Some(rec) => rec,
             None => {
                 warn!("DELETE: Record {host} doesn't exist");
@@ -212,19 +273,19 @@ impl DnsProvider for DnSimple {
             }
         };
 
-        let acc_id = self.get_id().await?;
+        let acc_id = self.get_id()?;
         let rid = rec.id;
 
-        let url = format!("{}/{acc_id}/zones/{}/records/{rid}", self.endpoint, self.config.domain)
-            .parse()
-            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
+        let url = format!("{}/{acc_id}/zones/{}/records/{rid}", self.endpoint, self.config.domain);
         if self.config.dry_run {
             info!("DRY-RUN: Would have sent DELETE to {url}");
             return Ok(())
         }
 
-        let auth = self.auth.get_header();
-        http::delete(url, auth).await?;
+        client().delete(url)
+            .header(ACCEPT, "application/json")
+            .header(AUTHORIZATION, self.auth.get_header())
+            .call()?;
 
         Ok(())
     }
@@ -252,7 +313,7 @@ mod tests {
     async fn test_id_fetch() -> Result<()> {
         let client = get_client();
 
-        let id = client.get_upstream_id().await?;
+        let id = client.get_upstream_id()?;
         assert_eq!(2602, id);
 
         Ok(())
@@ -269,7 +330,7 @@ mod tests {
         #[test_log::test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn id_fetch() -> Result<()> {
-            test_id_fetch().await?;
+            test_id_fetch()?;
             Ok(())
         }
 
@@ -278,7 +339,7 @@ mod tests {
         #[test_log::test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn create_update_v4() -> Result<()> {
-            test_create_update_delete_ipv4(get_client()).await?;
+            test_create_update_delete_ipv4(get_client())?;
             Ok(())
         }
 
@@ -286,7 +347,7 @@ mod tests {
         #[test_log::test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn create_update_txt() -> Result<()> {
-            test_create_update_delete_txt(get_client()).await?;
+            test_create_update_delete_txt(get_client())?;
             Ok(())
         }
 
@@ -294,7 +355,7 @@ mod tests {
         #[test_log::test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn create_update_default() -> Result<()> {
-            test_create_update_delete_txt_default(get_client()).await?;
+            test_create_update_delete_txt_default(get_client())?;
             Ok(())
         }
     }
@@ -308,7 +369,7 @@ mod tests {
         #[test_log::test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn id_fetch() -> Result<()> {
-            test_id_fetch().await?;
+            test_id_fetch()?;
             Ok(())
         }
 
@@ -317,7 +378,7 @@ mod tests {
         #[test_log::test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn create_update_v4() -> Result<()> {
-            test_create_update_delete_ipv4(get_client()).await?;
+            test_create_update_delete_ipv4(get_client())?;
             Ok(())
         }
 
@@ -325,7 +386,7 @@ mod tests {
         #[test_log::test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn create_update_txt() -> Result<()> {
-            test_create_update_delete_txt(get_client()).await?;
+            test_create_update_delete_txt(get_client())?;
             Ok(())
         }
 
@@ -333,7 +394,7 @@ mod tests {
         #[test_log::test]
         #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
         async fn create_update_default() -> Result<()> {
-            test_create_update_delete_txt_default(get_client()).await?;
+            test_create_update_delete_txt_default(get_client())?;
             Ok(())
         }
 
