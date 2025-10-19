@@ -25,10 +25,10 @@ use crate::{
 };
 
 
-const API_BASE: &str = "https://api.dnsimple.com/v2";
+pub(crate) const API_BASE: &str = "https://api.dnsimple.com/v2";
 
 pub struct Auth {
-    key: String,
+    pub(crate) key: String,
 }
 
 impl Auth {
@@ -37,7 +37,7 @@ impl Auth {
     }
 }
 
-struct DnSimple {
+pub(crate) struct DnSimple {
     config: Config,
     endpoint: &'static str,
     auth: Auth,
@@ -49,7 +49,7 @@ impl DnSimple {
         Self::new_with_endpoint(config, auth, acc, API_BASE)
     }
 
-    fn new_with_endpoint(config: Config, auth: Auth, acc: Option<u32>, endpoint: &'static str) -> Self {
+    pub fn new_with_endpoint(config: Config, auth: Auth, acc: Option<u32>, endpoint: &'static str) -> Self {
         let acc_id = Mutex::new(acc);
         DnSimple {
             config,
@@ -150,7 +150,7 @@ impl DnsProvider for DnSimple {
 
     fn create_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
     where
-        T: Display + Sync,
+        T: Display,
     {
         let acc_id = self.get_id()?;
 
@@ -180,7 +180,7 @@ impl DnsProvider for DnSimple {
 
     fn update_record<T>(&self, rtype: RecordType, host: &str, urec: &T) -> Result<()>
     where
-        T: DeserializeOwned + Display + Sync + Send,
+        T: DeserializeOwned + Display,
     {
         let rec: GetRecord<T> = match self.get_upstream_record(rtype, host)? {
             Some(rec) => rec,
@@ -305,88 +305,6 @@ mod tests {
         test_create_update_delete_txt_default(get_client())?;
         Ok(())
     }
-
-
-    #[cfg(feature = "test_smol")]
-    mod smol_tests {
-        use super::*;
-        use macro_rules_attribute::apply;
-        use smol_macros::test;
-
-        #[apply(test!)]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn id_fetch() -> Result<()> {
-            test_id_fetch()?;
-            Ok(())
-        }
-
-
-        #[apply(test!)]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_v4() -> Result<()> {
-            test_create_update_delete_ipv4(get_client())?;
-            Ok(())
-        }
-
-        #[apply(test!)]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_txt() -> Result<()> {
-            test_create_update_delete_txt(get_client())?;
-            Ok(())
-        }
-
-        #[apply(test!)]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_default() -> Result<()> {
-            test_create_update_delete_txt_default(get_client())?;
-            Ok(())
-        }
-    }
-
-    #[cfg(feature = "test_tokio")]
-    mod tokio_tests {
-        use super::*;
-
-
-        #[tokio::test]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn id_fetch() -> Result<()> {
-            test_id_fetch()?;
-            Ok(())
-        }
-
-
-        #[tokio::test]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_v4() -> Result<()> {
-            test_create_update_delete_ipv4(get_client())?;
-            Ok(())
-        }
-
-        #[tokio::test]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_txt() -> Result<()> {
-            test_create_update_delete_txt(get_client())?;
-            Ok(())
-        }
-
-        #[tokio::test]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_default() -> Result<()> {
-            test_create_update_delete_txt_default(get_client())?;
-            Ok(())
-        }
-
-    }
-
 
 }
 

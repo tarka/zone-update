@@ -322,6 +322,7 @@ dependencies = [
  "futures-io",
  "futures-lite",
  "piper",
+ "tracing",
 ]
 
 [[package]]
@@ -2340,6 +2341,7 @@ version = "0.3.1"
 dependencies = [
  "acme-micro",
  "anyhow",
+ "blocking",
  "cfg-if",
  "chrono",
  "futures-rustls",

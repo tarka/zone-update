@@ -1,4 +1,6 @@
 
+
+pub mod async_impl;
 pub mod errors;
 mod http;
 
@@ -51,19 +53,17 @@ pub trait DnsProvider {
 
     fn create_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
     where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync;
+        T: Serialize + DeserializeOwned + Display + Clone;
 
     fn update_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
     where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync;
+        T: Serialize + DeserializeOwned + Display + Clone;
 
     fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>;
 
 
     // Default helper impls
 
-    // We know all the types, and they're enforced above, so this lint
-    // doesn't apply here(?)
     fn get_txt_record(&self, host: &str) -> Result<Option<String>> {
         self.get_record::<String>(RecordType::TXT, host)
             .map(|opt| opt.map(|s| strip_quotes(&s)))

@@ -76,7 +76,7 @@ impl DnsProvider for Gandi {
 
     fn create_record<T>(&self, rtype: RecordType, host: &str, rec: &T) -> Result<()>
     where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync
+        T: Serialize + DeserializeOwned + Display + Clone
     {
         // PUT works for both operations
         self.update_record(rtype, host, rec)
@@ -84,7 +84,7 @@ impl DnsProvider for Gandi {
 
     fn update_record<T>(&self, rtype: RecordType, host: &str, ip: &T) -> Result<()>
     where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync
+        T: Serialize + DeserializeOwned + Display + Clone
     {
         let url = format!("{API_BASE}/domains/{}/records/{host}/{rtype}", self.config.domain);
         if self.config.dry_run {
