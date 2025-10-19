@@ -5,6 +5,7 @@ use anyhow::Result;
 use random_string::charsets::ALPHANUMERIC;
 use zone_edit::{gandi::{Auth, Gandi}, Config, DnsProvider};
 
+
 fn get_dns_client() -> Result<impl DnsProvider> {
     // Gandi supports 2 types of API key
     let auth = if let Some(key) = env::var("GANDI_APIKEY").ok() {
@@ -26,7 +27,7 @@ fn get_dns_client() -> Result<impl DnsProvider> {
     })
 }
 
-fn get_cert() -> Result<Certificate> {
+async fn get_cert() -> Result<Certificate> {
     println!("Starting get_cert()");
 
     let dns_client = get_dns_client()?;
@@ -63,7 +64,7 @@ fn get_cert() -> Result<Certificate> {
         println!("Challenge string is {token}");
 
         println!("Creating challenge TXT record {txt_name}");
-        dns_client.create_txt_record(&txt_name, &token)?;
+        dns_client.create_txt_record(&txt_name, &token).await?;
 
         println!("Validating");
         chall.validate(Duration::from_millis(5000))?;
@@ -83,7 +84,7 @@ fn get_cert() -> Result<Certificate> {
 
     println!("Deleting acme challenge");
 
-    dns_client.delete_txt_record(&txt_name)?;
+    dns_client.delete_txt_record(&txt_name).await?;
 
     println!("Done");
 
@@ -93,7 +94,18 @@ fn get_cert() -> Result<Certificate> {
 
 fn main() -> Result<()> {
 
-    get_cert()?;
+    #[cfg(feature = "smol")]
+    smol::block_on(
+        get_cert()
+    )?;
+
+    #[cfg(feature = "tokio")]
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?
+        .block_on(
+            get_cert()
+        )?;
 
     Ok(())
 }
