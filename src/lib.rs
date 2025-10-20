@@ -136,7 +136,7 @@ mod tests {
     }
 
 
-    pub fn test_create_update_delete_ipv4(client: impl DnsProvider) -> Result<()> {
+    pub(crate) fn test_create_update_delete_ipv4(client: impl DnsProvider) -> Result<()> {
 
         let host = random_string::generate(16, ALPHANUMERIC);
 
@@ -162,7 +162,7 @@ mod tests {
         Ok(())
     }
 
-    pub fn test_create_update_delete_txt(client: impl DnsProvider) -> Result<()> {
+    pub(crate) fn test_create_update_delete_txt(client: impl DnsProvider) -> Result<()> {
 
         let host = random_string::generate(16, ALPHANUMERIC);
 
@@ -188,7 +188,7 @@ mod tests {
         Ok(())
     }
 
-    pub fn test_create_update_delete_txt_default(client: impl DnsProvider) -> Result<()> {
+    pub(crate) fn test_create_update_delete_txt_default(client: impl DnsProvider) -> Result<()> {
 
         let host = random_string::generate(16, ALPHANUMERIC);
 
