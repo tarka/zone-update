@@ -126,7 +126,7 @@ impl DnsProvider for Gandi {
 
 #[cfg(test)]
 mod tests {
-    use crate::strip_quotes;
+    use crate::{generate_tests, strip_quotes};
 
     use super::*;
     use crate::tests::*;
@@ -154,28 +154,6 @@ mod tests {
     }
 
 
-    #[test]
-    #[test_log::test]
-    #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
-    fn create_update_v4() -> Result<()> {
-        test_create_update_delete_ipv4(get_client())?;
-        Ok(())
-    }
-
-    #[test]
-    #[test_log::test]
-    #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
-    fn create_update_txt() -> Result<()> {
-        test_create_update_delete_txt(get_client())?;
-        Ok(())
-    }
-
-    #[test]
-    #[test_log::test]
-    #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
-    fn create_update_default() -> Result<()> {
-        test_create_update_delete_txt_default(get_client())?;
-        Ok(())
-    }
+    generate_tests!("test_dnsimple");
 
 }

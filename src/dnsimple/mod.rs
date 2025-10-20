@@ -246,7 +246,7 @@ impl DnsProvider for DnSimple {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::*;
+    use crate::{generate_tests, tests::*};
     use std::env;
 
     const TEST_API: &str = "https://api.sandbox.dnsimple.com/v2";
@@ -272,29 +272,6 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    #[test_log::test]
-    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-    fn create_update_v4() -> Result<()> {
-        test_create_update_delete_ipv4(get_client())?;
-        Ok(())
-    }
-
-    #[test]
-    #[test_log::test]
-    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-    fn create_update_txt() -> Result<()> {
-        test_create_update_delete_txt(get_client())?;
-        Ok(())
-    }
-
-    #[test]
-    #[test_log::test]
-    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-    fn create_update_default() -> Result<()> {
-        test_create_update_delete_txt_default(get_client())?;
-        Ok(())
-    }
-
+    generate_tests!("test_dnsimple");
 }
 

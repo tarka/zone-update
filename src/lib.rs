@@ -214,5 +214,67 @@ mod tests {
         Ok(())
     }
 
+    /// A macro to generate a standard set of tests for a DNS provider.
+    ///
+    /// This macro generates three tests:
+    /// - `create_update_v4`: tests creating, updating, and deleting an A record.
+    /// - `create_update_txt`: tests creating, updating, and deleting a TXT record.
+    /// - `create_update_default`: tests creating, updating, and deleting a TXT record using the default provider methods.
+    ///
+    /// The tests are conditionally compiled based on the feature flag passed as an argument.
+    ///
+    /// # Requirements
+    ///
+    /// The module that uses this macro must define a `get_client()` function that returns a type
+    /// that implements the `DnsProvider` trait. This function is used by the tests to get a client
+    /// for the DNS provider.
+    ///
+    /// # Arguments
+    ///
+    /// * `$feat` - A string literal representing the feature flag that enables these tests.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// // In your test module
+    /// use zone_edit::{generate_tests, DnsProvider};
+    ///
+    /// fn get_client() -> impl DnsProvider {
+    ///     // ... your client implementation
+    /// }
+    ///
+    /// // This will generate the tests, but they will only run if the "my_provider" feature is enabled.
+    /// generate_tests!("my_provider");
+    /// ```
+    #[macro_export]
+    macro_rules! generate_tests {
+        ($feat:literal) => {
+
+            #[test]
+            #[test_log::test]
+            #[cfg_attr(not(feature = $feat), ignore = "API test")]
+            fn create_update_v4() -> Result<()> {
+                test_create_update_delete_ipv4(get_client())?;
+                Ok(())
+            }
+
+            #[test]
+            #[test_log::test]
+            #[cfg_attr(not(feature = $feat), ignore = "API test")]
+            fn create_update_txt() -> Result<()> {
+                test_create_update_delete_txt(get_client())?;
+                Ok(())
+            }
+
+            #[test]
+            #[test_log::test]
+            #[cfg_attr(not(feature = $feat), ignore = "API test")]
+            fn create_update_default() -> Result<()> {
+                test_create_update_delete_txt_default(get_client())?;
+                Ok(())
+            }
+        }
+    }
+
 
 }
