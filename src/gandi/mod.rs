@@ -154,6 +154,6 @@ mod tests {
     }
 
 
-    generate_tests!("test_dnsimple");
+    generate_tests!("test_gandi");
 
 }
