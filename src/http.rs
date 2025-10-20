@@ -1,4 +1,3 @@
-
 use std::str::FromStr;
 
 use serde::de::DeserializeOwned;
@@ -53,11 +52,44 @@ impl ResponseToOption for Response<Body> {
 }
 
 
+/// Extension trait to adding multiple headers to a ureq request
+/// builder.
 pub(crate) trait WithHeaders<T> {
+    /// Adds the provided headers to the request builder.
+    ///
+    /// # Arguments
+    ///
+    /// * `headers` - A vector of header key-value pairs where the key is a string slice
+    ///   and the value is a String.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the modified `RequestBuilder` on success,
+    /// or an `Error` if header validation fails.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The headers cannot be extracted from the request builder
+    /// - Any of the header names or values are invalid
     fn with_headers(self, headers: Vec<(&str, String)>) -> Result<RequestBuilder<T>>;
 }
 
+/// Implementation of the `WithHeaders` trait for `RequestBuilder`.
 impl<Any> WithHeaders<Any> for RequestBuilder<Any> {
+    /// Adds the specified headers to the request builder.
+    ///
+    /// This method iterates through the provided header pairs and adds them to the
+    /// request. Each header name and value is validated before insertion.
+    ///
+    /// # Arguments
+    ///
+    /// * `headers` - A vector of tuples containing header names and values
+    ///
+    /// # Returns
+    ///
+    /// Returns the modified `RequestBuilder` wrapped in a `Result` on success,
+    /// or an `Error` if any header validation fails.
     fn with_headers(mut self, headers: Vec<(&str, String)>) -> Result<Self> {
         let mut reqh = self.headers_mut()
             .ok_or(Error::HttpError("Failed to get headers from ureq".to_string()))?;
