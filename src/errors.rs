@@ -29,21 +29,11 @@ pub enum Error {
     #[error("Failed to lock: {0}")]
     LockingError(String),
 
+    #[error(transparent)]
+    HeaderNameError(#[from] ureq::http::header::InvalidHeaderName),
 
-    // #[error(transparent)]
-    // HostError(#[from] InvalidDnsNameError),
-
-    // #[error(transparent)]
-    // HyperError(#[from] hyper::Error),
-
-    // #[error(transparent)]
-    // HyperHttpError(#[from] hyper::http::Error),
-
-    // #[error(transparent)]
-    // HeaderNameError(#[from] http::header::InvalidHeaderName),
-
-    // #[error(transparent)]
-    // HeaderValueError(#[from] http::header::InvalidHeaderValue),
+    #[error(transparent)]
+    HeaderValueError(#[from] ureq::http::header::InvalidHeaderValue),
 
     #[error(transparent)]
     IoError(#[from] std::io::Error),

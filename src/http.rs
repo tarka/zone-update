@@ -1,6 +1,9 @@
+
+use std::str::FromStr;
+
 use serde::de::DeserializeOwned;
 use tracing::{error, warn};
-use ureq::{http::{Response, StatusCode}, Agent, Body, ResponseExt};
+use ureq::{http::{HeaderName, HeaderValue, Response, StatusCode}, tls::TlsConfig, Agent, Body, RequestBuilder, ResponseExt};
 
 use crate::errors::{Error, Result};
 
@@ -50,10 +53,34 @@ impl ResponseToOption for Response<Body> {
 }
 
 
+pub(crate) trait WithHeaders<T> {
+    fn with_headers(self, headers: Vec<(&str, String)>) -> Result<RequestBuilder<T>>;
+}
+
+impl<Any> WithHeaders<Any> for RequestBuilder<Any> {
+    fn with_headers(mut self, headers: Vec<(&str, String)>) -> Result<Self> {
+        let mut reqh = self.headers_mut()
+            .ok_or(Error::HttpError("Failed to get headers from ureq".to_string()))?;
+
+        for (k, v) in headers {
+            reqh.insert(HeaderName::from_str(k)?, HeaderValue::from_str(&v)?);
+        }
+
+        Ok(self)
+    }
+}
+
 pub(crate) fn client() -> Agent {
     Agent::config_builder()
         .http_status_as_error(false)
+        .tls_config(
+            // At least one provider (DnsMadeEasy) uses legacy TLS
+            // protocol versions that Rustls doesn't support on their
+            // sandbox.
+            TlsConfig::builder()
+                .provider(ureq::tls::TlsProvider::NativeTls)
+                .build()
+        )
         .build()
         .new_agent()
 }
-

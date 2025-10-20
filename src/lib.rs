@@ -5,8 +5,11 @@ mod http;
 
 #[cfg(feature = "async")]
 pub mod async_impl;
+
 #[cfg(feature = "dnsimple")]
 pub mod dnsimple;
+#[cfg(feature = "dnsmadeeasy")]
+pub mod dnsmadeeasy;
 #[cfg(feature = "gandi")]
 pub mod gandi;
 

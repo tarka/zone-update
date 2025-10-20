@@ -10,24 +10,29 @@ edition = "2024"
 blocking = { version = "1.6.2", features = ["tracing"] }
 cfg-if = "1.0.3"
 chrono = { version = "0.4.42", features = ["now", "serde"], default-features = false }
+hex = "0.4.3"
+hmac = "0.12.1"
 serde = { version = "1.0.226", features = ["derive"] }
 serde_json = "1.0.145"
+sha1 = "0.10.6"
 thiserror = "2.0.16"
 tracing = "0.1.41"
-ureq = { version = "3.1.2" }
+ureq = { version = "3.1.2", features = ["native-tls"], default-features = false }
 
 [features]
 default = ["all-providers"]
 async = []
-all-providers = ["gandi", "dnsimple"]
+all-providers = ["gandi", "dnsmadeeasy", "dnsimple"]
 gandi = []
 dnsimple = []
+dnsmadeeasy = []
 
 # Test features
 # Disables http module tests that rely on external services
 test_offline = []
 test_gandi = ["gandi"]
 test_dnsimple = ["dnsimple"]
+test_dnsmadeeasy = ["dnsmadeeasy"]
 test_smol = ["async"]
 test_tokio = ["async"]
 

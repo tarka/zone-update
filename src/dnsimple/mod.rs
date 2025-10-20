@@ -5,7 +5,17 @@ use std::{fmt::Display, sync::{LazyLock, Mutex, OnceLock}};
 
 use serde::de::DeserializeOwned;
 use tracing::{error, info, warn};
-use ureq::{config::ConfigBuilder, http::{header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, Response, StatusCode}, Agent, Body, ResponseExt};
+use ureq::{
+    config::ConfigBuilder,
+    http::{
+        header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
+        Response,
+        StatusCode
+    },
+    Agent,
+    Body,
+    ResponseExt,
+};
 
 use crate::http::{self, ResponseToOption};
 
