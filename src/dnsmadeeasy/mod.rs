@@ -10,7 +10,12 @@ use tracing::{error, info, warn};
 use ureq::http::header::AUTHORIZATION;
 
 use crate::{
-    dnsmadeeasy::types::Domain, errors::{Error, Result}, http::{self, ResponseToOption, WithHeaders}, Config, DnsProvider, RecordType
+    dnsmadeeasy::types::Domain,
+    errors::{Error, Result},
+    http::{self, ResponseToOption, WithHeaders},
+    Config,
+    DnsProvider,
+    RecordType
 };
 
 
@@ -28,12 +33,14 @@ const TIME_HEADER: &str = "x-dnsme-requestDate";
 
 
 impl Auth {
-    fn get_headers(&self) -> Vec<(&str, String)> {
+    fn get_headers(&self) -> Result<Vec<(&str, String)>> {
+        // See https://api-docs.dnsmadeeasy.com/
         let time = Utc::now()
             .to_rfc2822();
         let hmac = {
             let secret = self.secret.clone();
-            let mut mac = Hmac::<Sha1>::new_from_slice(&secret.into_bytes()).unwrap();
+            let mut mac = Hmac::<Sha1>::new_from_slice(&secret.into_bytes())
+                .map_err(|e| Error::AuthError(format!("Error generating HMAC: {e}")))?;
             mac.update(&time.clone().into_bytes());
             hex::encode(mac.finalize().into_bytes())
         };
@@ -43,7 +50,7 @@ impl Auth {
             (TIME_HEADER, time),
         ];
 
-        headers
+        Ok(headers)
     }
 }
 
@@ -71,7 +78,7 @@ impl DnsMadeEasy {
         let url = format!("{}/dns/managed/name?domainname={}", self.endpoint, self.config.domain);
 
         let domain = http::client().get(url)
-            .with_headers(self.auth.get_headers())?
+            .with_headers(self.auth.get_headers()?)?
             .call()?
             .to_option::<Domain>()?
             .ok_or(Error::ApiError("No domain returned from upstream".to_string()))?;
