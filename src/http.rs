@@ -32,8 +32,8 @@ impl ResponseToOption for Response<Body> {
                 Ok(None)
             }
             _ => {
-                //Err(self.from_error()?)
-                Err(Error::ApiError("TEST".to_string()))
+                let body = self.body_mut().read_to_string()?;
+                Err(Error::ApiError(format!("Api Error: {} -> {body}", self.status())))
             }
         }
     }

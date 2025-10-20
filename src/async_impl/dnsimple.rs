@@ -33,7 +33,7 @@ async_provider_impl!(AsyncDnSimple);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::async_impl::tests::*;
+    use crate::{async_impl::tests::*, generate_tests};
     use std::env;
 
     const TEST_API: &str = "https://api.sandbox.dnsimple.com/v2";
@@ -47,69 +47,7 @@ mod tests {
         AsyncDnSimple::new_with_endpoint(config, auth, None, TEST_API)
     }
 
-
-    #[cfg(feature = "test_smol")]
-    mod smol_tests {
-        use super::*;
-        use macro_rules_attribute::apply;
-        use smol_macros::test;
-
-
-        #[apply(test!)]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_v4() -> Result<()> {
-            test_create_update_delete_ipv4(get_client()).await?;
-            Ok(())
-        }
-
-        #[apply(test!)]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_txt() -> Result<()> {
-            test_create_update_delete_txt(get_client()).await?;
-            Ok(())
-        }
-
-        #[apply(test!)]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_default() -> Result<()> {
-            test_create_update_delete_txt_default(get_client()).await?;
-            Ok(())
-        }
-    }
-
-    #[cfg(feature = "test_tokio")]
-    mod tokio_tests {
-        use super::*;
-
-        #[tokio::test]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_v4() -> Result<()> {
-            test_create_update_delete_ipv4(get_client()).await?;
-            Ok(())
-        }
-
-        #[tokio::test]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_txt() -> Result<()> {
-            test_create_update_delete_txt(get_client()).await?;
-            Ok(())
-        }
-
-        #[tokio::test]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_default() -> Result<()> {
-            test_create_update_delete_txt_default(get_client()).await?;
-            Ok(())
-        }
-
-    }
-
+    generate_tests!("test_dnsimple");
 
 }
 

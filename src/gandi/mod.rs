@@ -8,7 +8,7 @@ use types::{Record, RecordUpdate};
 use ureq::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use crate::{errors::{Error, Result}, http::{self, ResponseToOption}, Config, DnsProvider, RecordType};
 
-const API_BASE: &str = "https://api.gandi.net/v5/livedns";
+pub(crate) const API_BASE: &str = "https://api.gandi.net/v5/livedns";
 
 pub enum Auth {
     ApiKey(String),
