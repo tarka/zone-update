@@ -5,19 +5,19 @@ use std::{fmt::Display, net::Ipv4Addr};
 use blocking::unblock;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::gandi::{Auth, Gandi};
+use crate::gandi::{self as sync, Auth};
 use crate::{async_provider_impl, Config, DnsProvider};
 use crate::{errors::Result, RecordType};
 
 use crate::async_impl::AsyncDnsProvider;
 
-pub struct AsyncGandi {
-    inner: Arc<Gandi>,
+pub struct Gandi {
+    inner: Arc<sync::Gandi>,
 }
 
-impl AsyncGandi {
+impl Gandi {
     pub fn new(config: Config, auth: Auth) -> Self {
-        let inner = Gandi::new(config, auth);
+        let inner = sync::Gandi::new(config, auth);
         Self {
             inner: Arc::new(inner)
         }
@@ -25,7 +25,7 @@ impl AsyncGandi {
 
 }
 
-async_provider_impl!(AsyncGandi);
+async_provider_impl!(Gandi);
 
 
 #[cfg(test)]
@@ -34,7 +34,7 @@ mod tests {
     use crate::{async_impl::tests::*, generate_async_tests};
     use std::env;
 
-    fn get_client() -> AsyncGandi {
+    fn get_client() -> Gandi {
         let auth = if let Some(key) = env::var("GANDI_APIKEY").ok() {
             Auth::ApiKey(key)
         } else if let Some(key) = env::var("GANDI_PATKEY").ok() {
@@ -48,7 +48,7 @@ mod tests {
             dry_run: false,
         };
 
-        AsyncGandi::new(config, auth)
+        Gandi::new(config, auth)
     }
 
     generate_async_tests!("test_gandi");

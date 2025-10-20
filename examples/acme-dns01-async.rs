@@ -3,7 +3,7 @@ use std::{env, time::Duration};
 use acme_micro::{create_p384_key, Certificate, Directory, DirectoryUrl};
 use anyhow::Result;
 use random_string::charsets::ALPHANUMERIC;
-use zone_edit::{async_impl::{AsyncDnsProvider, gandi::AsyncGandi}, gandi::Auth, Config, DnsProvider};
+use zone_edit::{async_impl::{AsyncDnsProvider, gandi::Gandi}, gandi::Auth, Config};
 
 
 fn get_dns_client() -> Result<impl AsyncDnsProvider> {
@@ -20,7 +20,7 @@ fn get_dns_client() -> Result<impl AsyncDnsProvider> {
         domain: env::var("GANDI_TEST_DOMAIN")?,
         dry_run: false,
     };
-    let gandi = AsyncGandi::new(config, auth);
+    let gandi = Gandi::new(config, auth);
 
     Ok(gandi)
 }
@@ -31,7 +31,7 @@ async fn get_cert() -> Result<Certificate> {
     let dns_client = get_dns_client()?;
 
     let hostname = random_string::generate(16, ALPHANUMERIC);
-    let domain = env::var("EXAMPLE_DOMAIN").unwrap();
+    let domain = env::var("GANDI_TEST_DOMAIN").unwrap();
     let email = format!("mailto:{}", env::var("EXAMPLE_EMAIL").unwrap());
 
     // The following is based on the acme-micro example. In practice
