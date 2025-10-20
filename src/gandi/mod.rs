@@ -6,7 +6,7 @@ use tracing::{error, info, warn};
 
 use types::{Record, RecordUpdate};
 use ureq::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use crate::{errors::{Error, Result}, http::{self, ResponseToOption}, Config, DnsProvider, RecordType};
+use crate::{errors::{Error, Result}, http::{self, ResponseToOption, WithHeaders}, Config, DnsProvider, RecordType};
 
 pub(crate) const API_BASE: &str = "https://api.gandi.net/v5/livedns";
 
@@ -47,8 +47,8 @@ impl DnsProvider for Gandi {
 
         let url = format!("{API_BASE}/domains/{}/records/{host}/{rtype}", self.config.domain);
         let response = http::client().get(url)
-            .header(ACCEPT, "application/json")
-            .header(AUTHORIZATION, self.auth.get_header())
+            .with_json_headers()
+            .with_auth(self.auth.get_header())
             .call()?
             .to_option::<Record<T>>()?;
 
@@ -98,9 +98,8 @@ impl DnsProvider for Gandi {
 
         let body = serde_json::to_string(&update)?;
         http::client().put(url)
-            .header(ACCEPT, "application/json")
-            .header(CONTENT_TYPE, "application/json")
-            .header(AUTHORIZATION, self.auth.get_header())
+            .with_json_headers()
+            .with_auth(self.auth.get_header())
             .send(body)?;
 
         Ok(())
@@ -115,8 +114,8 @@ impl DnsProvider for Gandi {
         }
 
         http::client().delete(url)
-            .header(ACCEPT, "application/json")
-            .header(AUTHORIZATION, self.auth.get_header())
+            .with_json_headers()
+            .with_auth(self.auth.get_header())
             .call()?;
 
         Ok(())

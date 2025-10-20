@@ -38,8 +38,8 @@ impl Auth {
         let time = Utc::now()
             .to_rfc2822();
         let hmac = {
-            let secret = self.secret.clone();
-            let mut mac = Hmac::<Sha1>::new_from_slice(&secret.into_bytes())
+            let secret = self.secret.clone().into_bytes();
+            let mut mac = Hmac::<Sha1>::new_from_slice(&secret)
                 .map_err(|e| Error::AuthError(format!("Error generating HMAC: {e}")))?;
             mac.update(&time.clone().into_bytes());
             hex::encode(mac.finalize().into_bytes())

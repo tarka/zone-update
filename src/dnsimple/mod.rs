@@ -17,7 +17,7 @@ use ureq::{
     ResponseExt,
 };
 
-use crate::http::{self, ResponseToOption};
+use crate::http::{self, ResponseToOption, WithHeaders};
 
 
 use crate::{
@@ -74,7 +74,7 @@ impl DnSimple {
         let url = format!("{}/accounts", self.endpoint);
 
         let accounts_p = http::client().get(url)
-            .header(AUTHORIZATION, self.auth.get_header())
+            .with_auth(self.auth.get_header())
             .call()?
             .to_option::<Accounts>()?;
 
@@ -117,8 +117,8 @@ impl DnSimple {
         let url = format!("{}/{acc_id}/zones/{}/records?name={host}&type={rtype}", self.endpoint, self.config.domain);
 
         let response = http::client().get(url)
-            .header(ACCEPT, "application/json")
-            .header(AUTHORIZATION, self.auth.get_header())
+            .with_json_headers()
+            .with_auth(self.auth.get_header())
             .call()?
             .to_option::<Records<T>>()?;
         let mut recs: Records<T> = match response {
@@ -180,9 +180,8 @@ impl DnsProvider for DnSimple {
 
         let body = serde_json::to_string(&rec)?;
         http::client().post(url)
-            .header(ACCEPT, "application/json")
-            .header(CONTENT_TYPE, "application/json")
-            .header(AUTHORIZATION, self.auth.get_header())
+            .with_json_headers()
+            .with_auth(self.auth.get_header())
             .send(body)?;
 
         Ok(())
@@ -216,9 +215,8 @@ impl DnsProvider for DnSimple {
 
         let body = serde_json::to_string(&update)?;
         http::client().patch(url)
-            .header(ACCEPT, "application/json")
-            .header(CONTENT_TYPE, "application/json")
-            .header(AUTHORIZATION, self.auth.get_header())
+            .with_json_headers()
+            .with_auth(self.auth.get_header())
             .send(body)?;
 
         Ok(())
@@ -243,8 +241,8 @@ impl DnsProvider for DnSimple {
         }
 
         http::client().delete(url)
-            .header(ACCEPT, "application/json")
-            .header(AUTHORIZATION, self.auth.get_header())
+            .with_json_headers()
+            .with_auth(self.auth.get_header())
             .call()?;
 
         Ok(())

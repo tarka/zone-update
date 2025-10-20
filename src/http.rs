@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use serde::de::DeserializeOwned;
 use tracing::{error, warn};
-use ureq::{http::{HeaderName, HeaderValue, Response, StatusCode}, tls::TlsConfig, Agent, Body, RequestBuilder, ResponseExt};
+use ureq::{http::{header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, HeaderName, HeaderValue, Response, StatusCode}, tls::TlsConfig, Agent, Body, RequestBuilder, ResponseExt};
 
 use crate::errors::{Error, Result};
 
@@ -131,23 +131,15 @@ pub(crate) trait WithHeaders<T> {
     /// - The headers cannot be extracted from the request builder
     /// - Any of the header names or values are invalid
     fn with_headers(self, headers: Vec<(&str, String)>) -> Result<RequestBuilder<T>>;
+
+    fn with_auth(self, auth: String) ->  RequestBuilder<T>;
+
+    fn with_json_headers(self) ->  RequestBuilder<T>;
 }
 
 /// Implementation of the `WithHeaders` trait for `RequestBuilder`.
 impl<Any> WithHeaders<Any> for RequestBuilder<Any> {
-    /// Adds the specified headers to the request builder.
-    ///
-    /// This method iterates through the provided header pairs and adds them to the
-    /// request. Each header name and value is validated before insertion.
-    ///
-    /// # Arguments
-    ///
-    /// * `headers` - A vector of tuples containing header names and values
-    ///
-    /// # Returns
-    ///
-    /// Returns the modified `RequestBuilder` wrapped in a `Result` on success,
-    /// or an `Error` if any header validation fails.
+
     fn with_headers(mut self, headers: Vec<(&str, String)>) -> Result<Self> {
         let mut reqh = self.headers_mut()
             .ok_or(Error::HttpError("Failed to get headers from ureq".to_string()))?;
@@ -157,6 +149,15 @@ impl<Any> WithHeaders<Any> for RequestBuilder<Any> {
         }
 
         Ok(self)
+    }
+
+    fn with_auth(self, auth: String) ->  Self {
+        self.header(AUTHORIZATION, auth)
+    }
+
+    fn with_json_headers(self) ->  Self {
+        self.header(ACCEPT, "application/json")
+            .header(CONTENT_TYPE, "application/json")
     }
 }
 
@@ -173,15 +174,6 @@ impl<Any> WithHeaders<Any> for RequestBuilder<Any> {
 /// # Returns
 ///
 /// Returns a configured `Agent` instance that can be used to make HTTP requests.
-///
-/// # Example
-///
-/// ```
-/// use ureq::Agent;
-///
-/// let client = client();
-/// let response = client.get("https://api.example.com/records").call();
-/// ```
 pub(crate) fn client() -> Agent {
     Agent::config_builder()
         .http_status_as_error(false)
