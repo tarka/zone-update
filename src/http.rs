@@ -110,31 +110,49 @@ impl ResponseToOption for Response<Body> {
 }
 
 
-/// Extension trait to adding multiple headers to a ureq request
-/// builder.
+/// Extension trait for adding headers and authentication to a `ureq` request builder.
+///
+/// This trait provides convenient methods for adding multiple headers, authentication tokens,
+/// and common JSON headers to a `RequestBuilder`.
 pub(crate) trait WithHeaders<T> {
-    /// Adds the provided headers to the request builder.
+    /// Adds a collection of headers to the request builder.
+    ///
+    /// This method takes a vector of key-value pairs and adds them as headers to the request.
+    /// It validates both the header names and values, returning an error if either is invalid.
     ///
     /// # Arguments
     ///
-    /// * `headers` - A vector of header key-value pairs where the key is a string slice
-    ///   and the value is a String.
+    /// * `headers` - A vector of `(&str, String)` tuples representing header key-value pairs.
     ///
     /// # Returns
     ///
-    /// Returns a `Result` containing the modified `RequestBuilder` on success,
-    /// or an `Error` if header validation fails.
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if:
-    /// - The headers cannot be extracted from the request builder
-    /// - Any of the header names or values are invalid
+    /// Returns a `Result` containing the modified `RequestBuilder` on success, or an `Error`
+    /// if header validation fails.
     fn with_headers(self, headers: Vec<(&str, String)>) -> Result<RequestBuilder<T>>;
 
-    fn with_auth(self, auth: String) ->  RequestBuilder<T>;
+    /// Adds an `AUTHORIZATION` header to the request builder.
+    ///
+    /// This is a convenience method for setting the `AUTHORIZATION` header, commonly used for
+    /// bearer tokens or other authentication schemes.
+    ///
+    /// # Arguments
+    ///
+    /// * `auth` - The authentication token or value as a `String`.
+    ///
+    /// # Returns
+    ///
+    /// Returns the modified `RequestBuilder`.
+    fn with_auth(self, auth: String) -> RequestBuilder<T>;
 
-    fn with_json_headers(self) ->  RequestBuilder<T>;
+    /// Adds `ACCEPT` and `CONTENT_TYPE` headers for JSON content.
+    ///
+    /// This method sets the `ACCEPT` and `CONTENT_TYPE` headers to `application/json`,
+    /// which is a common requirement for REST APIs.
+    ///
+    /// # Returns
+    ///
+    /// Returns the modified `RequestBuilder`.
+    fn with_json_headers(self) -> RequestBuilder<T>;
 }
 
 /// Implementation of the `WithHeaders` trait for `RequestBuilder`.
@@ -151,11 +169,11 @@ impl<Any> WithHeaders<Any> for RequestBuilder<Any> {
         Ok(self)
     }
 
-    fn with_auth(self, auth: String) ->  Self {
+    fn with_auth(self, auth: String) -> Self {
         self.header(AUTHORIZATION, auth)
     }
 
-    fn with_json_headers(self) ->  Self {
+    fn with_json_headers(self) -> Self {
         self.header(ACCEPT, "application/json")
             .header(CONTENT_TYPE, "application/json")
     }
