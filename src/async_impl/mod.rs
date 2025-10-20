@@ -119,7 +119,7 @@ macro_rules! async_provider_impl {
 
     };
 }
-
+pub use async_provider_impl;
 
 
 #[cfg(test)]
@@ -244,7 +244,7 @@ mod tests {
     /// generate_tests!(\"my_provider\");
     /// ```
     #[macro_export]
-    macro_rules! generate_tests {
+    macro_rules! generate_async_tests {
         ($feat:literal) => {
 
             #[cfg(feature = "test_smol")]
@@ -309,5 +309,4 @@ mod tests {
             }
         }
     }
-
 }
