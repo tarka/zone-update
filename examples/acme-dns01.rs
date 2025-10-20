@@ -5,7 +5,7 @@ use anyhow::Result;
 use random_string::charsets::ALPHANUMERIC;
 use zone_edit::{gandi::{Auth, Gandi}, Config, DnsProvider};
 
-fn get_dns_client() -> Result<impl DnsProvider> {
+fn get_dns_client() -> Result<Gandi> {
     // Gandi supports 2 types of API key
     let auth = if let Some(key) = env::var("GANDI_APIKEY").ok() {
         Auth::ApiKey(key)
@@ -20,10 +20,8 @@ fn get_dns_client() -> Result<impl DnsProvider> {
         dry_run: false,
     };
 
-    Ok(Gandi {
-        config,
-        auth,
-    })
+    let gandi = Gandi::new(config, auth);
+    Ok(gandi)
 }
 
 fn get_cert() -> Result<Certificate> {

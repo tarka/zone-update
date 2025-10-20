@@ -1,9 +1,10 @@
 
 
-pub mod async_impl;
 pub mod errors;
 mod http;
 
+#[cfg(feature = "async")]
+pub mod async_impl;
 #[cfg(feature = "dnsimple")]
 pub mod dnsimple;
 #[cfg(feature = "gandi")]

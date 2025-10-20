@@ -3,10 +3,10 @@ use std::{env, time::Duration};
 use acme_micro::{create_p384_key, Certificate, Directory, DirectoryUrl};
 use anyhow::Result;
 use random_string::charsets::ALPHANUMERIC;
-use zone_edit::{gandi::{Auth, Gandi}, Config, DnsProvider};
+use zone_edit::{async_impl::{AsyncDnsProvider, gandi::AsyncGandi}, gandi::Auth, Config, DnsProvider};
 
 
-fn get_dns_client() -> Result<impl DnsProvider> {
+fn get_dns_client() -> Result<impl AsyncDnsProvider> {
     // Gandi supports 2 types of API key
     let auth = if let Some(key) = env::var("GANDI_APIKEY").ok() {
         Auth::ApiKey(key)
@@ -20,11 +20,9 @@ fn get_dns_client() -> Result<impl DnsProvider> {
         domain: env::var("GANDI_TEST_DOMAIN")?,
         dry_run: false,
     };
+    let gandi = AsyncGandi::new(config, auth);
 
-    Ok(Gandi {
-        config,
-        auth,
-    })
+    Ok(gandi)
 }
 
 async fn get_cert() -> Result<Certificate> {
@@ -93,19 +91,18 @@ async fn get_cert() -> Result<Certificate> {
 
 
 fn main() -> Result<()> {
-
-    #[cfg(feature = "smol")]
     smol::block_on(
         get_cert()
     )?;
 
-    #[cfg(feature = "tokio")]
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()?
-        .block_on(
-            get_cert()
-        )?;
+    // Alternatively...
+    //
+    // tokio::runtime::Builder::new_multi_thread()
+    //     .enable_all()
+    //     .build()?
+    //     .block_on(
+    //         get_cert()
+    //     )?;
 
     Ok(())
 }

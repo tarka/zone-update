@@ -11,7 +11,7 @@ use crate::{errors::Result, RecordType};
 
 use crate::async_impl::AsyncDnsProvider;
 
-struct AsyncGandi {
+pub struct AsyncGandi {
     inner: Arc<Gandi>,
 }
 
