@@ -24,7 +24,6 @@ impl Auth {
     }
 }
 
-
 pub struct Gandi {
     pub config: Config,
     pub auth: Auth,

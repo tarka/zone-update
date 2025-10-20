@@ -272,16 +272,6 @@ mod tests {
         Ok(())
     }
 
-
-    #[test]
-    #[test_log::test]
-    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-    fn id_fetch() -> Result<()> {
-        test_id_fetch()?;
-        Ok(())
-    }
-
-
     #[test]
     #[test_log::test]
     #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
