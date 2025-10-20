@@ -20,9 +20,8 @@ jobs:
         run: rustup update
 
       - name: Run ${{ matrix.runtime }} tests
-        with:
-          env:
-            DNSIMPLE_TEST_DOMAIN: ${{ secrets.DNSIMPLE_TEST_DOMAIN }}
-            DNSIMPLE_TOKEN: ${{ secrets.DNSIMPLE_TOKEN }}
+        env:
+          DNSIMPLE_TEST_DOMAIN: ${{ secrets.DNSIMPLE_TEST_DOMAIN }}
+          DNSIMPLE_TOKEN: ${{ secrets.DNSIMPLE_TOKEN }}
 
         run: cargo test --no-default-features --features ${{ matrix.runtime }},test_${{ matrix.provider }}
