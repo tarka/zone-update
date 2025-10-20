@@ -10,11 +10,19 @@ jobs:
     strategy:
       matrix:
         runtime: [smol, tokio]
+        provider: [dnsimple]
+
     steps:
+      
       - uses: actions/checkout@v4
 
       - name: Update Rust to latest
         run: rustup update
 
       - name: Run ${{ matrix.runtime }} tests
-        run: cargo test --no-default-features --features ${{ matrix.runtime }}
+        with:
+          env:
+            DNSIMPLE_TEST_DOMAIN: ${{ secrets.DNSIMPLE_TEST_DOMAIN }}
+            DNSIMPLE_TOKEN: ${{ secrets.DNSIMPLE_TOKEN }}
+
+        run: cargo test --no-default-features --features ${{ matrix.runtime }},test_${{ matrix.provider }}
