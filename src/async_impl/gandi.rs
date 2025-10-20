@@ -31,7 +31,7 @@ async_provider_impl!(AsyncGandi);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{async_impl::tests::*, generate_tests};
+    use crate::{async_impl::tests::*, generate_async_tests};
     use std::env;
 
     fn get_client() -> AsyncGandi {
@@ -51,7 +51,7 @@ mod tests {
         AsyncGandi::new(config, auth)
     }
 
-    generate_tests!("test_gandi");
+    generate_async_tests!("test_gandi");
 
 }
 

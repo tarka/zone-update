@@ -33,7 +33,7 @@ async_provider_impl!(AsyncDnSimple);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{async_impl::tests::*, generate_tests};
+    use crate::{async_impl::tests::*, generate_async_tests};
     use std::env;
 
     const TEST_API: &str = "https://api.sandbox.dnsimple.com/v2";
@@ -47,7 +47,7 @@ mod tests {
         AsyncDnSimple::new_with_endpoint(config, auth, None, TEST_API)
     }
 
-    generate_tests!("test_dnsimple");
+    generate_async_tests!("test_dnsimple");
 
 }
 
