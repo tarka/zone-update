@@ -5,7 +5,7 @@ use blocking::unblock;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::dnsimple::{Auth, DnSimple, API_BASE};
-use crate::{Config, DnsProvider};
+use crate::{async_provider_impl, Config, DnsProvider};
 use crate::{errors::Result, RecordType};
 
 use crate::async_impl::AsyncDnsProvider;
@@ -27,46 +27,7 @@ impl AsyncDnSimple {
     }
 }
 
-impl AsyncDnsProvider for AsyncDnSimple {
-
-    fn get_record<T>(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<Option<T>>>
-    where
-        T: DeserializeOwned + Send + Sync + 'static
-    {
-        let provider = self.inner.clone();
-        let host = host.clone();
-        unblock(move || provider.get_record(rtype, &host))
-    }
-
-    fn create_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
-    where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static
-{
-        let provider = self.inner.clone();
-        let host = host.clone();
-        let record = record.clone();
-        unblock(move || provider.create_record(rtype, &host, &record))
-    }
-
-    fn update_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
-    where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static
-    {
-        let provider = self.inner.clone();
-        let host = host.clone();
-        let record = record.clone();
-        unblock(move || provider.update_record(rtype, &host, &record))
-    }
-
-    fn delete_record(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<()>>
-    {
-        let provider = self.inner.clone();
-        let host = host.clone();
-        unblock(move || provider.delete_record(rtype, &host))
-    }
-
-}
-
+async_provider_impl!(AsyncDnSimple);
 
 
 #[cfg(test)]

@@ -72,6 +72,53 @@ pub trait AsyncDnsProvider {
     }
 }
 
+#[macro_export]
+macro_rules! async_provider_impl {
+    ($i:ident) => {
+        impl AsyncDnsProvider for $i {
+
+            fn get_record<T>(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<Option<T>>>
+            where
+                T: DeserializeOwned + Send + Sync + 'static
+            {
+                let provider = self.inner.clone();
+                let host = host.clone();
+                unblock(move || provider.get_record(rtype, &host))
+            }
+
+            fn create_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
+            where
+                T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static
+            {
+                let provider = self.inner.clone();
+                let host = host.clone();
+                let record = record.clone();
+                unblock(move || provider.create_record(rtype, &host, &record))
+            }
+
+            fn update_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
+            where
+                T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static
+            {
+                let provider = self.inner.clone();
+                let host = host.clone();
+                let record = record.clone();
+                unblock(move || provider.update_record(rtype, &host, &record))
+            }
+
+            fn delete_record(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<()>>
+            {
+                let provider = self.inner.clone();
+                let host = host.clone();
+                unblock(move || provider.delete_record(rtype, &host))
+            }
+
+        }
+
+    };
+}
+
+
 
 #[cfg(test)]
 mod tests {
