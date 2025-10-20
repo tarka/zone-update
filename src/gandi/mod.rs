@@ -5,9 +5,10 @@ use serde::{de::DeserializeOwned, Serialize};
 use tracing::{error, info, warn};
 
 use types::{Record, RecordUpdate};
-use crate::{errors::{Error, Result}, http, Config, DnsProvider, RecordType};
+use ureq::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use crate::{errors::{Error, Result}, http::{self, ResponseToOption}, Config, DnsProvider, RecordType};
 
-const API_BASE: &str = "https://api.gandi.net/v5/livedns";
+pub(crate) const API_BASE: &str = "https://api.gandi.net/v5/livedns";
 
 pub enum Auth {
     ApiKey(String),
@@ -23,10 +24,9 @@ impl Auth {
     }
 }
 
-
 pub struct Gandi {
-    pub config: Config,
-    pub auth: Auth,
+    config: Config,
+    auth: Auth,
 }
 
 impl Gandi {
@@ -40,15 +40,19 @@ impl Gandi {
 
 impl DnsProvider for Gandi {
 
-    async fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
+    fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
     where
         T: DeserializeOwned
     {
-        let url = format!("{API_BASE}/domains/{}/records/{host}/{rtype}", self.config.domain)
-            .parse()
-            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
-        let auth = self.auth.get_header();
-        let mut rec: Record<T> = match http::get(url, auth).await? {
+
+        let url = format!("{API_BASE}/domains/{}/records/{host}/{rtype}", self.config.domain);
+        let response = http::client().get(url)
+            .header(ACCEPT, "application/json")
+            .header(AUTHORIZATION, self.auth.get_header())
+            .call()?
+            .to_option::<Record<T>>()?;
+
+        let mut rec: Record<T> = match response {
             Some(rec) => rec,
             None => return Ok(None)
         };
@@ -69,46 +73,51 @@ impl DnsProvider for Gandi {
 
     }
 
-    async fn create_record<T>(&self, rtype: RecordType, host: &str, rec: &T) -> Result<()>
+    fn create_record<T>(&self, rtype: RecordType, host: &str, rec: &T) -> Result<()>
     where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync
+        T: Serialize + DeserializeOwned + Display + Clone
     {
         // PUT works for both operations
-        self.update_record(rtype, host, rec).await
+        self.update_record(rtype, host, rec)
     }
 
-    async fn update_record<T>(&self, rtype: RecordType, host: &str, ip: &T) -> Result<()>
+    fn update_record<T>(&self, rtype: RecordType, host: &str, ip: &T) -> Result<()>
     where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync
+        T: Serialize + DeserializeOwned + Display + Clone
     {
-        let url = format!("{API_BASE}/domains/{}/records/{host}/{rtype}", self.config.domain)
-            .parse()
-            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
-        let auth = self.auth.get_header();
+        let url = format!("{API_BASE}/domains/{}/records/{host}/{rtype}", self.config.domain);
+        if self.config.dry_run {
+            info!("DRY-RUN: Would have sent PUT to {url}");
+            return Ok(())
+        }
 
         let update = RecordUpdate {
             rrset_values: vec![(*ip).clone()],
             rrset_ttl: Some(300),
         };
-        if self.config.dry_run {
-            info!("DRY-RUN: Would have sent PUT to {url}");
-            return Ok(())
-        }
-        http::put::<RecordUpdate<T>>(url, &update, auth).await?;
+
+        let body = serde_json::to_string(&update)?;
+        http::client().put(url)
+            .header(ACCEPT, "application/json")
+            .header(CONTENT_TYPE, "application/json")
+            .header(AUTHORIZATION, self.auth.get_header())
+            .send(body)?;
+
         Ok(())
     }
 
-    async  fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()> {
-        let url = format!("{API_BASE}/domains/{}/records/{host}/{rtype}", self.config.domain)
-            .parse()
-            .map_err(|e| Error::UrlError(format!("Error: {e}")))?;
-        let auth = self.auth.get_header();
+     fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()> {
+        let url = format!("{API_BASE}/domains/{}/records/{host}/{rtype}", self.config.domain);
 
         if self.config.dry_run {
             info!("DRY-RUN: Would have sent DELETE to {url}");
             return Ok(())
         }
-        http::delete(url, auth).await?;
+
+        http::client().delete(url)
+            .header(ACCEPT, "application/json")
+            .header(AUTHORIZATION, self.auth.get_header())
+            .call()?;
 
         Ok(())
     }
@@ -145,65 +154,28 @@ mod tests {
     }
 
 
-    #[cfg(feature = "smol")]
-    mod smol_tests {
-        use super::*;
-        use macro_rules_attribute::apply;
-        use smol_macros::test;
-
-
-        #[apply(test!)]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_v4() -> Result<()> {
-            test_create_update_delete_ipv4(get_client()).await?;
-            Ok(())
-        }
-
-        #[apply(test!)]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_txt() -> Result<()> {
-            test_create_update_delete_txt(get_client()).await?;
-            Ok(())
-        }
-
-        #[apply(test!)]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_default() -> Result<()> {
-            test_create_update_delete_txt_default(get_client()).await?;
-            Ok(())
-        }
+    #[test]
+    #[test_log::test]
+    #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
+    fn create_update_v4() -> Result<()> {
+        test_create_update_delete_ipv4(get_client())?;
+        Ok(())
     }
 
-    #[cfg(feature = "tokio")]
-    mod tokio_tests {
-        use super::*;
+    #[test]
+    #[test_log::test]
+    #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
+    fn create_update_txt() -> Result<()> {
+        test_create_update_delete_txt(get_client())?;
+        Ok(())
+    }
 
-        #[tokio::test]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_v4() -> Result<()> {
-            test_create_update_delete_ipv4(get_client()).await?;
-            Ok(())
-        }
-
-        #[tokio::test]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_txt() -> Result<()> {
-            test_create_update_delete_txt(get_client()).await?;
-            Ok(())
-        }
-
-        #[tokio::test]
-        #[test_log::test]
-        #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
-        async fn create_update_default() -> Result<()> {
-            test_create_update_delete_txt_default(get_client()).await?;
-            Ok(())
-        }
+    #[test]
+    #[test_log::test]
+    #[cfg_attr(not(feature = "test_gandi"), ignore = "Gandi API test")]
+    fn create_update_default() -> Result<()> {
+        test_create_update_delete_txt_default(get_client())?;
+        Ok(())
     }
 
 }

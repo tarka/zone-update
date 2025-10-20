@@ -1,6 +1,5 @@
 
-use std::result;
-use rustls::pki_types::InvalidDnsNameError;
+use std::{result, sync::PoisonError};
 use thiserror::Error;
 
 
@@ -25,19 +24,26 @@ pub enum Error {
     AddrParseError(#[from] std::net::AddrParseError),
 
     #[error(transparent)]
-    HostError(#[from] InvalidDnsNameError),
+    UreqError(#[from] ureq::Error),
 
-    #[error(transparent)]
-    HyperError(#[from] hyper::Error),
+    #[error("Failed to lock: {0}")]
+    LockingError(String),
 
-    #[error(transparent)]
-    HyperHttpError(#[from] hyper::http::Error),
 
-    #[error(transparent)]
-    HeaderNameError(#[from] http::header::InvalidHeaderName),
+    // #[error(transparent)]
+    // HostError(#[from] InvalidDnsNameError),
 
-    #[error(transparent)]
-    HeaderValueError(#[from] http::header::InvalidHeaderValue),
+    // #[error(transparent)]
+    // HyperError(#[from] hyper::Error),
+
+    // #[error(transparent)]
+    // HyperHttpError(#[from] hyper::http::Error),
+
+    // #[error(transparent)]
+    // HeaderNameError(#[from] http::header::InvalidHeaderName),
+
+    // #[error(transparent)]
+    // HeaderValueError(#[from] http::header::InvalidHeaderValue),
 
     #[error(transparent)]
     IoError(#[from] std::io::Error),
@@ -45,8 +51,8 @@ pub enum Error {
     #[error(transparent)]
     JsonError(#[from] serde_json::Error),
 
-    #[error(transparent)]
-    RustlsError(#[from] rustls::Error),
+    // #[error(transparent)]
+    // RustlsError(#[from] rustls::Error),
 }
 
 pub type Result<T> = result::Result<T, Error>;

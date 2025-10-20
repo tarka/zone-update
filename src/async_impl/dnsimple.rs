@@ -1,0 +1,53 @@
+use std::sync::Arc;
+use std::{fmt::Display, net::Ipv4Addr};
+
+use blocking::unblock;
+use serde::{de::DeserializeOwned, Serialize};
+
+use crate::dnsimple::{Auth, DnSimple, API_BASE};
+use crate::{async_provider_impl, Config, DnsProvider};
+use crate::{errors::Result, RecordType};
+
+use crate::async_impl::AsyncDnsProvider;
+
+struct AsyncDnSimple {
+    inner: Arc<DnSimple>,
+}
+
+impl AsyncDnSimple {
+    pub fn new(config: Config, auth: Auth, acc: Option<u32>) -> Self {
+        Self::new_with_endpoint(config, auth, acc, API_BASE)
+    }
+
+    fn new_with_endpoint(config: Config, auth: Auth, acc: Option<u32>, endpoint: &'static str) -> Self {
+        let inner = DnSimple::new_with_endpoint(config, auth, acc, endpoint);
+        Self {
+            inner: Arc::new(inner)
+        }
+    }
+}
+
+async_provider_impl!(AsyncDnSimple);
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{async_impl::tests::*, generate_tests};
+    use std::env;
+
+    const TEST_API: &str = "https://api.sandbox.dnsimple.com/v2";
+
+    fn get_client() -> AsyncDnSimple {
+        let auth = Auth { key: env::var("DNSIMPLE_TOKEN").unwrap() };
+        let config = Config {
+            domain: env::var("DNSIMPLE_TEST_DOMAIN").unwrap(),
+            dry_run: false,
+        };
+        AsyncDnSimple::new_with_endpoint(config, auth, None, TEST_API)
+    }
+
+    generate_tests!("test_dnsimple");
+
+}
+

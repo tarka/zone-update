@@ -1,6 +1,10 @@
-mod http;
-pub mod errors;
 
+
+pub mod errors;
+mod http;
+
+#[cfg(feature = "async")]
+pub mod async_impl;
 #[cfg(feature = "dnsimple")]
 pub mod dnsimple;
 #[cfg(feature = "gandi")]
@@ -44,64 +48,54 @@ impl Display for RecordType {
 
 #[allow(unused)]
 pub trait DnsProvider {
-    fn get_record<T>(&self, rtype: RecordType, host: &str) -> impl Future<Output = Result<Option<T>>>
+    fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
     where
         T: DeserializeOwned;
 
-    fn create_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> impl Future<Output = Result<()>>
+    fn create_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
     where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync;
+        T: Serialize + DeserializeOwned + Display + Clone;
 
-    fn update_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> impl Future<Output = Result<()>>
+    fn update_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
     where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync;
+        T: Serialize + DeserializeOwned + Display + Clone;
 
-    fn delete_record(&self, rtype: RecordType, host: &str) -> impl Future<Output = Result<()>>;
+    fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>;
 
 
     // Default helper impls
 
-    // We know all the types, and they're enforced above, so this lint
-    // doesn't apply here(?)
-    #[allow(async_fn_in_trait)]
-    async fn get_txt_record(&self, host: &str) -> Result<Option<String>> {
-        self.get_record::<String>(RecordType::TXT, host).await
+    fn get_txt_record(&self, host: &str) -> Result<Option<String>> {
+        self.get_record::<String>(RecordType::TXT, host)
             .map(|opt| opt.map(|s| strip_quotes(&s)))
     }
 
-    #[allow(async_fn_in_trait)]
-    async fn create_txt_record(&self, host: &str, record: &String) -> Result<()> {
-        self.create_record(RecordType::TXT, host, record).await
+    fn create_txt_record(&self, host: &str, record: &String) -> Result<()> {
+        self.create_record(RecordType::TXT, host, record)
     }
 
-    #[allow(async_fn_in_trait)]
-    async fn update_txt_record(&self, host: &str, record: &String) -> Result<()> {
-        self.update_record(RecordType::TXT, host, record).await
+    fn update_txt_record(&self, host: &str, record: &String) -> Result<()> {
+        self.update_record(RecordType::TXT, host, record)
     }
 
-    #[allow(async_fn_in_trait)]
-    async fn delete_txt_record(&self, host: &str) -> Result<()> {
-        self.delete_record(RecordType::TXT, host).await
+    fn delete_txt_record(&self, host: &str) -> Result<()> {
+        self.delete_record(RecordType::TXT, host)
     }
 
-    #[allow(async_fn_in_trait)]
-    async fn get_a_record(&self, host: &str) -> Result<Option<Ipv4Addr>> {
-        self.get_record(RecordType::A, host).await
+    fn get_a_record(&self, host: &str) -> Result<Option<Ipv4Addr>> {
+        self.get_record(RecordType::A, host)
     }
 
-    #[allow(async_fn_in_trait)]
-    async fn create_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()> {
-        self.create_record(RecordType::A, host, record).await
+    fn create_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()> {
+        self.create_record(RecordType::A, host, record)
     }
 
-    #[allow(async_fn_in_trait)]
-    async fn update_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()> {
-        self.update_record(RecordType::A, host, record).await
+    fn update_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()> {
+        self.update_record(RecordType::A, host, record)
     }
 
-    #[allow(async_fn_in_trait)]
-    async fn delete_a_record(&self, host: &str) -> Result<()> {
-        self.delete_record(RecordType::A, host).await
+     fn delete_a_record(&self, host: &str) -> Result<()> {
+        self.delete_record(RecordType::A, host)
     }
 }
 
@@ -142,79 +136,79 @@ mod tests {
     }
 
 
-    pub async fn test_create_update_delete_ipv4(client: impl DnsProvider) -> Result<()> {
+    pub fn test_create_update_delete_ipv4(client: impl DnsProvider) -> Result<()> {
 
         let host = random_string::generate(16, ALPHANUMERIC);
 
         // Create
         let ip: Ipv4Addr = "1.1.1.1".parse()?;
-        client.create_record(RecordType::A, &host, &ip).await?;
-        let cur = client.get_record(RecordType::A, &host).await?;
+        client.create_record(RecordType::A, &host, &ip)?;
+        let cur = client.get_record(RecordType::A, &host)?;
         assert_eq!(Some(ip), cur);
 
 
         // Update
         let ip: Ipv4Addr = "2.2.2.2".parse()?;
-        client.update_record(RecordType::A, &host, &ip).await?;
-        let cur = client.get_record(RecordType::A, &host).await?;
+        client.update_record(RecordType::A, &host, &ip)?;
+        let cur = client.get_record(RecordType::A, &host)?;
         assert_eq!(Some(ip), cur);
 
 
         // Delete
-        client.delete_record(RecordType::A, &host).await?;
-        let del: Option<Ipv4Addr> = client.get_record(RecordType::A, &host).await?;
+        client.delete_record(RecordType::A, &host)?;
+        let del: Option<Ipv4Addr> = client.get_record(RecordType::A, &host)?;
         assert!(del.is_none());
 
         Ok(())
     }
 
-    pub async fn test_create_update_delete_txt(client: impl DnsProvider) -> Result<()> {
+    pub fn test_create_update_delete_txt(client: impl DnsProvider) -> Result<()> {
 
         let host = random_string::generate(16, ALPHANUMERIC);
 
         // Create
         let txt = "a text reference".to_string();
-        client.create_record(RecordType::TXT, &host, &txt).await?;
-        let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
+        client.create_record(RecordType::TXT, &host, &txt)?;
+        let cur: Option<String> = client.get_record(RecordType::TXT, &host)?;
         assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
 
         // Update
         let txt = "another text reference".to_string();
-        client.update_record(RecordType::TXT, &host, &txt).await?;
-        let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
+        client.update_record(RecordType::TXT, &host, &txt)?;
+        let cur: Option<String> = client.get_record(RecordType::TXT, &host)?;
         assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
 
         // Delete
-        client.delete_record(RecordType::TXT, &host).await?;
-        let del: Option<String> = client.get_record(RecordType::TXT, &host).await?;
+        client.delete_record(RecordType::TXT, &host)?;
+        let del: Option<String> = client.get_record(RecordType::TXT, &host)?;
         assert!(del.is_none());
 
         Ok(())
     }
 
-    pub async fn test_create_update_delete_txt_default(client: impl DnsProvider) -> Result<()> {
+    pub fn test_create_update_delete_txt_default(client: impl DnsProvider) -> Result<()> {
 
         let host = random_string::generate(16, ALPHANUMERIC);
 
         // Create
         let txt = "a text reference".to_string();
-        client.create_txt_record(&host, &txt).await?;
-        let cur = client.get_txt_record(&host).await?;
+        client.create_txt_record(&host, &txt)?;
+        let cur = client.get_txt_record(&host)?;
         assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
 
         // Update
         let txt = "another text reference".to_string();
-        client.update_txt_record(&host, &txt).await?;
-        let cur = client.get_txt_record(&host).await?;
+        client.update_txt_record(&host, &txt)?;
+        let cur = client.get_txt_record(&host)?;
         assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
 
         // Delete
-        client.delete_txt_record(&host).await?;
-        let del = client.get_txt_record(&host).await?;
+        client.delete_txt_record(&host)?;
+        let del = client.get_txt_record(&host)?;
         assert!(del.is_none());
 
         Ok(())
