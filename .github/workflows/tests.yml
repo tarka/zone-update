@@ -23,5 +23,8 @@ jobs:
         env:
           DNSIMPLE_TEST_DOMAIN: ${{ secrets.DNSIMPLE_TEST_DOMAIN }}
           DNSIMPLE_TOKEN: ${{ secrets.DNSIMPLE_TOKEN }}
+          DNSMADEEASY_TEST_DOMAIN: ${{ secrets.DNSMADEEASY_TEST_DOMAIN }}
+          DNSMADEEASY_KEY: ${{ secrets.DNSMADEEASY_KEY }}
+          DNSMADEEASY_SECRET: ${{ secrets.DNSMADEEASY_SECRET }}
 
         run: cargo test --features test_${{ matrix.runtime }},test_${{ matrix.provider }}
