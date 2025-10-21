@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/tarka/zone-edit/compare/v0.3.1...v0.4.0) - 2025-10-21
+
+### Other
+
+- Update provider list.
+- Actually add dnsmadeeasy
+- Add dnsmadeeasy to CI.
+- Add DnsMadeEasy impl, plus misc. fixes for problems found along the way.
+- More automated docs for http.rs
+- Add a couple of more ureq helpers.
+- Replace unwrap with error
+- Add more docs to http.rs.
+- Add automated docs to WithHeader extension trait.
+- Start adding dnsmadeeasy
+- Fix feature name
+- Use same provider names as in sync version.
+- Fix macro name-clash.
+- Scope some tests
+- Also generate boilerplate for sync testing. Add auto-generated docs for macros.
+- Fix feature name
+- Correct actions syntax.
+- Enable dnsimple sandbox testing in CI.
+- More small cleanups.
+- Convert some async boilerplate to macros and add gandi async impl.
+- Convert boiler-plate async impl to macro
+- Minor cleanups
+- Remove old async test code.
+- Initial implementation of async API using `blocking`.
+- Convert Gandi to ureq.
+- Move common utils into http.rs
+- Intial working and tests for dnsimple.
+- Start of converting dnsimple to ureq.
+- Note about Namecheap sandbox payment.
+- Update DnsMadeEasy sandbox status
+- More cleanups.
+- Remove dnsmadeeasy code prior to merge of other changes to master.
+- More DnsMadeEasy changes.
+- Default auth header doesn't need to be Option anymore.
+- Refactor http module to allow custom headers.
+- Interim checkin prior to http.rs changes.
+- Add skeleton of DnsMadeEasy impl.
+- Move resuable API tests up to root.
+- Minor cleanups to dnsimple.
+- More readme tweaks.
+- Minor readme update.
+- Provider corrections.
+- Fix link
+- Move provider matrix to own file and expand from acme.sh list.
+- Clarify note
+- Use emojis
+- Start of DNS provider list.
+- Add note about Gandi keys.
+- Rename example.
+- Dump cert and private key in example.
+- The example needs gandi to build.
+- Cleanups and clarifications for example.
+- Add practical example using acme-micro to create an cert with letsencrypt.
+- In the wild we need to specify a crypto provider to rustls.
+- Minor cleanups.
+
 ## [0.3.1](https://github.com/tarka/zone-edit/compare/v0.3.0...v0.3.1) - 2025-09-26
 
 ### Other
