@@ -5,6 +5,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use crate::{errors::Result, strip_quotes, RecordType};
 
 
+#[cfg(feature = "dnsmadeeasy")]
+pub mod dnsmadeeasy;
 #[cfg(feature = "dnsimple")]
 pub mod dnsimple;
 #[cfg(feature = "gandi")]
@@ -126,11 +128,11 @@ pub use async_provider_impl;
 mod tests {
     use super::*;
     use std::net::Ipv4Addr;
-    use random_string::charsets::ALPHANUMERIC;
+    use random_string::charsets::ALPHA_LOWER;
 
     pub async fn test_create_update_delete_ipv4(client: impl AsyncDnsProvider) -> Result<()> {
 
-        let host = random_string::generate(16, ALPHANUMERIC);
+        let host = random_string::generate(16, ALPHA_LOWER);
 
         // Create
         let ip: Ipv4Addr = "1.1.1.1".parse()?;
@@ -156,7 +158,7 @@ mod tests {
 
     pub async fn test_create_update_delete_txt(client: impl AsyncDnsProvider) -> Result<()> {
 
-        let host = random_string::generate(16, ALPHANUMERIC);
+        let host = random_string::generate(16, ALPHA_LOWER);
 
         // Create
         let txt = "a text reference".to_string();
@@ -182,7 +184,7 @@ mod tests {
 
     pub async fn test_create_update_delete_txt_default(client: impl AsyncDnsProvider) -> Result<()> {
 
-        let host = random_string::generate(16, ALPHANUMERIC);
+        let host = random_string::generate(16, ALPHA_LOWER);
 
         // Create
         let txt = "a text reference".to_string();

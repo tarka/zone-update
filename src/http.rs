@@ -179,7 +179,7 @@ impl<Any> WithHeaders<Any> for RequestBuilder<Any> {
     }
 }
 
-/// Create and return a configured HTTP client agent.
+/// Create and return a configured HTTP ureq agent.
 ///
 /// This function sets up a ureq Agent with specific configuration options
 /// that are suitable for DNS provider APIs, including support for legacy

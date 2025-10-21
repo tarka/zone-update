@@ -126,17 +126,17 @@ impl DnSimple {
             None => return Ok(None)
         };
 
-        // FIXME: Assumes no or single address (which probably makes sense
-        // for DDNS, but may cause issues with malformed zones.
+        // FIXME: Assumes no or single address (which probably makes
+        // sense for DDNS and DNS-01, but may cause issues with
+        // malformed zones).
         let nr = recs.records.len();
         if nr > 1 {
             error!("Returned number of IPs is {}, should be 1", nr);
-            return Err(Error::UnexpectedRecord(format!("Returned number of IPs is {nr}, should be 1")));
+            return Err(Error::UnexpectedRecord(format!("Returned number of records is {nr}, should be 1")));
         } else if nr == 0 {
             warn!("No IP returned for {host}, continuing");
             return Ok(None);
         }
-
 
         Ok(Some(recs.records.remove(0)))
     }
@@ -268,7 +268,6 @@ mod tests {
         DnSimple::new_with_endpoint(config, auth, None, TEST_API)
     }
 
-    #[test]
     #[test_log::test]
     #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
     fn test_id_fetch() -> Result<()> {

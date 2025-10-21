@@ -126,7 +126,8 @@ fn strip_quotes(record: &str) -> String {
 mod tests {
     use super::*;
     use std::net::Ipv4Addr;
-    use random_string::charsets::ALPHANUMERIC;
+    use random_string::charsets::ALPHA_LOWER;
+    use tracing::info;
 
     #[test]
     fn test_strip_quotes() -> Result<()> {
@@ -141,9 +142,10 @@ mod tests {
 
     pub(crate) fn test_create_update_delete_ipv4(client: impl DnsProvider) -> Result<()> {
 
-        let host = random_string::generate(16, ALPHANUMERIC);
+        let host = random_string::generate(16, ALPHA_LOWER);
 
         // Create
+        info!("Creating IPv4 {host}");
         let ip: Ipv4Addr = "1.1.1.1".parse()?;
         client.create_record(RecordType::A, &host, &ip)?;
         let cur = client.get_record(RecordType::A, &host)?;
@@ -151,6 +153,7 @@ mod tests {
 
 
         // Update
+        info!("Updating IPv4 {host}");
         let ip: Ipv4Addr = "2.2.2.2".parse()?;
         client.update_record(RecordType::A, &host, &ip)?;
         let cur = client.get_record(RecordType::A, &host)?;
@@ -158,6 +161,7 @@ mod tests {
 
 
         // Delete
+        info!("Deleting IPv4 {host}");
         client.delete_record(RecordType::A, &host)?;
         let del: Option<Ipv4Addr> = client.get_record(RecordType::A, &host)?;
         assert!(del.is_none());
@@ -167,7 +171,7 @@ mod tests {
 
     pub(crate) fn test_create_update_delete_txt(client: impl DnsProvider) -> Result<()> {
 
-        let host = random_string::generate(16, ALPHANUMERIC);
+        let host = random_string::generate(16, ALPHA_LOWER);
 
         // Create
         let txt = "a text reference".to_string();
@@ -193,7 +197,7 @@ mod tests {
 
     pub(crate) fn test_create_update_delete_txt_default(client: impl DnsProvider) -> Result<()> {
 
-        let host = random_string::generate(16, ALPHANUMERIC);
+        let host = random_string::generate(16, ALPHA_LOWER);
 
         // Create
         let txt = "a text reference".to_string();
@@ -253,7 +257,6 @@ mod tests {
     macro_rules! generate_tests {
         ($feat:literal) => {
 
-            #[test]
             #[test_log::test]
             #[cfg_attr(not(feature = $feat), ignore = "API test")]
             fn create_update_v4() -> Result<()> {
@@ -261,7 +264,6 @@ mod tests {
                 Ok(())
             }
 
-            #[test]
             #[test_log::test]
             #[cfg_attr(not(feature = $feat), ignore = "API test")]
             fn create_update_txt() -> Result<()> {
@@ -269,7 +271,6 @@ mod tests {
                 Ok(())
             }
 
-            #[test]
             #[test_log::test]
             #[cfg_attr(not(feature = $feat), ignore = "API test")]
             fn create_update_default() -> Result<()> {
