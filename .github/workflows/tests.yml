@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         runtime: [smol, tokio]
-        provider: [dnsimple]
+        provider: [dnsimple, dnsmadeeasy]
 
     steps:
       
