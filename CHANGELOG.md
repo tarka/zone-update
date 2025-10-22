@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1](https://github.com/tarka/zone-edit/compare/v0.4.0...v0.4.1) - 2025-10-22
+
+### Other
+
+- Limite per-provider tests to one at a time.
+- Use single thread for tests against sandboxes.
+- Update list of supported providers.
+- Add async impl for porkbun.
+- Fixes for porkbun.
+- Initial porkbun support, still needs some fixes to decoding.
+- Re-export Auth from async modules for convenience.
+
 ## [0.4.0](https://github.com/tarka/zone-edit/compare/v0.3.1...v0.4.0) - 2025-10-21
 
 ### Other
