@@ -5,11 +5,13 @@ use std::{fmt::Display, net::Ipv4Addr};
 use blocking::unblock;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::gandi::{self as sync, Auth};
+use crate::gandi as sync;
 use crate::{async_provider_impl, Config, DnsProvider};
 use crate::{errors::Result, RecordType};
 
 use crate::async_impl::AsyncDnsProvider;
+
+pub use crate::gandi::Auth;
 
 pub struct Gandi {
     inner: Arc<sync::Gandi>,

@@ -4,11 +4,14 @@ use std::{fmt::Display, net::Ipv4Addr};
 use blocking::unblock;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::dnsimple::{self as sync, Auth, API_BASE};
+use crate::dnsimple::{self as sync, API_BASE};
 use crate::{async_provider_impl, Config, DnsProvider};
 use crate::{errors::Result, RecordType};
 
 use crate::async_impl::AsyncDnsProvider;
+
+
+pub use crate::dnsimple::Auth;
 
 struct DnSimple {
     inner: Arc<sync::DnSimple>,
@@ -50,4 +53,3 @@ mod tests {
     generate_async_tests!("test_dnsimple");
 
 }
-

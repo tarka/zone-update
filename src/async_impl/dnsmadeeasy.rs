@@ -11,6 +11,9 @@ use crate::{errors::Result, RecordType};
 
 use crate::async_impl::AsyncDnsProvider;
 
+
+pub use crate::dnsmadeeasy::Auth;
+
 struct DnsMadeEasy {
     inner: Arc<sync::DnsMadeEasy>,
 }
