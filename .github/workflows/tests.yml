@@ -27,4 +27,4 @@ jobs:
           DNSMADEEASY_KEY: ${{ secrets.DNSMADEEASY_KEY }}
           DNSMADEEASY_SECRET: ${{ secrets.DNSMADEEASY_SECRET }}
 
-        run: cargo test --features test_${{ matrix.runtime }},test_${{ matrix.provider }}
+        run: cargo test --features test_${{ matrix.runtime }},test_${{ matrix.provider }} -- --test-threads=1
