@@ -74,7 +74,7 @@ impl ResponseToOption for Response<Body> {
 
     fn from_error(&mut self) -> Result<Error> {
         let code = self.status();
-        let mut err = String::new();
+        let err = String::new();
         let _nr = self.body_mut()
             .read_to_string()?;
         error!("REST op failed: {code} {err:?}");
@@ -133,7 +133,7 @@ pub(crate) trait WithHeaders<T> {
 impl<Any> WithHeaders<Any> for RequestBuilder<Any> {
 
     fn with_headers(mut self, headers: Vec<(&str, String)>) -> Result<Self> {
-        let mut reqh = self.headers_mut()
+        let reqh = self.headers_mut()
             .ok_or(Error::HttpError("Failed to get headers from ureq".to_string()))?;
 
         for (k, v) in headers {

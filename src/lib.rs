@@ -51,7 +51,6 @@ impl Display for RecordType {
     }
 }
 
-#[allow(unused)]
 pub trait DnsProvider {
     fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
     where

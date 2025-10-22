@@ -1,6 +1,6 @@
 
 use std::sync::Arc;
-use std::{fmt::Display, net::Ipv4Addr};
+use std::fmt::Display;
 
 use blocking::unblock;
 use serde::{de::DeserializeOwned, Serialize};
@@ -33,8 +33,7 @@ async_provider_impl!(Porkbun);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{async_impl::tests::*, generate_async_tests};
-    use crate::dnsmadeeasy::tests::TEST_API;
+    use crate::generate_async_tests;
     use std::env;
 
     fn get_client() -> Porkbun {

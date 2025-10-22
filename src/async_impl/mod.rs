@@ -15,7 +15,6 @@ pub mod dnsimple;
 pub mod porkbun;
 
 
-#[allow(unused)]
 pub trait AsyncDnsProvider {
     fn get_record<T>(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<Option<T>>>
     where

@@ -5,8 +5,13 @@ use serde::{de::DeserializeOwned, Serialize};
 use tracing::{error, info, warn};
 
 use types::{Record, RecordUpdate};
-use ureq::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use crate::{errors::{Error, Result}, http::{self, ResponseToOption, WithHeaders}, Config, DnsProvider, RecordType};
+use crate::{
+    errors::{Error, Result},
+    http::{self, ResponseToOption, WithHeaders},
+    Config,
+    DnsProvider,
+    RecordType,
+};
 
 pub(crate) const API_BASE: &str = "https://api.gandi.net/v5/livedns";
 
@@ -125,12 +130,11 @@ impl DnsProvider for Gandi {
 
 #[cfg(test)]
 mod tests {
-    use crate::{generate_tests, strip_quotes};
+    use crate::generate_tests;
 
     use super::*;
     use crate::tests::*;
-    use std::{env, net::Ipv4Addr};
-    use random_string::charsets::ALPHANUMERIC;
+    use std::env;
 
     fn get_client() -> Gandi {
         let auth = if let Some(key) = env::var("GANDI_APIKEY").ok() {

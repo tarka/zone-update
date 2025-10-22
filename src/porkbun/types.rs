@@ -1,7 +1,5 @@
 
-use std::str::FromStr;
-
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     http::de_str,
@@ -24,12 +22,6 @@ impl From<Auth> for AuthOnly {
             apikey: value.key,
         }
     }
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct IdOnly {
-    #[serde(deserialize_with = "de_str")]
-    id: u64,
 }
 
 // {

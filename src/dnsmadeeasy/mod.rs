@@ -1,13 +1,12 @@
 mod types;
 
-use std::{fmt::Display, str::FromStr, sync::Mutex};
+use std::{fmt::Display, sync::Mutex};
 
 use chrono::Utc;
 use hmac::{Hmac, Mac};
 use serde::{de::DeserializeOwned, Serialize};
-use sha1::{Digest, Sha1};
-use tracing::{error, info, warn, Instrument};
-use ureq::http::header::AUTHORIZATION;
+use sha1::Sha1;
+use tracing::{error, info, warn};
 
 use crate::{
     dnsmadeeasy::types::{Domain, Record, Records},

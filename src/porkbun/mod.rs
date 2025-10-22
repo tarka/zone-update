@@ -1,16 +1,22 @@
 mod types;
 
-use std::{any::Any, fmt::Display, str::FromStr, sync::Mutex};
+use std::fmt::Display;
 
-use chrono::Utc;
-use hmac::{Hmac, Mac};
 use serde::{de::DeserializeOwned, Serialize};
-use sha1::{Digest, Sha1};
-use tracing::{error, info, warn, Instrument};
-use ureq::http::{header::AUTHORIZATION, response};
+use tracing::{error, info, warn};
 
 use crate::{
-    errors::{Error, Result}, http::{self, ResponseToOption, WithHeaders}, porkbun::types::{AuthOnly, CreateUpdate, IdOnly, Record, Records}, Config, DnsProvider, RecordType
+    errors::{Error, Result},
+    http::{self, ResponseToOption, WithHeaders},
+    porkbun::types::{
+        AuthOnly,
+        CreateUpdate,
+        Record,
+        Records
+    },
+    Config,
+    DnsProvider,
+    RecordType
 };
 
 
