@@ -8,10 +8,10 @@ entirely accurate. Corrections and updates welcome.
 | DnSimple                  | ✅         | ✅       | tarka  | tarka      |                                                                                      |
 | Gandi                     | ✅         | ‼️        | tarka  |  tarka     | Tested manually. (Has a sandbox but is unusable in practice?)                        |
 | DNSMadeEasy               | ✅         | ✅       | tarka  | tarka      | Sandbox uses legacy ciphers and fails with rustls.                                   |
+| Porkbun                   | ✅         | ❌       | tarka  | tarka      |                                                                                      |
 | easyDNS.net               | ❌         | ✅       |        |            |                                                                                      |
 | Namecheap                 | ❌         | ✅       |        |            | Sandbox accepts test CC numbers.                                                     |
-| Porkbun                   | ❌         | ❌       |        |            |                                                                                      |
-| 1984Hosting               | ❌         | ❔       |        |            |                                                                                      |
+| 1984Hosting               | ❌         | ❔       |        |            | Doesn't really have an API, but the web forms can be abused. See acme.sh.            |
 | ACME                      | ❌         | ❔       |        |            |                                                                                      |
 | AcmeProxy                 | ❌         | ❔       |        |            |                                                                                      |
 | Active24                  | ❌         | ❔       |        |            |                                                                                      |

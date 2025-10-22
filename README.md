@@ -17,8 +17,10 @@ The library is async and supports both `smol` and `tokio`.
 
 Currently, Zone Edit supports the following DNS providers:
 
-* Gandi LiveDNS API
+* Gandi
 * Dnsimple
+* DnsMadeEasy
+* Porkbun
 
 See the [DNS providers matrix](docs/PROVIDERS.md) for more details.
 
