@@ -12,6 +12,8 @@ pub mod dnsimple;
 pub mod dnsmadeeasy;
 #[cfg(feature = "gandi")]
 pub mod gandi;
+#[cfg(feature = "porkbun")]
+pub mod porkbun;
 
 use std::{fmt::{self, Debug, Display, Formatter}, net::Ipv4Addr};
 

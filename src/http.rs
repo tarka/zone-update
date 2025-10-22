@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Deserialize, Deserializer};
 use tracing::{error, warn};
 use ureq::{http::{header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, HeaderName, HeaderValue, Response, StatusCode}, tls::TlsConfig, Agent, Body, RequestBuilder, ResponseExt};
 
@@ -50,26 +50,7 @@ pub(crate) trait ResponseToOption {
 
 
 
-/// Implementation of the `ResponseToOption` trait for `Response<Body>`.
-///
-/// This implementation provides concrete functionality for converting HTTP responses
-/// into optional values or error information based on response status codes.
 impl ResponseToOption for Response<Body> {
-    /// Converts an HTTP response to an optional value based on its status.
-    ///
-    /// For successful responses (200 OK), this method deserializes the response body
-    /// into the requested type. For 404 responses, it returns `None`. For other
-    /// status codes, it returns an `ApiError`.
-    ///
-    /// # Type Parameters
-    ///
-    /// * `T` - The type to deserialize the response body into, must implement `DeserializeOwned`
-    ///
-    /// # Returns
-    ///
-    /// * `Ok(Some(T))` - For 200 OK responses with successfully deserialized content
-    /// * `Ok(None)` - For 404 NOT_FOUND responses
-    /// * `Err(Error)` - For other status codes or deserialization failures
     fn to_option<T>(&mut self) -> Result<Option<T>>
     where
         T: DeserializeOwned
@@ -91,13 +72,6 @@ impl ResponseToOption for Response<Body> {
         }
     }
 
-    /// Extracts error information from an HTTP response.
-    ///
-    /// Reads the response body and status code to create an appropriate error.
-    ///
-    /// # Returns
-    ///
-    /// Returns an `Error::HttpError` containing information about the failed request.
     fn from_error(&mut self) -> Result<Error> {
         let code = self.status();
         let mut err = String::new();
@@ -205,4 +179,17 @@ pub(crate) fn client() -> Agent {
         )
         .build()
         .new_agent()
+}
+
+
+
+pub(crate) fn de_str<'de, T, D>(destr: D) -> std::result::Result<T, D::Error>
+where
+    T: FromStr,
+    T::Err: std::fmt::Display,
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(destr)?;
+    T::from_str(&s)
+        .map_err(serde::de::Error::custom)
 }
