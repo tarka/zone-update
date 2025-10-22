@@ -11,7 +11,9 @@ jobs:
       matrix:
         runtime: [smol, tokio]
         provider: [dnsimple, dnsmadeeasy]
-
+    concurrency:
+      group: ${{ matrix.provider }}
+  
     steps:
       
       - uses: actions/checkout@v4
