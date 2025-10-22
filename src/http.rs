@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Deserialize, Deserializer};
 use tracing::{error, warn};
 use ureq::{http::{header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, HeaderName, HeaderValue, Response, StatusCode}, tls::TlsConfig, Agent, Body, RequestBuilder, ResponseExt};
 
@@ -179,4 +179,17 @@ pub(crate) fn client() -> Agent {
         )
         .build()
         .new_agent()
+}
+
+
+
+pub(crate) fn de_str<'de, T, D>(destr: D) -> std::result::Result<T, D::Error>
+where
+    T: FromStr,
+    T::Err: std::fmt::Display,
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(destr)?;
+    T::from_str(&s)
+        .map_err(serde::de::Error::custom)
 }

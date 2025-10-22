@@ -1,7 +1,13 @@
 
-use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
-use crate::{porkbun::Auth, RecordType};
+use serde::{Deserialize, Deserializer, Serialize};
+
+use crate::{
+    http::de_str,
+    porkbun::Auth,
+    RecordType
+};
 
 // This could be folded into the records below with #[serde(flatten)],
 // but isn't worth it.
@@ -22,6 +28,7 @@ impl From<Auth> for AuthOnly {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct IdOnly {
+    #[serde(deserialize_with = "de_str")]
     id: u64,
 }
 
@@ -61,6 +68,7 @@ pub struct CreateUpdate<T> {
 // }
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Record<T> {
+    #[serde(deserialize_with = "de_str")]
     pub id: u64,
     pub name: String,
     #[serde(rename = "type")]

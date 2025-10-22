@@ -70,8 +70,7 @@ impl Porkbun {
     }
 
     fn get_record_id(&self, rtype: &RecordType, host: &str) -> Result<Option<u64>> {
-        // Simpler ID-only wrapper that removes the need for a known type.
-        let id_p = self.get_upstream_record::<IdOnly>(rtype, host)?
+        let id_p = self.get_upstream_record::<String>(rtype, host)?
             .map(|r| r.id);
         Ok(id_p)
     }
@@ -86,7 +85,7 @@ impl DnsProvider for Porkbun {
         T: DeserializeOwned
     {
          let rec: Record<T> = match self.get_upstream_record(&rtype, host)? {
-            Some(recs) => recs,
+            Some(rec) => rec,
             None => return Ok(None)
         };
 
