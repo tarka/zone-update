@@ -5,7 +5,7 @@ use std::{fmt::Display, net::Ipv4Addr};
 use blocking::unblock;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::dnsmadeeasy::{self as sync, Auth, API_BASE};
+use crate::dnsmadeeasy::{self as sync, API_BASE};
 use crate::{async_provider_impl, Config, DnsProvider};
 use crate::{errors::Result, RecordType};
 

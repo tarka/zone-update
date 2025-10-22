@@ -22,10 +22,11 @@ ureq = { version = "3.1.2", features = ["native-tls"], default-features = false 
 [features]
 default = ["all-providers"]
 async = []
-all-providers = ["gandi", "dnsmadeeasy", "dnsimple"]
-gandi = []
+all-providers = ["gandi", "dnsmadeeasy", "dnsimple", "porkbun"]
 dnsimple = []
 dnsmadeeasy = []
+gandi = []
+porkbun = []
 
 # Test features
 # Disables http module tests that rely on external services
@@ -33,6 +34,7 @@ test_offline = []
 test_gandi = ["gandi"]
 test_dnsimple = ["dnsimple"]
 test_dnsmadeeasy = ["dnsmadeeasy"]
+test_porkbun = ["porkbun"]
 test_smol = ["async"]
 test_tokio = ["async"]
 

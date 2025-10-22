@@ -50,26 +50,7 @@ pub(crate) trait ResponseToOption {
 
 
 
-/// Implementation of the `ResponseToOption` trait for `Response<Body>`.
-///
-/// This implementation provides concrete functionality for converting HTTP responses
-/// into optional values or error information based on response status codes.
 impl ResponseToOption for Response<Body> {
-    /// Converts an HTTP response to an optional value based on its status.
-    ///
-    /// For successful responses (200 OK), this method deserializes the response body
-    /// into the requested type. For 404 responses, it returns `None`. For other
-    /// status codes, it returns an `ApiError`.
-    ///
-    /// # Type Parameters
-    ///
-    /// * `T` - The type to deserialize the response body into, must implement `DeserializeOwned`
-    ///
-    /// # Returns
-    ///
-    /// * `Ok(Some(T))` - For 200 OK responses with successfully deserialized content
-    /// * `Ok(None)` - For 404 NOT_FOUND responses
-    /// * `Err(Error)` - For other status codes or deserialization failures
     fn to_option<T>(&mut self) -> Result<Option<T>>
     where
         T: DeserializeOwned
@@ -91,13 +72,6 @@ impl ResponseToOption for Response<Body> {
         }
     }
 
-    /// Extracts error information from an HTTP response.
-    ///
-    /// Reads the response body and status code to create an appropriate error.
-    ///
-    /// # Returns
-    ///
-    /// Returns an `Error::HttpError` containing information about the failed request.
     fn from_error(&mut self) -> Result<Error> {
         let code = self.status();
         let mut err = String::new();
