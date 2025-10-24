@@ -253,6 +253,7 @@ mod tests {
             #[cfg(feature = "test_smol")]
             mod smol_tests {
                 use super::*;
+                use crate::async_impl::tests::*;
                 use macro_rules_attribute::apply;
                 use smol_macros::test;
 
