@@ -285,6 +285,7 @@ mod tests {
             #[cfg(feature = "test_tokio")]
             mod tokio_tests {
                 use super::*;
+                use crate::async_impl::tests::*;
 
                 #[tokio::test]
                 #[test_log::test]
