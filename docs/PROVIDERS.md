@@ -11,7 +11,7 @@ entirely accurate. Corrections and updates welcome.
 | Porkbun                   | ✅         | ❌       | tarka  | tarka      |                                                                                      |
 | easyDNS.net               | ❌         | ✅       |        |            |                                                                                      |
 | Namecheap                 | ❌         | ✅       |        |            | Sandbox accepts test CC numbers.                                                     |
-| 1984Hosting               | ❌         | ❔       |        |            | Doesn't really have an API, but the web forms can be abused. See acme.sh.            |
+| 1984Hosting               | ❌         | ❌       |        |            | Doesn't really have an API, but the web forms can be abused. See acme.sh.            |
 | ACME                      | ❌         | ❔       |        |            |                                                                                      |
 | AcmeProxy                 | ❌         | ❔       |        |            |                                                                                      |
 | Active24                  | ❌         | ❔       |        |            |                                                                                      |
@@ -52,7 +52,7 @@ entirely accurate. Corrections and updates welcome.
 | DuckDNS.org               | ❌         | ❔       |        |            |                                                                                      |
 | durabledns                | ❌         | ❔       |        |            |                                                                                      |
 | Dyn                       | ❌         | ❔       |        |            |                                                                                      |
-| dynadot                   | ❌         | ❔       |        |            |                                                                                      |
+| dynadot                   | ❌         | ✅       |        |            | https://www.dynadot.com/help/question/api-sandbox                                    |
 | dyndnsfree                | ❌         | ❔       |        |            |                                                                                      |
 | Dynu                      | ❌         | ❔       |        |            |                                                                                      |
 | dynv6                     | ❌         | ❔       |        |            |                                                                                      |
