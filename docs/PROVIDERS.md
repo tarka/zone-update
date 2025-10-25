@@ -52,7 +52,7 @@ entirely accurate. Corrections and updates welcome.
 | DuckDNS.org               | ❌         | ❔       |        |            |                                                                                      |
 | durabledns                | ❌         | ❔       |        |            |                                                                                      |
 | Dyn                       | ❌         | ❔       |        |            |                                                                                      |
-| dynadot                   | ❌         | ✅       |        |            | https://www.dynadot.com/help/question/api-sandbox                                    |
+| dynadot                   | ❌         | ❔       |        |            | API is only for purchase/sale of domains?                                            |
 | dyndnsfree                | ❌         | ❔       |        |            |                                                                                      |
 | Dynu                      | ❌         | ❔       |        |            |                                                                                      |
 | dynv6                     | ❌         | ❔       |        |            |                                                                                      |
