@@ -118,9 +118,10 @@ impl DnsProvider for Porkbun {
         }
 
         let body = serde_json::to_string(&record)?;
-        let response = http::client().post(url)
+        let _response = http::client().post(url)
             .with_json_headers()
-            .send(body)?;
+            .send(body)?
+            .check_error()?;
 
         Ok(())
     }
@@ -154,9 +155,10 @@ impl DnsProvider for Porkbun {
         }
 
         let body = serde_json::to_string(&record)?;
-        let response = http::client().post(url)
+        let _response = http::client().post(url)
             .with_json_headers()
-            .send(body)?;
+            .send(body)?
+            .check_error()?;
 
         Ok(())
     }

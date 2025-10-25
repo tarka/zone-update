@@ -9,6 +9,10 @@ use serde::{Deserialize, Serialize};
 //   "code": 404,
 //   "message": "The resource could not be found."
 // }
+//
+// Note: Not currently decoded, but body is logged as part of
+// `check_error()`;
+#[allow(unused)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Error {
     pub object: String,

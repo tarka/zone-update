@@ -178,10 +178,11 @@ impl DnsProvider for DnsMadeEasy {
         }
 
         let body = serde_json::to_string(&record)?;
-        let response = http::client().post(url)
+        let _response = http::client().post(url)
             .with_json_headers()
             .with_headers(self.auth.get_headers()?)?
-            .send(body)?;
+            .send(body)?
+            .check_error()?;
 
         Ok(())
     }
@@ -217,10 +218,11 @@ impl DnsProvider for DnsMadeEasy {
         }
 
         let body = serde_json::to_string(&record)?;
-        let response = http::client().put(url)
+        let _response = http::client().put(url)
             .with_json_headers()
             .with_headers(self.auth.get_headers()?)?
-            .send(body)?;
+            .send(body)?
+            .check_error()?;
 
         Ok(())
     }
@@ -243,10 +245,11 @@ impl DnsProvider for DnsMadeEasy {
             return Ok(())
         }
 
-        http::client().delete(url)
+        let _response = http::client().delete(url)
             .with_json_headers()
             .with_headers(self.auth.get_headers()?)?
-            .call()?;
+            .call()?
+            .check_error()?;
 
         Ok(())
     }

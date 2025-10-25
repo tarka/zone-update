@@ -102,10 +102,11 @@ impl DnsProvider for Gandi {
         };
 
         let body = serde_json::to_string(&update)?;
-        http::client().put(url)
+        let _response = http::client().put(url)
             .with_json_headers()
             .with_auth(self.auth.get_header())
-            .send(body)?;
+            .send(body)?
+            .check_error()?;
 
         Ok(())
     }
@@ -118,10 +119,11 @@ impl DnsProvider for Gandi {
             return Ok(())
         }
 
-        http::client().delete(url)
+        let _response = http::client().delete(url)
             .with_json_headers()
             .with_auth(self.auth.get_header())
-            .call()?;
+            .call()?
+            .check_error()?;
 
         Ok(())
     }

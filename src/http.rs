@@ -7,7 +7,6 @@ use ureq::{http::{header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, HeaderName, Hea
 use crate::errors::{Error, Result};
 
 
-
 /// Extension trait for converting ureq HTTP responses to optional
 /// values or error information.
 ///
@@ -15,7 +14,7 @@ use crate::errors::{Error, Result};
 /// - Converts successful responses (status 200 OK) into deserialized values
 /// - Treats not found responses (status 404) as `None` values
 /// - Converts other error statuses into appropriate error types
-pub(crate) trait ResponseToOption {
+pub(crate) trait ResponseToOption: Sized {
     /// Converts the HTTP response body to an optional value based on the status code.
     ///
     /// This method handles different HTTP status codes as follows:
@@ -45,7 +44,7 @@ pub(crate) trait ResponseToOption {
     /// # Returns
     ///
     /// Returns a `Result<Error>` containing the error information extracted from the response.
-    fn from_error(&mut self) -> Result<Error>;
+    fn check_error(self) -> Result<Self>;
 }
 
 
@@ -72,13 +71,20 @@ impl ResponseToOption for Response<Body> {
         }
     }
 
-    fn from_error(&mut self) -> Result<Error> {
+    fn check_error(mut self) -> Result<Self> {
+        // This roughly duplicates the effect of ureq's
+        // `http_status_as_error` flag, which we disable to simplify
+        // finer-grained status handling above.
         let code = self.status();
-        let err = String::new();
-        let _nr = self.body_mut()
+        if code.is_success() {
+            return Ok(self)
+        }
+
+        let err = self.body_mut()
             .read_to_string()?;
         error!("REST op failed: {code} {err:?}");
-        Ok(Error::HttpError(format!("REST op failed: {code} {err:?}")))
+
+        Err(Error::HttpError(format!("REST op failed: {code} {err:?}")))
     }
 
 }
