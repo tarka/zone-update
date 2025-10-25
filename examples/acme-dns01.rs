@@ -3,7 +3,7 @@ use std::{env, time::Duration};
 use acme_micro::{create_p384_key, Certificate, Directory, DirectoryUrl};
 use anyhow::Result;
 use random_string::charsets::ALPHANUMERIC;
-use zone_edit::{gandi::{Auth, Gandi}, Config, DnsProvider};
+use zone_update::{gandi::{Auth, Gandi}, Config, DnsProvider};
 
 fn get_dns_client() -> Result<Gandi> {
     // Gandi supports 2 types of API key

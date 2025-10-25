@@ -1,21 +1,21 @@
-# Zone Edit
+# Zone Update
 
-[![Crates.io](https://img.shields.io/crates/v/zone-edit)](https://crates.io/crates/zone-edit)
-[![Docs.rs](https://docs.rs/zone-edit/badge.svg)](https://docs.rs/zone-edit)
-[![GitHub CI](https://github.com/tarka/zone-edit/actions/workflows/tests.yml/badge.svg)](https://github.com/tarka/zone-edit/actions)
-[![License](https://img.shields.io/crates/l/zone-edit)](https://github.com/tarka/zone-edit/blob/main/README.md#License)
+[![Crates.io](https://img.shields.io/crates/v/zone-update)](https://crates.io/crates/zone-update)
+[![Docs.rs](https://docs.rs/zone-update/badge.svg)](https://docs.rs/zone-update)
+[![GitHub CI](https://github.com/tarka/zone-update/actions/workflows/tests.yml/badge.svg)](https://github.com/tarka/zone-update/actions)
+[![License](https://img.shields.io/crates/l/zone-update)](https://github.com/tarka/zone-update/blob/main/README.md#License)
 
 A minimal Rust library for updating DNS records with various DNS providers.
 
 ## Overview
 
-Zone Edit is a lightweight library that provides a simple interface for
+Zone Update is a lightweight library that provides a simple interface for
 programmatically managing DNS records through provider APIs.
 The library is async and supports both `smol` and `tokio`.
 
 ### Supported DNS providers
 
-Currently, Zone Edit supports the following DNS providers:
+Currently, Zone Update supports the following DNS providers:
 
 * Gandi
 * Dnsimple
@@ -31,7 +31,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-zone-edit = "0.1.0"
+zone-update = "0.1.0"
 ```
 
 ## Usage
@@ -39,11 +39,11 @@ zone-edit = "0.1.0"
 ### Basic Example
 
 ```rust
-use zone_edit::{gandi, errors::Result};
+use zone_update::{gandi, errors::Result};
 use std::net::Ipv4Addr;
 
 async fn update_gandi_record() -> Result<()> {
-    let config = zone_edit::Config {
+    let config = zone_update::Config {
         domain: "example.com".to_string(),
         dry_run: false,
     };

@@ -236,7 +236,7 @@ mod tests {
     ///
     /// ```
     /// // In your test module
-    /// use zone_edit::async_impl::{generate_tests, AsyncDnsProvider};
+    /// use zone_update::async_impl::{generate_tests, AsyncDnsProvider};
     ///
     /// fn get_client() -> impl AsyncDnsProvider {
     ///     // ... your client implementation

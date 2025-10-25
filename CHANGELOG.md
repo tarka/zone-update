@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.2](https://github.com/tarka/zone-edit/compare/v0.4.1...v0.4.2) - 2025-10-25
+## [0.4.2](https://github.com/tarka/zone-update/compare/v0.4.1...v0.4.2) - 2025-10-25
 
 ### Other
 
@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Note about dynadot.
 - Lots of cleanups of unused
 
-## [0.4.1](https://github.com/tarka/zone-edit/compare/v0.4.0...v0.4.1) - 2025-10-22
+## [0.4.1](https://github.com/tarka/zone-update/compare/v0.4.0...v0.4.1) - 2025-10-22
 
 ### Other
 
@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial porkbun support, still needs some fixes to decoding.
 - Re-export Auth from async modules for convenience.
 
-## [0.4.0](https://github.com/tarka/zone-edit/compare/v0.3.1...v0.4.0) - 2025-10-21
+## [0.4.0](https://github.com/tarka/zone-update/compare/v0.3.1...v0.4.0) - 2025-10-21
 
 ### Other
 
@@ -96,13 +96,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In the wild we need to specify a crypto provider to rustls.
 - Minor cleanups.
 
-## [0.3.1](https://github.com/tarka/zone-edit/compare/v0.3.0...v0.3.1) - 2025-09-26
+## [0.3.1](https://github.com/tarka/zone-update/compare/v0.3.0...v0.3.1) - 2025-09-26
 
 ### Other
 
 - Add helpers for A records
 
-## [0.3.0](https://github.com/tarka/zone-edit/compare/v0.2.3...v0.3.0) - 2025-09-26
+## [0.3.0](https://github.com/tarka/zone-update/compare/v0.2.3...v0.3.0) - 2025-09-26
 
 ### Other
 
@@ -117,27 +117,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix base URL.
 - Fix CI badge.
 
-## [0.2.3](https://github.com/tarka/zone-edit/compare/v0.2.2...v0.2.3) - 2025-09-24
+## [0.2.3](https://github.com/tarka/zone-update/compare/v0.2.2...v0.2.3) - 2025-09-24
 
 ### Other
 
 - Cleanup Cargo.toml.
 
-## [0.2.2](https://github.com/tarka/zone-edit/compare/v0.2.1...v0.2.2) - 2025-09-24
+## [0.2.2](https://github.com/tarka/zone-update/compare/v0.2.1...v0.2.2) - 2025-09-24
 
 ### Other
 
 - Change README to point to renamed project.
 - spawn() shouldn't be pub
 
-## [0.2.1](https://github.com/tarka/zone-edit/compare/v0.2.0...v0.2.1) - 2025-09-23
+## [0.2.1](https://github.com/tarka/zone-update/compare/v0.2.0...v0.2.1) - 2025-09-23
 
 ### Other
 
 - Add feature flags for providers.
 - Bump dependencies.
 
-## [0.2.0](https://github.com/tarka/zone-edit/compare/v0.1.1...v0.2.0) - 2025-09-23
+## [0.2.0](https://github.com/tarka/zone-update/compare/v0.1.1...v0.2.0) - 2025-09-23
 
 ### Other
 

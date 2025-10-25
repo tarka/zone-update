@@ -3,7 +3,7 @@ use std::{env, time::Duration};
 use acme_micro::{create_p384_key, Certificate, Directory, DirectoryUrl};
 use anyhow::Result;
 use random_string::charsets::ALPHANUMERIC;
-use zone_edit::{async_impl::{AsyncDnsProvider, gandi::Gandi}, gandi::Auth, Config};
+use zone_update::{async_impl::{AsyncDnsProvider, gandi::Gandi}, gandi::Auth, Config};
 
 
 fn get_dns_client() -> Result<impl AsyncDnsProvider> {

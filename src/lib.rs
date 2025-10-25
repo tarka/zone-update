@@ -245,7 +245,7 @@ mod tests {
     ///
     /// ```
     /// // In your test module
-    /// use zone_edit::{generate_tests, DnsProvider};
+    /// use zone_update::{generate_tests, DnsProvider};
     ///
     /// fn get_client() -> impl DnsProvider {
     ///     // ... your client implementation
