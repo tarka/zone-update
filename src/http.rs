@@ -5,10 +5,10 @@ use tracing::{error, warn};
 use ureq::{
     http::{
         header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
-        HeaderName, HeaderValue,
+        HeaderName, HeaderValue, Response, StatusCode
     },
     tls::TlsConfig,
-    Agent, Body, RequestBuilder, Response, StatusCode,
+    Agent, Body, RequestBuilder, ResponseExt
 };
 
 use crate::errors::{Error, Result};
