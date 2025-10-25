@@ -2,7 +2,14 @@ use std::str::FromStr;
 
 use serde::{de::DeserializeOwned, Deserialize, Deserializer};
 use tracing::{error, warn};
-use ureq::{http::{header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, HeaderName, HeaderValue, Response, StatusCode}, tls::TlsConfig, Agent, Body, RequestBuilder, ResponseExt};
+use ureq::{
+    http::{
+        header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
+        HeaderName, HeaderValue,
+    },
+    tls::TlsConfig,
+    Agent, Body, RequestBuilder, Response, StatusCode,
+};
 
 use crate::errors::{Error, Result};
 
