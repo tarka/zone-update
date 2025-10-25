@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2](https://github.com/tarka/zone-edit/compare/v0.4.1...v0.4.2) - 2025-10-25
+
+### Other
+
+- Correct a provider.
+- Fill in a few more providers.
+- Update dynadot note.
+- Fix error in imports.
+- Cleanup imports.
+- Updated docs for check_error
+- Re-add some missing error handling.
+- Add missing pub exports.
+- Missed tokio
+- Fix import of async tests.
+- Note about dynadot.
+- Lots of cleanups of unused
+
 ## [0.4.1](https://github.com/tarka/zone-edit/compare/v0.4.0...v0.4.1) - 2025-10-22
 
 ### Other
