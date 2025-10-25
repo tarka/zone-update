@@ -13,7 +13,7 @@ use crate::async_impl::AsyncDnsProvider;
 
 pub use crate::dnsimple::Auth;
 
-struct DnSimple {
+pub struct DnSimple {
     inner: Arc<sync::DnSimple>,
 }
 

@@ -14,7 +14,7 @@ use crate::async_impl::AsyncDnsProvider;
 
 pub use crate::porkbun::Auth;
 
-struct Porkbun {
+pub struct Porkbun {
     inner: Arc<sync::Porkbun>,
 }
 

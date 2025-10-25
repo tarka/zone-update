@@ -27,7 +27,7 @@ use crate::{
 pub(crate) const API_BASE: &str = "https://api.dnsimple.com/v2";
 
 pub struct Auth {
-    pub(crate) key: String,
+    pub key: String,
 }
 
 impl Auth {
@@ -36,7 +36,7 @@ impl Auth {
     }
 }
 
-pub(crate) struct DnSimple {
+pub struct DnSimple {
     config: Config,
     endpoint: &'static str,
     auth: Auth,
