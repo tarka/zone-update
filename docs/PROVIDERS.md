@@ -11,7 +11,7 @@ entirely accurate. Corrections and updates welcome.
 | Porkbun                   | ✅         | ❌       | tarka  | tarka      |                                                                                      |
 | 1984Hosting               | ❌         | ❌       |        |            | Doesn't really have an API, but the web forms can be abused. See acme.sh.            |
 | ACME-DNS                  | ❌         | ✅       |        |            | Self-hosted DNS shim for DNS-01 support. Run locally for testing.                    |
-| AcmeProxy.pl              | ❌         | ❔       |        |            | Similar to ACME-DNS.                                                                 |
+| AcmeProxy.pl              | ❌         | ✅       |        |            | Similar to ACME-DNS.                                                                 |
 | Active24                  | ❌         | ✅       |        |            |                                                                                      |
 | Akamai                    | ❌         | ❔       |        |            |                                                                                      |
 | Aliyun                    | ❌         | ❔       |        |            |                                                                                      |
