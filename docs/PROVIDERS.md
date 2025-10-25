@@ -9,12 +9,10 @@ entirely accurate. Corrections and updates welcome.
 | Gandi                     | ✅         | ‼️        | tarka  |  tarka     | Tested manually. (Has a sandbox but is unusable in practice?)                        |
 | DNSMadeEasy               | ✅         | ✅       | tarka  | tarka      | Sandbox uses legacy ciphers and fails with rustls.                                   |
 | Porkbun                   | ✅         | ❌       | tarka  | tarka      |                                                                                      |
-| easyDNS.net               | ❌         | ✅       |        |            |                                                                                      |
-| Namecheap                 | ❌         | ✅       |        |            | Sandbox accepts test CC numbers.                                                     |
 | 1984Hosting               | ❌         | ❌       |        |            | Doesn't really have an API, but the web forms can be abused. See acme.sh.            |
-| ACME                      | ❌         | ❔       |        |            |                                                                                      |
-| AcmeProxy                 | ❌         | ❔       |        |            |                                                                                      |
-| Active24                  | ❌         | ❔       |        |            |                                                                                      |
+| ACME-DNS                  | ❌         | ✅       |        |            | Self-hosted DNS shim for DNS-01 support. Run locally for testing.                    |
+| AcmeProxy.pl              | ❌         | ❔       |        |            | Similar to ACME-DNS.                                                                 |
+| Active24                  | ❌         | ✅       |        |            |                                                                                      |
 | Akamai                    | ❌         | ❔       |        |            |                                                                                      |
 | Aliyun                    | ❌         | ❔       |        |            |                                                                                      |
 | All-Inkl                  | ❌         | ❔       |        |            |                                                                                      |
@@ -56,6 +54,7 @@ entirely accurate. Corrections and updates welcome.
 | dyndnsfree                | ❌         | ❔       |        |            |                                                                                      |
 | Dynu                      | ❌         | ❔       |        |            |                                                                                      |
 | dynv6                     | ❌         | ❔       |        |            |                                                                                      |
+| easyDNS.net               | ❌         | ✅       |        |            |                                                                                      |
 | Euserv.eu                 | ❌         | ❔       |        |            |                                                                                      |
 | Exoscale                  | ❌         | ❔       |        |            |                                                                                      |
 | fornex.com                | ❌         | ❔       |        |            |                                                                                      |
@@ -97,6 +96,7 @@ entirely accurate. Corrections and updates welcome.
 | myLoc.de                  | ❌         | ❔       |        |            |                                                                                      |
 | mythic-beasts.com         | ❌         | ❔       |        |            |                                                                                      |
 | Name.com                  | ❌         | ❔       |        |            |                                                                                      |
+| Namecheap                 | ❌         | ✅       |        |            | API is poorly documented and dangerous (see discussion on API pages).                |
 | Namemaster                | ❌         | ❔       |        |            |                                                                                      |
 | Nanelo                    | ❌         | ❔       |        |            |                                                                                      |
 | Neodigit.net              | ❌         | ❔       |        |            |                                                                                      |
