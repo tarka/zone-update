@@ -36,14 +36,21 @@ pub(crate) trait ResponseToOption: Sized {
     where
         T: DeserializeOwned;
 
-    /// Extracts error information from the HTTP response.
+    /// Checks for HTTP errors in the response.
     ///
-    /// This method reads the response body and creates an `Error` based on the
-    /// response status code and content, primarily used for handling error responses.
+    /// This method provides custom error handling for `ureq` responses. Since the
+    /// default `http_status_as_error` feature is disabled to allow for more
+    /// granular control (like treating 404 as `None`), this function is used to
+    /// explicitly check for other error-level status codes.
+    ///
+    /// If the response status is successful (2xx), it returns the response as-is.
+    /// Otherwise, it reads the response body, logs the error, and returns an
+    /// `Error::HttpError` with the status code and body content.
     ///
     /// # Returns
     ///
-    /// Returns a `Result<Error>` containing the error information extracted from the response.
+    /// - `Ok(Self)` if the response was successful.
+    /// - `Err(Error::HttpError)` if the response status indicates an error.
     fn check_error(self) -> Result<Self>;
 }
 
