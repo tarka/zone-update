@@ -51,53 +51,86 @@ impl Display for RecordType {
     }
 }
 
+/// A trait for a DNS provider.
+///
+/// This trait defines the basic operations that a DNS provider must support.
+///
+/// The trait provides methods for creating, reading, updating, and
+/// deleting DNS records. It also provides default implementations for
+/// TXT and A records.
 pub trait DnsProvider {
+    /// Get a DNS record by host and record type.
     fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
     where
         T: DeserializeOwned;
 
+    /// Create a new DNS record by host and record type.
     fn create_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
     where
         T: Serialize + DeserializeOwned + Display + Clone;
 
+    /// Update a DNS record by host and record type.
     fn update_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
     where
         T: Serialize + DeserializeOwned + Display + Clone;
 
+    /// Delete a DNS record by host and record type.
     fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>;
 
 
-    // Default helper impls
-
+    /// Get a TXT record.
+    ///
+    /// This is a helper method that calls `get_record` with the `TXT` record type.
     fn get_txt_record(&self, host: &str) -> Result<Option<String>> {
         self.get_record::<String>(RecordType::TXT, host)
             .map(|opt| opt.map(|s| strip_quotes(&s)))
     }
 
+    /// Create a new TXT record.
+    ///
+    /// This is a helper method that calls `create_record` with the `TXT` record type.
     fn create_txt_record(&self, host: &str, record: &String) -> Result<()> {
         self.create_record(RecordType::TXT, host, record)
     }
 
+    /// Update a TXT record.
+    ///
+    /// This is a helper method that calls `update_record` with the `TXT` record type.
     fn update_txt_record(&self, host: &str, record: &String) -> Result<()> {
         self.update_record(RecordType::TXT, host, record)
     }
 
+    /// Delete a TXT record.
+    ///
+    /// This is a helper method that calls `delete_record` with the `TXT` record type.
     fn delete_txt_record(&self, host: &str) -> Result<()> {
         self.delete_record(RecordType::TXT, host)
     }
 
+    /// Get an A record.
+    ///
+    /// This is a helper method that calls `get_record` with the `A` record type.
     fn get_a_record(&self, host: &str) -> Result<Option<Ipv4Addr>> {
         self.get_record(RecordType::A, host)
     }
 
+    /// Create a new A record.
+    ///
+    /// This is a helper method that calls `create_record` with the `A` record type.
     fn create_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()> {
         self.create_record(RecordType::A, host, record)
     }
 
+    /// Update an A record.
+    ///
+    /// This is a helper method that calls `update_record` with the `A` record type.
     fn update_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()> {
         self.update_record(RecordType::A, host, record)
     }
 
+    /// Delete an A record.
+    ///
+    /// This is a helper method that calls `delete_record` with the `A` record type.
      fn delete_a_record(&self, host: &str) -> Result<()> {
         self.delete_record(RecordType::A, host)
     }
