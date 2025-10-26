@@ -36,21 +36,21 @@ impl Auth {
     }
 }
 
-pub struct DnSimple {
+pub struct Dnsimple {
     config: Config,
     endpoint: &'static str,
     auth: Auth,
     acc_id: Mutex<Option<u32>>,
 }
 
-impl DnSimple {
+impl Dnsimple {
     pub fn new(config: Config, auth: Auth, acc: Option<u32>) -> Self {
         Self::new_with_endpoint(config, auth, acc, API_BASE)
     }
 
     pub fn new_with_endpoint(config: Config, auth: Auth, acc: Option<u32>, endpoint: &'static str) -> Self {
         let acc_id = Mutex::new(acc);
-        DnSimple {
+        Dnsimple {
             config,
             endpoint,
             auth,
@@ -132,7 +132,7 @@ impl DnSimple {
 }
 
 
-impl DnsProvider for DnSimple {
+impl DnsProvider for Dnsimple {
 
     fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T> >
     where
@@ -248,17 +248,17 @@ mod tests {
 
     const TEST_API: &str = "https://api.sandbox.dnsimple.com/v2";
 
-    fn get_client() -> DnSimple {
+    fn get_client() -> Dnsimple {
         let auth = Auth { key: env::var("DNSIMPLE_TOKEN").unwrap() };
         let config = Config {
             domain: env::var("DNSIMPLE_TEST_DOMAIN").unwrap(),
             dry_run: false,
         };
-        DnSimple::new_with_endpoint(config, auth, None, TEST_API)
+        Dnsimple::new_with_endpoint(config, auth, None, TEST_API)
     }
 
     #[test_log::test]
-    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "DnSimple API test")]
+    #[cfg_attr(not(feature = "test_dnsimple"), ignore = "Dnsimple API test")]
     fn test_id_fetch() -> Result<()> {
         let client = get_client();
 
