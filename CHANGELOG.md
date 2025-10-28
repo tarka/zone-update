@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1](https://github.com/tarka/zone-update/compare/v0.5.0...v0.5.1) - 2025-10-28
+
+### Other
+
+- Change the default trait fns to abstract, but generate the boilerplate in a macro. This removes all the Sized/Box/dyn complexity.
+- Cleanup some warnings
+- Make dyn compatible.
+
 ## [0.5.0](https://github.com/tarka/zone-update/compare/v0.4.2...v0.5.0) - 2025-10-26
 
 ### Other
