@@ -40,13 +40,15 @@ mod sync {
             secret: "a_secret".to_string(),
         });
 
-        let _p = get_dns_provider(pe)?;
+        let p = get_dns_provider(pe)?;
+        let _r = p.get_a_record("test");
         Ok(())
     }
 
 }
 
 
+#[cfg(feature = "async")]
 mod r#async {
     use super::*;
     use zone_update::async_impl::{dnsimple, dnsmadeeasy, gandi, porkbun, AsyncDnsProvider};
@@ -85,7 +87,9 @@ mod r#async {
             secret: "a_secret".to_string(),
         });
 
-        let _p = get_dns_provider(pe)?;
+        let p = get_dns_provider(pe)?;
+        let h = "test".to_string();
+        let _r = p.get_a_record(&h);
         Ok(())
     }
 

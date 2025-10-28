@@ -6,16 +6,12 @@ use tracing::{error, info, warn};
 
 use types::{Record, RecordUpdate};
 use crate::{
-    errors::{Error, Result},
-    http::{self, ResponseToOption, WithHeaders},
-    Config,
-    DnsProvider,
-    RecordType,
+    errors::{Error, Result}, generate_helpers, http::{self, ResponseToOption, WithHeaders}, Config, DnsProvider, RecordType
 };
 
 pub(crate) const API_BASE: &str = "https://api.gandi.net/v5/livedns";
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Auth {
     ApiKey(String),
@@ -130,6 +126,7 @@ impl DnsProvider for Gandi {
         Ok(())
     }
 
+    generate_helpers!();
 }
 
 #[cfg(test)]

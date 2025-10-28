@@ -2,7 +2,7 @@ use std::{fmt::Display, net::Ipv4Addr};
 
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{errors::Result, strip_quotes, RecordType};
+use crate::{errors::Result, RecordType};
 
 
 #[cfg(feature = "gandi")]
@@ -15,92 +15,48 @@ pub mod dnsimple;
 pub mod porkbun;
 
 
+#[async_trait::async_trait]
 pub trait AsyncDnsProvider: Send + Sync {
 
-    fn get_record<T>(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<Option<T>>>
+    async fn get_record<T>(&self, rtype: RecordType, host: &String) -> Result<Option<T>>
     where
         T: DeserializeOwned + Send + Sync + 'static,
         Self: Sized;
 
-    fn create_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
+    async fn create_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> Result<()>
     where
         T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static,
         Self: Sized;
 
-    fn update_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
+    async fn update_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> Result<()>
     where
         T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static,
         Self: Sized;
 
-    fn delete_record(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<()>>
+    async fn delete_record(&self, rtype: RecordType, host: &String) -> Result<()>
     where Self: Sized;
 
+    async fn get_txt_record(&self, host: &String) -> Result<Option<String>>;
 
-    // Default helper impls
+    async fn create_txt_record(&self, host: &String, record: &String) -> Result<()>;
 
-    // We know all the types, and they're enforced above, so this lint
-    // doesn't apply here(?)
-    #[allow(async_fn_in_trait)]
-    async fn get_txt_record(&self, host: &String) -> Result<Option<String>>
-    where Self: Sized
-    {
-        self.get_record::<String>(RecordType::TXT, host).await
-            .map(|opt| opt.map(|s| strip_quotes(&s)))
-    }
+    async fn update_txt_record(&self, host: &String, record: &String) -> Result<()>;
 
-    #[allow(async_fn_in_trait)]
-    async fn create_txt_record(&self, host: &String, record: &String) -> Result<()>
-    where Self: Sized
-    {
-        self.create_record(RecordType::TXT, host, record).await
-    }
+    async fn delete_txt_record(&self, host: &String) -> Result<()>;
 
-    #[allow(async_fn_in_trait)]
-    async fn update_txt_record(&self, host: &String, record: &String) -> Result<()>
-    where Self: Sized
-    {
-        self.update_record(RecordType::TXT, host, record).await
-    }
+    async fn get_a_record(&self, host: &String) -> Result<Option<Ipv4Addr>>;
 
-    #[allow(async_fn_in_trait)]
-    async fn delete_txt_record(&self, host: &String) -> Result<()>
-    where Self: Sized
-    {
-        self.delete_record(RecordType::TXT, host).await
-    }
+    async fn create_a_record(&self, host: &String, record: &Ipv4Addr) -> Result<()>;
 
-    #[allow(async_fn_in_trait)]
-    async fn get_a_record(&self, host: &String) -> Result<Option<Ipv4Addr>>
-    where Self: Sized
-    {
-        self.get_record(RecordType::A, host).await
-    }
+    async fn update_a_record(&self, host: &String, record: &Ipv4Addr) -> Result<()>;
 
-    #[allow(async_fn_in_trait)]
-    async fn create_a_record(&self, host: &String, record: &Ipv4Addr) -> Result<()>
-    where Self: Sized
-    {
-        self.create_record(RecordType::A, host, record).await
-    }
-
-    #[allow(async_fn_in_trait)]
-    async fn update_a_record(&self, host: &String, record: &Ipv4Addr) -> Result<()>
-    where Self: Sized
-    {
-        self.update_record(RecordType::A, host, record).await
-    }
-
-    #[allow(async_fn_in_trait)]
-    async fn delete_a_record(&self, host: &String) -> Result<()>
-    where Self: Sized
-    {
-        self.delete_record(RecordType::A, host).await
-    }
+    async fn delete_a_record(&self, host: &String) -> Result<()>;
 }
 
 #[macro_export]
 macro_rules! async_provider_impl {
     ($i:ident) => {
+        #[async_trait::async_trait]
         impl AsyncDnsProvider for $i {
 
             async fn get_record<T>(&self, rtype: RecordType, host: &String) -> Result<Option<T>>
@@ -139,6 +95,47 @@ macro_rules! async_provider_impl {
                 unblock(move || provider.delete_record(rtype, &host)).await
             }
 
+            async fn get_txt_record(&self, host: &String) -> Result<Option<String>>
+            {
+                self.get_record::<String>(RecordType::TXT, host).await
+                    .map(|opt| opt.map(|s| crate::strip_quotes(&s)))
+            }
+
+            async fn create_txt_record(&self, host: &String, record: &String) -> Result<()>
+            {
+                self.create_record(RecordType::TXT, host, record).await
+            }
+
+            async fn update_txt_record(&self, host: &String, record: &String) -> Result<()>
+            {
+                self.update_record(RecordType::TXT, host, record).await
+            }
+
+            async fn delete_txt_record(&self, host: &String) -> Result<()>
+            {
+                self.delete_record(RecordType::TXT, host).await
+            }
+
+            async fn get_a_record(&self, host: &String) -> Result<Option<std::net::Ipv4Addr>>
+            {
+                self.get_record(RecordType::A, host).await
+            }
+
+            async fn create_a_record(&self, host: &String, record: &std::net::Ipv4Addr) -> Result<()>
+            {
+                self.create_record(RecordType::A, host, record).await
+            }
+
+            async fn update_a_record(&self, host: &String, record: &std::net::Ipv4Addr) -> Result<()>
+            {
+                self.update_record(RecordType::A, host, record).await
+            }
+
+            async fn delete_a_record(&self, host: &String) -> Result<()>
+            {
+                self.delete_record(RecordType::A, host).await
+            }
+
         }
 
     };
@@ -148,6 +145,8 @@ pub use async_provider_impl;
 
 #[cfg(test)]
 mod tests {
+    use crate::strip_quotes;
+
     use super::*;
     use std::net::Ipv4Addr;
     use random_string::charsets::ALPHA_LOWER;

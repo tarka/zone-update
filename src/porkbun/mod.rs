@@ -6,17 +6,12 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::{error, info, warn};
 
 use crate::{
-    errors::{Error, Result},
-    http::{self, ResponseToOption, WithHeaders},
-    porkbun::types::{
+    errors::{Error, Result}, generate_helpers, http::{self, ResponseToOption, WithHeaders}, porkbun::types::{
         AuthOnly,
         CreateUpdate,
         Record,
         Records
-    },
-    Config,
-    DnsProvider,
-    RecordType
+    }, Config, DnsProvider, RecordType
 };
 
 
@@ -187,6 +182,9 @@ impl DnsProvider for Porkbun {
 
         Ok(())
     }
+
+    generate_helpers!();
+
 }
 
 

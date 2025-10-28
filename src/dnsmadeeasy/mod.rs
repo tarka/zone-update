@@ -9,18 +9,13 @@ use sha1::Sha1;
 use tracing::{error, info, warn};
 
 use crate::{
-    dnsmadeeasy::types::{Domain, Record, Records},
-    errors::{Error, Result},
-    http::{self, ResponseToOption, WithHeaders},
-    Config,
-    DnsProvider,
-    RecordType
+    dnsmadeeasy::types::{Domain, Record, Records}, errors::{Error, Result}, generate_helpers, http::{self, ResponseToOption, WithHeaders}, Config, DnsProvider, RecordType
 };
 
 
 pub(crate) const API_BASE: &str = "https://api.dnsmadeeasy.com/V2.0";
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Auth {
     pub key: String,
     pub secret: String,
@@ -254,6 +249,9 @@ impl DnsProvider for DnsMadeEasy {
 
         Ok(())
     }
+
+
+    generate_helpers!();
 }
 
 
