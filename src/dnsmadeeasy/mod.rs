@@ -4,7 +4,7 @@ use std::{fmt::Display, sync::Mutex};
 
 use chrono::Utc;
 use hmac::{Hmac, Mac};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sha1::Sha1;
 use tracing::{error, info, warn};
 
@@ -20,6 +20,7 @@ use crate::{
 
 pub(crate) const API_BASE: &str = "https://api.dnsmadeeasy.com/V2.0";
 
+#[derive(Debug, Deserialize)]
 pub struct Auth {
     pub key: String,
     pub secret: String,

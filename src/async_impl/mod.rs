@@ -1,5 +1,6 @@
 use std::{fmt::Display, net::Ipv4Addr};
 
+//use async_trait::async_trait;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{errors::Result, strip_quotes, RecordType};
@@ -15,20 +16,25 @@ pub mod dnsimple;
 pub mod porkbun;
 
 
-pub trait AsyncDnsProvider {
-    fn get_record<T>(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<Option<T>>>
-    where
-        T: DeserializeOwned + Send + Sync + 'static;
+pub trait AsyncDnsProvider: Send + Sync {
 
-    fn create_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
+    async fn get_record<T>(&self, rtype: RecordType, host: &String) -> Result<Option<T>>
     where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static;
+        T: DeserializeOwned + Send + Sync + 'static,
+        Self: Sized;
 
-    fn update_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
+    async fn create_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> Result<()>
     where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static;
+        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static,
+        Self: Sized;
 
-    fn delete_record(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<()>>;
+    async fn update_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> Result<()>
+    where
+        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static,
+        Self: Sized;
+
+    async fn delete_record(&self, rtype: RecordType, host: &String) -> Result<()>
+    where Self: Sized;
 
 
     // Default helper impls
@@ -36,43 +42,59 @@ pub trait AsyncDnsProvider {
     // We know all the types, and they're enforced above, so this lint
     // doesn't apply here(?)
     #[allow(async_fn_in_trait)]
-    async fn get_txt_record(&self, host: &String) -> Result<Option<String>> {
+    async fn get_txt_record(&self, host: &String) -> Result<Option<String>>
+    where Self: Sized
+    {
         self.get_record::<String>(RecordType::TXT, host).await
             .map(|opt| opt.map(|s| strip_quotes(&s)))
     }
 
     #[allow(async_fn_in_trait)]
-    async fn create_txt_record(&self, host: &String, record: &String) -> Result<()> {
+    async fn create_txt_record(&self, host: &String, record: &String) -> Result<()>
+    where Self: Sized
+    {
         self.create_record(RecordType::TXT, host, record).await
     }
 
     #[allow(async_fn_in_trait)]
-    async fn update_txt_record(&self, host: &String, record: &String) -> Result<()> {
+    async fn update_txt_record(&self, host: &String, record: &String) -> Result<()>
+    where Self: Sized
+    {
         self.update_record(RecordType::TXT, host, record).await
     }
 
     #[allow(async_fn_in_trait)]
-    async fn delete_txt_record(&self, host: &String) -> Result<()> {
+    async fn delete_txt_record(&self, host: &String) -> Result<()>
+    where Self: Sized
+    {
         self.delete_record(RecordType::TXT, host).await
     }
 
     #[allow(async_fn_in_trait)]
-    async fn get_a_record(&self, host: &String) -> Result<Option<Ipv4Addr>> {
+    async fn get_a_record(&self, host: &String) -> Result<Option<Ipv4Addr>>
+    where Self: Sized
+    {
         self.get_record(RecordType::A, host).await
     }
 
     #[allow(async_fn_in_trait)]
-    async fn create_a_record(&self, host: &String, record: &Ipv4Addr) -> Result<()> {
+    async fn create_a_record(&self, host: &String, record: &Ipv4Addr) -> Result<()>
+    where Self: Sized
+    {
         self.create_record(RecordType::A, host, record).await
     }
 
     #[allow(async_fn_in_trait)]
-    async fn update_a_record(&self, host: &String, record: &Ipv4Addr) -> Result<()> {
+    async fn update_a_record(&self, host: &String, record: &Ipv4Addr) -> Result<()>
+    where Self: Sized
+    {
         self.update_record(RecordType::A, host, record).await
     }
 
     #[allow(async_fn_in_trait)]
-    async fn delete_a_record(&self, host: &String) -> Result<()> {
+    async fn delete_a_record(&self, host: &String) -> Result<()>
+    where Self: Sized
+    {
         self.delete_record(RecordType::A, host).await
     }
 }
@@ -82,40 +104,40 @@ macro_rules! async_provider_impl {
     ($i:ident) => {
         impl AsyncDnsProvider for $i {
 
-            fn get_record<T>(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<Option<T>>>
+            async fn get_record<T>(&self, rtype: RecordType, host: &String) -> Result<Option<T>>
             where
                 T: DeserializeOwned + Send + Sync + 'static
             {
                 let provider = self.inner.clone();
                 let host = host.clone();
-                unblock(move || provider.get_record(rtype, &host))
+                unblock(move || provider.get_record(rtype, &host)).await
             }
 
-            fn create_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
+            async fn create_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> Result<()>
             where
                 T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static
             {
                 let provider = self.inner.clone();
                 let host = host.clone();
                 let record = record.clone();
-                unblock(move || provider.create_record(rtype, &host, &record))
+                unblock(move || provider.create_record(rtype, &host, &record)).await
             }
 
-            fn update_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
+            async fn update_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> Result<()>
             where
                 T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static
             {
                 let provider = self.inner.clone();
                 let host = host.clone();
                 let record = record.clone();
-                unblock(move || provider.update_record(rtype, &host, &record))
+                unblock(move || provider.update_record(rtype, &host, &record)).await
             }
 
-            fn delete_record(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<()>>
+            async fn delete_record(&self, rtype: RecordType, host: &String) -> Result<()>
             {
                 let provider = self.inner.clone();
                 let host = host.clone();
-                unblock(move || provider.delete_record(rtype, &host))
+                unblock(move || provider.delete_record(rtype, &host)).await
             }
 
         }

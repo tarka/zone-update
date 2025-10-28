@@ -61,27 +61,30 @@ impl Display for RecordType {
 pub trait DnsProvider {
     /// Get a DNS record by host and record type.
     fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
-    where
-        T: DeserializeOwned;
+    where T: DeserializeOwned,
+          Self: Sized;
 
     /// Create a new DNS record by host and record type.
     fn create_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
-    where
-        T: Serialize + DeserializeOwned + Display + Clone;
+    where T: Serialize + DeserializeOwned + Display + Clone,
+          Self: Sized;
 
     /// Update a DNS record by host and record type.
     fn update_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
-    where
-        T: Serialize + DeserializeOwned + Display + Clone;
+    where T: Serialize + DeserializeOwned + Display + Clone,
+          Self: Sized;
 
     /// Delete a DNS record by host and record type.
-    fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>;
+    fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>
+    where Self: Sized;
 
 
     /// Get a TXT record.
     ///
     /// This is a helper method that calls `get_record` with the `TXT` record type.
-    fn get_txt_record(&self, host: &str) -> Result<Option<String>> {
+    fn get_txt_record(&self, host: &str) -> Result<Option<String>>
+    where Self: Sized
+    {
         self.get_record::<String>(RecordType::TXT, host)
             .map(|opt| opt.map(|s| strip_quotes(&s)))
     }
@@ -89,49 +92,63 @@ pub trait DnsProvider {
     /// Create a new TXT record.
     ///
     /// This is a helper method that calls `create_record` with the `TXT` record type.
-    fn create_txt_record(&self, host: &str, record: &String) -> Result<()> {
+    fn create_txt_record(&self, host: &str, record: &String) -> Result<()>
+    where Self: Sized
+    {
         self.create_record(RecordType::TXT, host, record)
     }
 
     /// Update a TXT record.
     ///
     /// This is a helper method that calls `update_record` with the `TXT` record type.
-    fn update_txt_record(&self, host: &str, record: &String) -> Result<()> {
+    fn update_txt_record(&self, host: &str, record: &String) -> Result<()>
+    where Self: Sized
+    {
         self.update_record(RecordType::TXT, host, record)
     }
 
     /// Delete a TXT record.
     ///
     /// This is a helper method that calls `delete_record` with the `TXT` record type.
-    fn delete_txt_record(&self, host: &str) -> Result<()> {
+    fn delete_txt_record(&self, host: &str) -> Result<()>
+    where Self: Sized
+    {
         self.delete_record(RecordType::TXT, host)
     }
 
     /// Get an A record.
     ///
     /// This is a helper method that calls `get_record` with the `A` record type.
-    fn get_a_record(&self, host: &str) -> Result<Option<Ipv4Addr>> {
+    fn get_a_record(&self, host: &str) -> Result<Option<Ipv4Addr>>
+    where Self: Sized
+    {
         self.get_record(RecordType::A, host)
     }
 
     /// Create a new A record.
     ///
     /// This is a helper method that calls `create_record` with the `A` record type.
-    fn create_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()> {
+    fn create_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()>
+    where Self: Sized
+    {
         self.create_record(RecordType::A, host, record)
     }
 
     /// Update an A record.
     ///
     /// This is a helper method that calls `update_record` with the `A` record type.
-    fn update_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()> {
+    fn update_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()>
+    where Self: Sized
+    {
         self.update_record(RecordType::A, host, record)
     }
 
     /// Delete an A record.
     ///
     /// This is a helper method that calls `delete_record` with the `A` record type.
-     fn delete_a_record(&self, host: &str) -> Result<()> {
+     fn delete_a_record(&self, host: &str) -> Result<()>
+    where Self: Sized
+    {
         self.delete_record(RecordType::A, host)
     }
 }

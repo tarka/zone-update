@@ -2,7 +2,7 @@ mod types;
 
 use std::fmt::Display;
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::{error, info, warn};
 
 use crate::{
@@ -22,7 +22,7 @@ use crate::{
 
 pub(crate) const API_BASE: &str = "https://api.porkbun.com/api/json/v3/dns";
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Auth {
     pub key: String,
     pub secret: String,

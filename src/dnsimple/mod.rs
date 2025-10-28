@@ -4,6 +4,7 @@ mod types;
 use std::{fmt::Display, sync::Mutex};
 
 use serde::de::DeserializeOwned;
+use serde::Deserialize;
 use tracing::{error, info, warn};
 
 use crate::http::{self, ResponseToOption, WithHeaders};
@@ -26,6 +27,7 @@ use crate::{
 
 pub(crate) const API_BASE: &str = "https://api.dnsimple.com/v2";
 
+#[derive(Debug, Deserialize)]
 pub struct Auth {
     pub key: String,
 }

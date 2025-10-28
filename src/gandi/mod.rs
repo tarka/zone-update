@@ -1,7 +1,7 @@
 mod types;
 
 use std::{fmt::Display};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::{error, info, warn};
 
 use types::{Record, RecordUpdate};
@@ -15,6 +15,8 @@ use crate::{
 
 pub(crate) const API_BASE: &str = "https://api.gandi.net/v5/livedns";
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Auth {
     ApiKey(String),
     PatKey(String),
