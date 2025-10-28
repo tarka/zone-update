@@ -36,6 +36,7 @@ mod tests {
     use crate::generate_async_tests;
     use std::env;
 
+    #[allow(unused)]
     fn get_client() -> Porkbun {
         let auth = Auth {
             key: env::var("PORKBUN_KEY").unwrap(),

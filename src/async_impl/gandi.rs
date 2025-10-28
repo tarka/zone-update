@@ -36,6 +36,7 @@ mod tests {
     use crate::generate_async_tests;
     use std::env;
 
+    #[allow(unused)]
     fn get_client() -> Gandi {
         let auth = if let Some(key) = env::var("GANDI_APIKEY").ok() {
             Auth::ApiKey(key)

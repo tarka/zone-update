@@ -41,6 +41,7 @@ mod tests {
 
     const TEST_API: &str = "https://api.sandbox.dnsimple.com/v2";
 
+    #[allow(unused)]
     fn get_client() -> Dnsimple {
         let auth = Auth { key: env::var("DNSIMPLE_TOKEN").unwrap() };
         let config = Config {

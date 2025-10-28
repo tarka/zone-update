@@ -1,6 +1,5 @@
 use std::{fmt::Display, net::Ipv4Addr};
 
-//use async_trait::async_trait;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{errors::Result, strip_quotes, RecordType};
@@ -18,22 +17,22 @@ pub mod porkbun;
 
 pub trait AsyncDnsProvider: Send + Sync {
 
-    async fn get_record<T>(&self, rtype: RecordType, host: &String) -> Result<Option<T>>
+    fn get_record<T>(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<Option<T>>>
     where
         T: DeserializeOwned + Send + Sync + 'static,
         Self: Sized;
 
-    async fn create_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> Result<()>
+    fn create_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
     where
         T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static,
         Self: Sized;
 
-    async fn update_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> Result<()>
+    fn update_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> impl Future<Output = Result<()>>
     where
         T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static,
         Self: Sized;
 
-    async fn delete_record(&self, rtype: RecordType, host: &String) -> Result<()>
+    fn delete_record(&self, rtype: RecordType, host: &String) -> impl Future<Output = Result<()>>
     where Self: Sized;
 
 
@@ -153,6 +152,7 @@ mod tests {
     use std::net::Ipv4Addr;
     use random_string::charsets::ALPHA_LOWER;
 
+    #[allow(unused)]
     pub async fn test_create_update_delete_ipv4(client: impl AsyncDnsProvider) -> Result<()> {
 
         let host = random_string::generate(16, ALPHA_LOWER);
@@ -179,6 +179,7 @@ mod tests {
         Ok(())
     }
 
+    #[allow(unused)]
     pub async fn test_create_update_delete_txt(client: impl AsyncDnsProvider) -> Result<()> {
 
         let host = random_string::generate(16, ALPHA_LOWER);
@@ -205,6 +206,7 @@ mod tests {
         Ok(())
     }
 
+    #[allow(unused)]
     pub async fn test_create_update_delete_txt_default(client: impl AsyncDnsProvider) -> Result<()> {
 
         let host = random_string::generate(16, ALPHA_LOWER);

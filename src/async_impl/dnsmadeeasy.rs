@@ -41,6 +41,7 @@ mod tests {
     use crate::dnsmadeeasy::tests::TEST_API;
     use std::env;
 
+    #[allow(unused)]
     fn get_client() -> DnsMadeEasy {
         let auth = Auth {
             key: env::var("DNSMADEEASY_KEY").unwrap(),
