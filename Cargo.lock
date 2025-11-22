@@ -2399,7 +2399,7 @@ dependencies = [
 
 [[package]]
 name = "zone-update"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "acme-micro",
  "anyhow",
