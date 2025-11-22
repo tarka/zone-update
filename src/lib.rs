@@ -28,6 +28,50 @@ pub struct Config {
     pub dry_run: bool,
 }
 
+// This can be used by dependents of this project as part of their
+// config-file, or directly. See the `netlink-ddns` project for an
+// example.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "lowercase", tag = "name")]
+pub enum Providers {
+    Gandi(gandi::Auth),
+    Dnsimple(dnsimple::Auth),
+    DnsMadeEasy(dnsmadeeasy::Auth),
+    PorkBun(porkbun::Auth),
+}
+
+impl Providers {
+
+    pub fn blocking_impl(&self, dns_conf: Config) -> Box<dyn DnsProvider> {
+        match self {
+            #[cfg(feature = "gandi")]
+            Providers::Gandi(auth) => Box::new(gandi::Gandi::new(dns_conf, auth.clone())),
+            #[cfg(feature = "dnsimple")]
+            Providers::Dnsimple(auth) => Box::new(dnsimple::Dnsimple::new(dns_conf, auth.clone(), None)),
+            #[cfg(feature = "dnsmadeeasy")]
+            Providers::DnsMadeEasy(auth) => Box::new(dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
+            #[cfg(feature = "porkbun")]
+            Providers::PorkBun(auth) => Box::new(porkbun::Porkbun::new(dns_conf, auth.clone())),
+        }
+    }
+
+    #[cfg(feature = "async")]
+    pub fn async_impl(&self, dns_conf: Config) -> Box<dyn async_impl::AsyncDnsProvider> {
+        match self {
+            #[cfg(feature = "gandi")]
+            Providers::Gandi(auth) => Box::new(async_impl::gandi::Gandi::new(dns_conf, auth.clone())),
+            #[cfg(feature = "dnsimple")]
+            Providers::Dnsimple(auth) => Box::new(async_impl::dnsimple::Dnsimple::new(dns_conf, auth.clone(), None)),
+            #[cfg(feature = "dnsmadeeasy")]
+            Providers::DnsMadeEasy(auth) => Box::new(async_impl::dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
+            #[cfg(feature = "porkbun")]
+            Providers::PorkBun(auth) => Box::new(async_impl::porkbun::Porkbun::new(dns_conf, auth.clone())),
+        }
+    }
+}
+
+
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum RecordType {
     A,
