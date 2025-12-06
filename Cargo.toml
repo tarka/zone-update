@@ -65,6 +65,7 @@ hyper-util = { version = "0.1.17", features = ["tokio"] }
 tokio = { version = "1.48.0", features = ["rt", "test-util", "net", "full"] }
 tokio-rustls = { version = "0.26.4" }
 lers = { version = "0.4.0", default-features = false, features = ["dns-01"] }
+papaya = "0.2.3"
 
 [[example]]
 name = "acme-dns01"
