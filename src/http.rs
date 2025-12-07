@@ -62,7 +62,6 @@ pub(crate) trait ResponseToOption: Sized {
 }
 
 
-
 impl ResponseToOption for Response<Body> {
     fn to_option<T>(&mut self) -> Result<Option<T>>
     where

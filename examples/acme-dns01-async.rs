@@ -48,6 +48,8 @@ async fn get_cert() -> Result<Certificate> {
     let mut ord_new = acc.new_order(&format!("{hostname}.{domain}"), &[])?;
     let txt_name = format!("_acme-challenge.{hostname}");
 
+    // If the domain(s) has already been authorized in a previous
+    // order we may be able to skip validation. The ACME API decides.
     let ord_csr = loop {
 
         if let Some(ord_csr) = ord_new.confirm_validations() {

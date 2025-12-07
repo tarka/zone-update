@@ -2,34 +2,34 @@ use std::{env, error::Error};
 
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
-use lers::{Certificate, Directory, LETS_ENCRYPT_STAGING_URL, Solver};
+use lers::{Certificate, Directory, Solver, LETS_ENCRYPT_STAGING_URL};
 use random_string::charsets::ALPHANUMERIC;
+use tracing::{level_filters::LevelFilter, Level};
+use tracing_subscriber::FmtSubscriber;
 use zone_update::{Config, Providers, async_impl::AsyncDnsProvider, porkbun::Auth};
 
-fn get_dns_client() -> Result<Box<dyn AsyncDnsProvider>> {
-    let auth = Auth {
-        key: env::var("PORKBUN_KEY")?,
-        secret: env::var("PORKBUN_SECRET")?,
-    };
-    let config = Config {
-        domain: env::var("PORKBUN_TEST_DOMAIN")?,
-        dry_run: false,
-    };
-    let provider = Providers::PorkBun(auth)
-        .async_impl(config);
-
-    Ok(provider)
-}
-
 struct ZoneUpdateSolver {
+    domain: String,
     dns_client: Box<dyn AsyncDnsProvider>,
     requests: papaya::HashMap<String, String>,
 }
 
 impl ZoneUpdateSolver {
-    fn new() -> Result<Self> {
+    fn new(domain: String, key: String, secret: String) -> Result<Self> {
+        let auth = Auth {
+            key,
+            secret,
+        };
+        let config = Config {
+            domain: domain.clone(),
+            dry_run: false,
+        };
+        let dns_client = Providers::PorkBun(auth)
+            .async_impl(config);
+
         Ok(Self {
-            dns_client: get_dns_client()?,
+            domain,
+            dns_client,
             requests: papaya::HashMap::new(),
         })
     }
@@ -38,12 +38,19 @@ impl ZoneUpdateSolver {
 #[async_trait]
 impl Solver for ZoneUpdateSolver {
     async fn present(&self,
-                     cert_domain: String,
+                     cert_fqdn: String,
                      req_id: String,
                      challenge: String)
                      -> Result<(), Box<dyn Error + Send + Sync + 'static>>
     {
-        let txt_name = format!("_acme-challenge.{cert_domain}");
+        println!("Creating proof for {cert_fqdn}");
+        // Lers provides the FQDN challenge, but many DNS APIs only
+        // work with unqualified names. Strip off the domain.
+        let challenge_host = cert_fqdn.strip_suffix(&format!(".{}",self.domain))
+            .unwrap_or(&cert_fqdn);
+        let txt_name = format!("_acme-challenge.{challenge_host}");
+
+        println!("Creating TXT record '{txt_name}' -> '{challenge}");
 
         self.dns_client.create_txt_record(&txt_name, &challenge).await?;
 
@@ -64,7 +71,8 @@ impl Solver for ZoneUpdateSolver {
                 .clone()
         };
 
-        self.dns_client.delete_txt_record(&txt_name).await?;
+        println!("Deleting TXT record '{txt_name}'");
+//        self.dns_client.delete_txt_record(&txt_name).await?;
 
         Ok(())
     }
@@ -78,7 +86,10 @@ async fn get_cert() -> Result<Certificate> {
     let fqdn = format!("{hostname}.{domain}");
     let email = format!("mailto:{}", env::var("EXAMPLE_EMAIL").unwrap());
 
-    let solver = ZoneUpdateSolver::new()?;
+    let dns_key = env::var("PORKBUN_KEY")?;
+    let dns_secret = env::var("PORKBUN_SECRET")?;
+
+    let solver = ZoneUpdateSolver::new(domain, dns_key, dns_secret)?;
 
     let directory = Directory::builder(LETS_ENCRYPT_STAGING_URL)
         .dns01_solver(Box::new(solver))
@@ -92,6 +103,7 @@ async fn get_cert() -> Result<Certificate> {
         .create_if_not_exists()
         .await?;
 
+    println!("Starting req for {fqdn}");
     let cert = account
         .certificate()
         .add_domain(fqdn)
@@ -116,18 +128,20 @@ async fn get_cert() -> Result<Certificate> {
 
 
 fn main() -> Result<()> {
-    smol::block_on(
-        get_cert()
-    )?;
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(Level::DEBUG)
+        .finish();
+    // let trace_fmt = tracing_subscriber::fmt()
+    //     .with_max_level(LevelFilter::INFO)
+    //     .finish();
+    tracing::subscriber::set_global_default(subscriber)?;
 
-    // Alternatively...
-    //
-    // tokio::runtime::Builder::new_multi_thread()
-    //     .enable_all()
-    //     .build()?
-    //     .block_on(
-    //         get_cert()
-    //     )?;
+    let _cert = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?
+        .block_on(
+            get_cert()
+        )?;
 
     Ok(())
 }
