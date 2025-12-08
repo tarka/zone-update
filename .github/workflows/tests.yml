@@ -7,10 +7,16 @@ jobs:
 
   test-runtime:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         runtime: [smol, tokio]
-        provider: [dnsimple, dnsmadeeasy]
+        # DNSMadeEasy's staging servers seem to run legacy SSL which
+        # rustls doesn't support, so we don't test here ATM.
+        #
+        # provider: [dnsimple, dnsmadeeasy]
+        provider: [dnsimple]
+
     concurrency:
       group: ${{ matrix.provider }}
   
