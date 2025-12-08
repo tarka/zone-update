@@ -1,84 +1,118 @@
-use std::{env, time::Duration};
+use std::{env, error::Error, net::{SocketAddr, ToSocketAddrs}, time::Duration};
 
-use acme_micro::{create_p384_key, Certificate, Directory, DirectoryUrl};
-use anyhow::Result;
-use random_string::charsets::ALPHANUMERIC;
-use zone_update::{async_impl::{AsyncDnsProvider, gandi::Gandi}, gandi::Auth, Config};
+use anyhow::{Result, anyhow};
+use async_trait::async_trait;
+use dnsclient::{r#async::DNSClient, UpstreamServer};
+use instant_acme::{Account, AuthorizationStatus, ChallengeType, Identifier, LetsEncrypt, NewAccount, NewOrder, OrderStatus, RetryPolicy};
+use random_string::charsets::{ALPHANUMERIC, ALPHA_LOWER};
+use tracing::{info, level_filters::LevelFilter, Level};
+use zone_update::{Config, Providers, async_impl::AsyncDnsProvider, porkbun::Auth};
 
 
-fn get_dns_client() -> Result<impl AsyncDnsProvider> {
-    // Gandi supports 2 types of API key
-    let auth = if let Some(key) = env::var("GANDI_APIKEY").ok() {
-        Auth::ApiKey(key)
-    } else if let Some(key) = env::var("GANDI_PATKEY").ok() {
-        Auth::PatKey(key)
-    } else {
-        panic!("No Gandi auth key set");
+fn dns_client(domain: String, key: String, secret: String) -> Result<Box<dyn AsyncDnsProvider>> {
+    let auth = Auth {
+        key,
+        secret,
     };
-
     let config = Config {
-        domain: env::var("GANDI_TEST_DOMAIN")?,
+        domain: domain,
         dry_run: false,
     };
-    let gandi = Gandi::new(config, auth);
+    let dns_client = Providers::PorkBun(auth)
+        .async_impl(config);
 
-    Ok(gandi)
+    Ok(dns_client)
 }
 
-async fn get_cert() -> Result<Certificate> {
-    println!("Starting get_cert()");
 
-    let dns_client = get_dns_client()?;
+async fn get_cert() -> Result<()> {
+    info!("Starting get_cert()");
 
-    let hostname = random_string::generate(16, ALPHANUMERIC);
-    let domain = env::var("GANDI_TEST_DOMAIN").unwrap();
-    let email = format!("mailto:{}", env::var("EXAMPLE_EMAIL").unwrap());
-
-    // The following is based on the acme-micro example. In practice
-    // most of the operations should be wrapped in `blocking()` as
-    // acme-micro uses the synchronous ureq crate, but it doesn't
-    // matter here.
-
-    let dir = Directory::from_url(DirectoryUrl::LetsEncryptStaging)?;
-
-    println!("Registering account");
-    let acc = dir.register_account(vec![email])?;
-
-    println!("Place order");
-    let mut ord_new = acc.new_order(&format!("{hostname}.{domain}"), &[])?;
+    let hostname = random_string::generate(16, ALPHA_LOWER);
+    //let hostname = "plug-01";
+    let domain = env::var("PORKBUN_TEST_DOMAIN").unwrap();
+    let fqdn = format!("{hostname}.{domain}");
+    let contact = format!("mailto:{}", env::var("EXAMPLE_EMAIL").unwrap());
     let txt_name = format!("_acme-challenge.{hostname}");
 
-    let ord_csr = loop {
+    let dns_secret = env::var("PORKBUN_SECRET")?;
 
-        if let Some(ord_csr) = ord_new.confirm_validations() {
-            break ord_csr;
+    let dns_key = env::var("PORKBUN_KEY")?;    info!("Initialising account");
+    let (account, _credentials) = Account::builder()?
+        .create(
+            &NewAccount {
+                contact: &[&contact],
+                terms_of_service_agreed: true,
+                only_return_existing: false,
+            },
+            LetsEncrypt::Staging.url().to_owned(),
+            None,
+        )
+        .await?;
+
+    let hid = Identifier::Dns(fqdn.clone());
+    info!("Create order for {hid:?}");
+    let mut order = account.new_order(&NewOrder::new(&[hid])).await?;
+
+    let dns_client = dns_client(domain.clone(), dns_key.clone(), dns_secret.clone())?;
+
+    let mut authorizations = order.authorizations();
+    while let Some(result) = authorizations.next().await {
+        let mut authz = result?;
+        info!("Processing {:?}", authz.status);
+        match authz.status {
+            AuthorizationStatus::Pending => {}
+            AuthorizationStatus::Valid => continue,
+            _ => todo!(),
         }
 
-        let auths = ord_new.authorizations()?;
+        info!("Creating challenge");
+        let mut challenge = authz
+            .challenge(ChallengeType::Dns01)
+            .ok_or_else(|| anyhow::anyhow!("no dns01 challenge found"))?;
 
-        let chall = auths[0].dns_challenge().unwrap();
 
-        let token = chall.dns_proof()?;
-        println!("Challenge string is {token}");
+        let token = challenge.key_authorization().dns_value();
 
-        println!("Creating challenge TXT record {txt_name}");
+        info!("Creating TXT: {txt_name} -> {}", token);
+
         dns_client.create_txt_record(&txt_name, &token).await?;
 
-        println!("Validating");
-        chall.validate(Duration::from_millis(5000))?;
+        let txt_fqdn = format!("{txt_name}.{domain}");
 
-        ord_new.refresh()?;
-    };
+        //let lookup = DNSClient::new_with_system_resolvers()?;
+        let upstream = UpstreamServer::new(SocketAddr::from(([1,1,1,1], 53)));
+        let lookup = DNSClient::new(vec![upstream]);
+        info!("Waiting for record to go live");
+        for _i in 0..30 {
+            info!("Lookup for {txt_fqdn}");
+            let txts = lookup.query_txt(&txt_fqdn).await?;
+            if txts.len() > 0 {
+                info!("Found {txt_fqdn}");
+                break;
+            }
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
 
-    let pkey_pri = create_p384_key()?;
-    let ord_cert = ord_csr.finalize_pkey(pkey_pri, Duration::from_millis(5000))?;
+        info!("Setting challenge to ready");
+        challenge.set_ready().await?;
+    }
+
+    info!("Polling challenge status");
+    let status = order.poll_ready(&RetryPolicy::default()).await?;
+    if status != OrderStatus::Ready {
+        dns_client.delete_txt_record(&txt_name).await?;
+        return Err(anyhow::anyhow!("unexpected order status: {status:?}"));
+    }
+
+    let private_key_pem = order.finalize().await?;
+    let cert_chain_pem = order.poll_certificate(&RetryPolicy::default()).await?;
 
     // Finally download the certificate.
-    let cert = ord_cert.download_cert()?;
     println!("======================= Cert ===============================\n");
-    println!("{}", cert.certificate());
+    println!("{}", cert_chain_pem);
     println!("====================== Private =============================\n");
-    println!("{}", cert.private_key());
+    println!("{}", private_key_pem);
 
     println!("Deleting acme challenge");
 
@@ -86,23 +120,22 @@ async fn get_cert() -> Result<Certificate> {
 
     println!("Done");
 
-    Ok(cert)
+    Ok(())
 }
 
 
 fn main() -> Result<()> {
-    smol::block_on(
-        get_cert()
-    )?;
+    let trace_fmt = tracing_subscriber::fmt()
+        .with_max_level(LevelFilter::INFO)
+        .finish();
+    tracing::subscriber::set_global_default(trace_fmt)?;
 
-    // Alternatively...
-    //
-    // tokio::runtime::Builder::new_multi_thread()
-    //     .enable_all()
-    //     .build()?
-    //     .block_on(
-    //         get_cert()
-    //     )?;
+    let _cert = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?
+        .block_on(
+            get_cert()
+        )?;
 
     Ok(())
 }
