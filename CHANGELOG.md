@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3](https://github.com/tarka/zone-update/compare/v0.5.2...v0.5.3) - 2025-12-08
+
+### Other
+
+- Disable dnsmadeeasy for functests as its staging servers are running legacy SSL ciphers.
+- Remove acme-micro example for now.
+- Use rustls as HTTPS backend, as native was clashing with openssl in other places.
+- Update async-example to use instant-acme
+- Bump deps.
+
 ## [0.5.2](https://github.com/tarka/zone-update/compare/v0.5.1...v0.5.2) - 2025-11-22
 
 ### Other
