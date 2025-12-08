@@ -37,7 +37,10 @@ async fn get_cert() -> Result<()> {
 
     let dns_secret = env::var("PORKBUN_SECRET")?;
 
-    let dns_key = env::var("PORKBUN_KEY")?;    info!("Initialising account");
+    let dns_key = env::var("PORKBUN_KEY")?;
+
+
+    info!("Initialising account");
     let (account, _credentials) = Account::builder()?
         .create(
             &NewAccount {

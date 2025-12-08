@@ -194,7 +194,7 @@ pub(crate) fn client() -> Agent {
             // protocol versions that Rustls doesn't support on their
             // sandbox.
             TlsConfig::builder()
-                .provider(ureq::tls::TlsProvider::NativeTls)
+                .provider(ureq::tls::TlsProvider::Rustls)
                 .build()
         )
         .build()
