@@ -67,11 +67,6 @@ futures = "0.3.31"
 dnsclient = "0.2.0"
 instant-acme = "0.8.4"
 
-# Disabled as acme-micro introduces Openssl dependency clashes.
-# [[example]]
-# name = "acme-dns01"
-# required-features = ["gandi"]
-
 [[example]]
 name = "acme-dns01-async"
 required-features = ["async"]
