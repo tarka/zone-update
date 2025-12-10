@@ -15,6 +15,9 @@ use crate::{
 
 pub(crate) const API_BASE: &str = "https://api.dnsmadeeasy.com/V2.0";
 
+/// Authentication credentials for DNSMadeEasy API access.
+///
+/// Contains the API key and secret used to sign requests.
 #[derive(Clone, Debug, Deserialize)]
 pub struct Auth {
     pub key: String,
@@ -49,6 +52,9 @@ impl Auth {
     }
 }
 
+/// Synchronous DNSMadeEasy provider implementation.
+///
+/// Manages endpoint, authentication and domain lookup state.
 pub struct DnsMadeEasy {
     config: Config,
     endpoint: &'static str,
@@ -57,10 +63,12 @@ pub struct DnsMadeEasy {
 }
 
 impl DnsMadeEasy {
+    /// Create a new `DnsMadeEasy` provider using the default API endpoint.
     pub fn new(config: Config, auth: Auth) -> Self {
         Self::new_with_endpoint(config, auth, API_BASE)
     }
 
+    /// Create a new `DnsMadeEasy` provider with a custom API endpoint.
     pub fn new_with_endpoint(config: Config, auth: Auth, endpoint: &'static str) -> Self {
         Self {
             config,

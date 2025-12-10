@@ -3,6 +3,10 @@ use std::result;
 use thiserror::Error;
 
 
+/// Error type for operations in this crate.
+///
+/// Represents various failure modes encountered when communicating with
+/// DNS provider APIs or performing local operations.
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("API usage error: {0}")]
@@ -45,4 +49,7 @@ pub enum Error {
     // RustlsError(#[from] rustls::Error),
 }
 
+/// Result type returned by functions in this crate.
+///
+/// Uses the crate-local `Error` type as the error variant.
 pub type Result<T> = result::Result<T, Error>;

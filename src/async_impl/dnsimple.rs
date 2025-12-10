@@ -13,11 +13,13 @@ use crate::async_impl::AsyncDnsProvider;
 
 pub use crate::dnsimple::Auth;
 
+/// Async wrapper around the synchronous `Dnsimple` provider.
 pub struct Dnsimple {
     inner: Arc<sync::Dnsimple>,
 }
 
 impl Dnsimple {
+    /// Create a new async `Dnsimple` wrapper using the default endpoint.
     pub fn new(config: Config, auth: Auth, acc: Option<u32>) -> Self {
         Self::new_with_endpoint(config, auth, acc, API_BASE)
     }

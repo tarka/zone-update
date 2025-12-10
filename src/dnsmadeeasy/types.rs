@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::RecordType;
 
 
+/// Representation of a managed domain in DNSMadeEasy.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Domain {
     pub id: u32,
@@ -30,6 +31,7 @@ pub struct Domain {
 //     },
 //   ]
 // }
+/// DNSMadeEasy record representation returned by the API.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Record<T> {
     pub id: u32,
@@ -42,6 +44,7 @@ pub struct Record<T> {
     pub ttl: u32,
 }
 
+/// Wrapper for lists of DNSMadeEasy records.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Records<T>
 {

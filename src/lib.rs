@@ -23,6 +23,10 @@ use tracing::warn;
 use crate::errors::Result;
 
 
+/// Configuration for DNS operations.
+///
+/// Contains the domain to operate on and a `dry_run` flag to avoid
+/// making changes during testing.
 pub struct Config {
     pub domain: String,
     pub dry_run: bool,
@@ -31,6 +35,10 @@ pub struct Config {
 // This can be used by dependents of this project as part of their
 // config-file, or directly. See the `netlink-ddns` project for an
 // example.
+/// DNS provider selection used by this crate.
+///
+/// Each variant contains the authentication information for the
+/// selected provider.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "name")]
 pub enum Providers {
@@ -42,6 +50,9 @@ pub enum Providers {
 
 impl Providers {
 
+    /// Return a blocking (synchronous) implementation of the selected provider.
+    ///
+    /// The returned boxed trait object implements `DnsProvider`.
     pub fn blocking_impl(&self, dns_conf: Config) -> Box<dyn DnsProvider> {
         match self {
             #[cfg(feature = "gandi")]
@@ -55,6 +66,9 @@ impl Providers {
         }
     }
 
+    /// Return an async implementation of the selected provider.
+    ///
+    /// The returned boxed trait object implements `async_impl::AsyncDnsProvider`.
     #[cfg(feature = "async")]
     pub fn async_impl(&self, dns_conf: Config) -> Box<dyn async_impl::AsyncDnsProvider> {
         match self {

@@ -11,6 +11,9 @@ use crate::{
 
 pub(crate) const API_BASE: &str = "https://api.gandi.net/v5/livedns";
 
+/// Authentication options for the Gandi provider.
+///
+/// Supports API key or PAT key styles depending on environment.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Auth {
@@ -27,12 +30,16 @@ impl Auth {
     }
 }
 
+/// Synchronous Gandi provider implementation.
+///
+/// Holds configuration and authentication for interacting with the Gandi API.
 pub struct Gandi {
     config: Config,
     auth: Auth,
 }
 
 impl Gandi {
+    /// Create a new `Gandi` provider instance.
     pub fn new(config: Config, auth: Auth) -> Self {
         Gandi {
             config,

@@ -13,11 +13,13 @@ use crate::async_impl::AsyncDnsProvider;
 
 pub use crate::gandi::Auth;
 
+/// Async wrapper around the synchronous `Gandi` provider.
 pub struct Gandi {
     inner: Arc<sync::Gandi>,
 }
 
 impl Gandi {
+    /// Create a new async `Gandi` wrapper.
     pub fn new(config: Config, auth: Auth) -> Self {
         let inner = sync::Gandi::new(config, auth);
         Self {

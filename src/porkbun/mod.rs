@@ -17,18 +17,25 @@ use crate::{
 
 pub(crate) const API_BASE: &str = "https://api.porkbun.com/api/json/v3/dns";
 
+/// Authentication credentials for the Porkbun API.
+///
+/// Contains the API key and secret required for requests.
 #[derive(Clone, Debug, Deserialize)]
 pub struct Auth {
     pub key: String,
     pub secret: String,
 }
 
+/// Synchronous Porkbun DNS provider implementation.
+///
+/// Holds configuration and authentication state for performing API calls.
 pub struct Porkbun {
     config: Config,
     auth: Auth,
 }
 
 impl Porkbun {
+    /// Create a new `Porkbun` provider instance.
     pub fn new(config: Config, auth: Auth) -> Self {
         Self {
             config,

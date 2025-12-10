@@ -16,6 +16,7 @@ use crate::RecordType;
 //     }
 //   ]
 // }
+/// Represents a DNSimple account returned by the API.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Account {
     pub id: u32,
@@ -25,6 +26,7 @@ pub struct Account {
     pub updated_at: DateTime<Utc>,
 }
 
+/// Container for account list responses from DNSimple.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Accounts {
     #[serde(rename = "data")]
@@ -57,6 +59,7 @@ pub struct Accounts {
 //     "total_pages": 1
 //   }
 // }
+/// A DNS record entry returned by DNSimple.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetRecord<T>
 {
@@ -72,6 +75,7 @@ pub struct GetRecord<T>
 }
 
 
+/// Wrapper for record list responses from DNSimple.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Records<T>
 {
@@ -90,6 +94,7 @@ pub struct Records<T>
 //   "regions": ["SV1", "IAD"],
 //   "integrated_zones": [1, 2, "dnsimple"]
 // }
+/// Payload used to create a DNS record on DNSimple.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateRecord {
     pub name: String,
@@ -101,6 +106,7 @@ pub struct CreateRecord {
     // some plans.
 }
 
+/// Payload used to update a DNSimple record's content.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateRecord {
     pub content: String,

@@ -15,6 +15,10 @@ pub mod dnsimple;
 pub mod porkbun;
 
 
+/// Asynchronous DNS provider trait.
+///
+/// Mirrors `DnsProvider` with async methods that can be implemented by
+/// async wrappers around synchronous providers or native async clients.
 #[async_trait::async_trait]
 pub trait AsyncDnsProvider: Send + Sync {
 

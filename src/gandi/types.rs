@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 //
 // Note: Not currently decoded, but body is logged as part of
 // `check_error()`;
+/// Minimal error response returned by the Gandi API.
 #[allow(unused)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Error {
@@ -32,6 +33,7 @@ pub struct Error {
 //     "rrset_href": "https://api.test/v5/livedns/domains/example.com/records/%40/A"
 //   },
 // ]
+/// Representation of a Gandi DNS record set.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Record<T>
 {
@@ -48,6 +50,7 @@ pub struct Record<T>
 //   ],
 //   "rrset_ttl": 320
 // }
+/// Payload used to update a Gandi DNS record set.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RecordUpdate<T> {
     pub rrset_values: Vec<T>,

@@ -14,11 +14,13 @@ use crate::async_impl::AsyncDnsProvider;
 
 pub use crate::porkbun::Auth;
 
+/// Async wrapper around the synchronous `Porkbun` provider.
 pub struct Porkbun {
     inner: Arc<sync::Porkbun>,
 }
 
 impl Porkbun {
+    /// Create a new async `Porkbun` wrapper.
     pub fn new(config: Config, auth: Auth) -> Self {
         let inner = sync::Porkbun::new(config, auth);
         Self {

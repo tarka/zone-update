@@ -9,6 +9,7 @@ use crate::{
 
 // This could be folded into the records below with #[serde(flatten)],
 // but isn't worth it.
+/// Minimal authentication payload used for Porkbun API requests.
 #[derive(Deserialize, Serialize, Debug)]
 pub struct AuthOnly {
     pub secretapikey: String,
@@ -32,6 +33,7 @@ impl From<Auth> for AuthOnly {
 // 	"content": "1.1.1.1",
 // 	"ttl": "600"
 // }
+/// Payload for creating or updating a Porkbun DNS record.
 #[derive(Deserialize, Serialize, Debug)]
 pub struct CreateUpdate<T> {
     pub secretapikey: String,
@@ -58,6 +60,7 @@ pub struct CreateUpdate<T> {
 // 	}
 //     ]
 // }
+/// Representation of a Porkbun DNS record returned by the API.
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Record<T> {
     #[serde(deserialize_with = "de_str")]
@@ -68,6 +71,7 @@ pub struct Record<T> {
     pub content: T,
 }
 
+/// A list of Porkbun records as returned by the API.
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Records<T> {
     pub records: Vec<Record<T>>

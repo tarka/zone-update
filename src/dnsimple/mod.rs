@@ -28,6 +28,9 @@ use crate::{
 
 pub(crate) const API_BASE: &str = "https://api.dnsimple.com/v2";
 
+/// Authentication credentials for DNSimple API usage.
+///
+/// Currently contains the API token used for `Authorization` headers.
 #[derive(Clone, Debug, Deserialize)]
 pub struct Auth {
     pub key: String,
@@ -39,6 +42,9 @@ impl Auth {
     }
 }
 
+/// Synchronous DNSimple provider implementation.
+///
+/// Manages endpoint, authentication and account lookup state.
 pub struct Dnsimple {
     config: Config,
     endpoint: &'static str,
@@ -47,10 +53,12 @@ pub struct Dnsimple {
 }
 
 impl Dnsimple {
+    /// Create a new `Dnsimple` provider using the default API endpoint.
     pub fn new(config: Config, auth: Auth, acc: Option<u32>) -> Self {
         Self::new_with_endpoint(config, auth, acc, API_BASE)
     }
 
+    /// Create a new `Dnsimple` provider with a custom API endpoint.
     pub fn new_with_endpoint(config: Config, auth: Auth, acc: Option<u32>, endpoint: &'static str) -> Self {
         let acc_id = Mutex::new(acc);
         Dnsimple {

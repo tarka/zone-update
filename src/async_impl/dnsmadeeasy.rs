@@ -14,11 +14,13 @@ use crate::async_impl::AsyncDnsProvider;
 
 pub use crate::dnsmadeeasy::Auth;
 
+/// Async wrapper around the synchronous `DnsMadeEasy` provider.
 pub struct DnsMadeEasy {
     inner: Arc<sync::DnsMadeEasy>,
 }
 
 impl DnsMadeEasy {
+    /// Create a new async `DnsMadeEasy` wrapper using the default endpoint.
     pub fn new(config: Config, auth: Auth) -> Self {
         Self::new_with_endpoint(config, auth, API_BASE)
     }

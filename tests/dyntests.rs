@@ -6,6 +6,7 @@ mod sync {
     use super::*;
     use zone_update::{dnsimple, dnsmadeeasy, gandi, porkbun, DnsProvider};
 
+    /// Test helper enum describing provider configurations.
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "lowercase", tag = "name")]
     pub enum Providers {
@@ -16,6 +17,7 @@ mod sync {
     }
 
 
+    /// Helper to construct a synchronous DNS provider from the test enum.
     pub fn get_dns_provider(pe: Providers) -> Result<Box<dyn DnsProvider>> {
 
         let dns_conf = zone_update::Config {
@@ -53,6 +55,7 @@ mod r#async {
     use super::*;
     use zone_update::async_impl::{dnsimple, dnsmadeeasy, gandi, porkbun, AsyncDnsProvider};
 
+    /// Test helper enum describing provider configurations for async tests.
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "lowercase", tag = "name")]
     pub enum Providers {
@@ -63,6 +66,7 @@ mod r#async {
     }
 
 
+    /// Helper to construct an async DNS provider from the test enum.
     pub fn get_dns_provider(pe: Providers) -> Result<Box<dyn AsyncDnsProvider>> {
 
         let dns_conf = zone_update::Config {
