@@ -60,7 +60,7 @@ impl Porkbun {
         // malformed zones).
         let nr = recs.records.len();
         if nr > 1 {
-            error!("Returned number of IPs is {}, should be 1", nr);
+            error!("Returned number of records is {}, should be 1", nr);
             return Err(Error::UnexpectedRecord(format!("Returned number of records is {nr}, should be 1")));
         } else if nr == 0 {
             warn!("No IP returned for {host}, continuing");
