@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/tarka/zone-update/compare/v0.6.0...v0.7.0) - 2025-12-11
+
+### Other
+
+- Rename Provider(s) and add explanation for the helper generation macro.
+- Revert previous API change as it requires too much boilerplate.
+- Typo
+- Fix actions workflow.
+- Simplify github actions.
+
 ## [0.6.0](https://github.com/tarka/zone-update/compare/v0.5.3...v0.6.0) - 2025-12-11
 
 ### Other
