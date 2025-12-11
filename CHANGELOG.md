@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/tarka/zone-update/compare/v0.5.3...v0.6.0) - 2025-12-11
+
+### Other
+
+- Move to using a concrete impl & match rather than dyn objects.
+- Add test for config parsing.
+- Add LLM-generated rustdocs.
+- Add AI policy
+
 ## [0.5.3](https://github.com/tarka/zone-update/compare/v0.5.2...v0.5.3) - 2025-12-08
 
 ### Other
