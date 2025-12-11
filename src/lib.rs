@@ -15,37 +15,13 @@ pub mod gandi;
 #[cfg(feature = "porkbun")]
 pub mod porkbun;
 
-use std::fmt::{self, Debug, Display, Formatter};
+use std::{fmt::{self, Debug, Display, Formatter}, net::Ipv4Addr};
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::warn;
 
 use crate::errors::Result;
 
-
-
-// This can be used by dependents of this project as part of their
-// config-file, or directly. See the `netlink-ddns` project for an
-// example.
-/// DNS provider selection used by this crate.
-///
-/// Each variant contains the authentication information for the
-/// selected provider.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "lowercase", tag = "name")]
-pub enum Provider {
-    Gandi(gandi::Auth),
-    Dnsimple(dnsimple::Auth),
-    DnsMadeEasy(dnsmadeeasy::Auth),
-    PorkBun(porkbun::Auth),
-}
-
-pub enum ProviderImpl {
-    Gandi(gandi::Gandi),
-    Dnsimple(dnsimple::Dnsimple),
-    DnsMadeEasy(dnsmadeeasy::DnsMadeEasy),
-    PorkBun(porkbun::Porkbun),
-}
 
 /// Configuration for DNS operations.
 ///
@@ -56,94 +32,58 @@ pub struct Config {
     pub dry_run: bool,
 }
 
-impl ProviderImpl {
+// This can be used by dependents of this project as part of their
+// config-file, or directly. See the `netlink-ddns` project for an
+// example.
+/// DNS provider selection used by this crate.
+///
+/// Each variant contains the authentication information for the
+/// selected provider.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "lowercase", tag = "name")]
+pub enum Providers {
+    Gandi(gandi::Auth),
+    Dnsimple(dnsimple::Auth),
+    DnsMadeEasy(dnsmadeeasy::Auth),
+    PorkBun(porkbun::Auth),
+}
 
-    pub fn new(provider: Provider, conf: Config) -> Self {
-        match provider {
+impl Providers {
+
+    /// Return a blocking (synchronous) implementation of the selected provider.
+    ///
+    /// The returned boxed trait object implements `DnsProvider`.
+    pub fn blocking_impl(&self, dns_conf: Config) -> Box<dyn DnsProvider> {
+        match self {
             #[cfg(feature = "gandi")]
-            Provider::Gandi(auth) => Self::Gandi(gandi::Gandi::new(conf, auth.clone())),
+            Providers::Gandi(auth) => Box::new(gandi::Gandi::new(dns_conf, auth.clone())),
             #[cfg(feature = "dnsimple")]
-            Provider::Dnsimple(auth) => Self::Dnsimple(dnsimple::Dnsimple::new(conf, auth.clone(), None)),
+            Providers::Dnsimple(auth) => Box::new(dnsimple::Dnsimple::new(dns_conf, auth.clone(), None)),
             #[cfg(feature = "dnsmadeeasy")]
-            Provider::DnsMadeEasy(auth) => Self::DnsMadeEasy(dnsmadeeasy::DnsMadeEasy::new(conf, auth.clone())),
+            Providers::DnsMadeEasy(auth) => Box::new(dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
             #[cfg(feature = "porkbun")]
-            Provider::PorkBun(auth) => Self::PorkBun(porkbun::Porkbun::new(conf, auth.clone())),
+            Providers::PorkBun(auth) => Box::new(porkbun::Porkbun::new(dns_conf, auth.clone())),
         }
     }
 
-    // /// Return an async implementation of the selected provider.
-    // ///
-    // /// The returned boxed trait object implements `async_impl::AsyncDnsProvider`.
-    // #[cfg(feature = "async")]
-    // pub fn async_impl(&self, dns_conf: Config) -> Box<dyn async_impl::AsyncDnsProvider> {
-    //     match self {
-    //         #[cfg(feature = "gandi")]
-    //         Providers::Gandi(auth) => Box::new(async_impl::gandi::Gandi::new(dns_conf, auth.clone())),
-    //         #[cfg(feature = "dnsimple")]
-    //         Providers::Dnsimple(auth) => Box::new(async_impl::dnsimple::Dnsimple::new(dns_conf, auth.clone(), None)),
-    //         #[cfg(feature = "dnsmadeeasy")]
-    //         Providers::DnsMadeEasy(auth) => Box::new(async_impl::dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
-    //         #[cfg(feature = "porkbun")]
-    //         Providers::PorkBun(auth) => Box::new(async_impl::porkbun::Porkbun::new(dns_conf, auth.clone())),
-    //     }
-    // }
-}
-
-impl DnsProvider for ProviderImpl {
-
-    fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
-    where T: DeserializeOwned,
-          Self: Sized
-    {
+    /// Return an async implementation of the selected provider.
+    ///
+    /// The returned boxed trait object implements `async_impl::AsyncDnsProvider`.
+    #[cfg(feature = "async")]
+    pub fn async_impl(&self, dns_conf: Config) -> Box<dyn async_impl::AsyncDnsProvider> {
         match self {
-            Self::Gandi(imp) => imp.get_record(rtype, host),
-            Self::Dnsimple(imp) => imp.get_record(rtype, host),
-            Self::DnsMadeEasy(imp) => imp.get_record(rtype, host),
-            Self::PorkBun(imp) => imp.get_record(rtype, host),
-        }
-    }
-
-
-    /// Create a new DNS record by host and record type.
-    fn create_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
-    where T: Serialize + DeserializeOwned + Display + Clone,
-          Self: Sized
-    {
-        match self {
-            Self::Gandi(imp) => imp.create_record(rtype, host, record),
-            Self::Dnsimple(imp) => imp.create_record(rtype, host, record),
-            Self::DnsMadeEasy(imp) => imp.create_record(rtype, host, record),
-            Self::PorkBun(imp) => imp.create_record(rtype, host, record),
-        }
-    }
-
-
-    /// Update a DNS record by host and record type.
-    fn update_record<T>(&self, rtype: RecordType, host: &str, record: &T) -> Result<()>
-    where T: Serialize + DeserializeOwned + Display + Clone,
-          Self: Sized
-    {
-        match self {
-            Self::Gandi(imp) => imp.update_record(rtype, host, record),
-            Self::Dnsimple(imp) => imp.update_record(rtype, host, record),
-            Self::DnsMadeEasy(imp) => imp.update_record(rtype, host, record),
-            Self::PorkBun(imp) => imp.update_record(rtype, host, record),
-        }
-    }
-
-
-    /// Delete a DNS record by host and record type.
-    fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>
-    where Self: Sized
-    {
-        match self {
-            Self::Gandi(imp) => imp.delete_record(rtype, host),
-            Self::Dnsimple(imp) => imp.delete_record(rtype, host),
-            Self::DnsMadeEasy(imp) => imp.delete_record(rtype, host),
-            Self::PorkBun(imp) => imp.delete_record(rtype, host),
+            #[cfg(feature = "gandi")]
+            Providers::Gandi(auth) => Box::new(async_impl::gandi::Gandi::new(dns_conf, auth.clone())),
+            #[cfg(feature = "dnsimple")]
+            Providers::Dnsimple(auth) => Box::new(async_impl::dnsimple::Dnsimple::new(dns_conf, auth.clone(), None)),
+            #[cfg(feature = "dnsmadeeasy")]
+            Providers::DnsMadeEasy(auth) => Box::new(async_impl::dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
+            #[cfg(feature = "porkbun")]
+            Providers::PorkBun(auth) => Box::new(async_impl::porkbun::Porkbun::new(dns_conf, auth.clone())),
         }
     }
 }
+
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -196,95 +136,45 @@ pub trait DnsProvider {
     fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>
     where Self: Sized;
 
-    // /// Get a TXT record.
-    // ///
-    // /// This is a helper method that calls `get_record` with the `TXT` record type.
-    // fn get_txt_record(&self, host: &str) -> Result<Option<String>>;
+    /// Get a TXT record.
+    ///
+    /// This is a helper method that calls `get_record` with the `TXT` record type.
+    fn get_txt_record(&self, host: &str) -> Result<Option<String>>;
 
-    // /// Create a new TXT record.
-    // ///
-    // /// This is a helper method that calls `create_record` with the `TXT` record type.
-    // fn create_txt_record(&self, host: &str, record: &String) -> Result<()>;
+    /// Create a new TXT record.
+    ///
+    /// This is a helper method that calls `create_record` with the `TXT` record type.
+    fn create_txt_record(&self, host: &str, record: &String) -> Result<()>;
 
-    // /// Update a TXT record.
-    // ///
-    // /// This is a helper method that calls `update_record` with the `TXT` record type.
-    // fn update_txt_record(&self, host: &str, record: &String) -> Result<()>;
+    /// Update a TXT record.
+    ///
+    /// This is a helper method that calls `update_record` with the `TXT` record type.
+    fn update_txt_record(&self, host: &str, record: &String) -> Result<()>;
 
-    // /// Delete a TXT record.
-    // ///
-    // /// This is a helper method that calls `delete_record` with the `TXT` record type.
-    // fn delete_txt_record(&self, host: &str) -> Result<()>;
+    /// Delete a TXT record.
+    ///
+    /// This is a helper method that calls `delete_record` with the `TXT` record type.
+    fn delete_txt_record(&self, host: &str) -> Result<()>;
 
-    // /// Get an A record.
-    // ///
-    // /// This is a helper method that calls `get_record` with the `A` record type.
-    // fn get_a_record(&self, host: &str) -> Result<Option<Ipv4Addr>>;
+    /// Get an A record.
+    ///
+    /// This is a helper method that calls `get_record` with the `A` record type.
+    fn get_a_record(&self, host: &str) -> Result<Option<Ipv4Addr>>;
 
-    // /// Create a new A record.
-    // ///
-    // /// This is a helper method that calls `create_record` with the `A` record type.
-    // fn create_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()>;
+    /// Create a new A record.
+    ///
+    /// This is a helper method that calls `create_record` with the `A` record type.
+    fn create_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()>;
 
-    // /// Update an A record.
-    // ///
-    // /// This is a helper method that calls `update_record` with the `A` record type.
-    // fn update_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()>;
+    /// Update an A record.
+    ///
+    /// This is a helper method that calls `update_record` with the `A` record type.
+    fn update_a_record(&self, host: &str, record: &Ipv4Addr) -> Result<()>;
 
-    // /// Delete an A record.
-    // ///
-    // /// This is a helper method that calls `delete_record` with the `A` record type.
-    // fn delete_a_record(&self, host: &str) -> Result<()>;
-
-
-    fn get_txt_record(&self, host: &str) -> Result<Option<String>>
-    where Self: Sized
-    {
-        self.get_record::<String>(RecordType::TXT, host)
-            .map(|opt| opt.map(|s| crate::strip_quotes(&s)))
-    }
-
-    fn create_txt_record(&self, host: &str, record: &String) -> Result<()>
-    where Self: Sized
-    {
-        self.create_record(RecordType::TXT, host, record)
-    }
-
-    fn update_txt_record(&self, host: &str, record: &String) -> Result<()>
-    where Self: Sized
-    {
-        self.update_record(RecordType::TXT, host, record)
-    }
-
-    fn delete_txt_record(&self, host: &str) -> Result<()>
-    where Self: Sized
-    {
-        self.delete_record(RecordType::TXT, host)
-    }
-
-    fn get_a_record(&self, host: &str) -> Result<Option<std::net::Ipv4Addr>>
-    where Self: Sized
-    {
-        self.get_record(RecordType::A, host)
-    }
-
-    fn create_a_record(&self, host: &str, record: &std::net::Ipv4Addr) -> Result<()>
-    where Self: Sized
-    {
-        self.create_record(RecordType::A, host, record)
-    }
-
-    fn update_a_record(&self, host: &str, record: &std::net::Ipv4Addr) -> Result<()>
-    where Self: Sized
-    {
-        self.update_record(RecordType::A, host, record)
-    }
-
-    fn delete_a_record(&self, host: &str) -> Result<()>
-    where Self: Sized
-    {
-        self.delete_record(RecordType::A, host)
-    }
+    /// Delete an A record.
+    ///
+    /// This is a helper method that calls `delete_record` with the `A` record type.
+    fn delete_a_record(&self, host: &str) -> Result<()>;
 }
 
 
@@ -292,38 +182,38 @@ pub trait DnsProvider {
 macro_rules! generate_helpers {
     () => {
 
-//         fn get_txt_record(&self, host: &str) -> Result<Option<String>> {
-//             self.get_record::<String>(RecordType::TXT, host)
-//                 .map(|opt| opt.map(|s| crate::strip_quotes(&s)))
-//         }
+        fn get_txt_record(&self, host: &str) -> Result<Option<String>> {
+            self.get_record::<String>(RecordType::TXT, host)
+                .map(|opt| opt.map(|s| crate::strip_quotes(&s)))
+        }
 
-//         fn create_txt_record(&self, host: &str, record: &String) -> Result<()> {
-//             self.create_record(RecordType::TXT, host, record)
-//         }
+        fn create_txt_record(&self, host: &str, record: &String) -> Result<()> {
+            self.create_record(RecordType::TXT, host, record)
+        }
 
-//         fn update_txt_record(&self, host: &str, record: &String) -> Result<()> {
-//             self.update_record(RecordType::TXT, host, record)
-//         }
+        fn update_txt_record(&self, host: &str, record: &String) -> Result<()> {
+            self.update_record(RecordType::TXT, host, record)
+        }
 
-//         fn delete_txt_record(&self, host: &str) -> Result<()> {
-//             self.delete_record(RecordType::TXT, host)
-//         }
+        fn delete_txt_record(&self, host: &str) -> Result<()> {
+            self.delete_record(RecordType::TXT, host)
+        }
 
-//         fn get_a_record(&self, host: &str) -> Result<Option<std::net::Ipv4Addr>> {
-//             self.get_record(RecordType::A, host)
-//         }
+        fn get_a_record(&self, host: &str) -> Result<Option<std::net::Ipv4Addr>> {
+            self.get_record(RecordType::A, host)
+        }
 
-//         fn create_a_record(&self, host: &str, record: &std::net::Ipv4Addr) -> Result<()> {
-//             self.create_record(RecordType::A, host, record)
-//         }
+        fn create_a_record(&self, host: &str, record: &std::net::Ipv4Addr) -> Result<()> {
+            self.create_record(RecordType::A, host, record)
+        }
 
-//         fn update_a_record(&self, host: &str, record: &std::net::Ipv4Addr) -> Result<()> {
-//             self.update_record(RecordType::A, host, record)
-//         }
+        fn update_a_record(&self, host: &str, record: &std::net::Ipv4Addr) -> Result<()> {
+            self.update_record(RecordType::A, host, record)
+        }
 
-//         fn delete_a_record(&self, host: &str) -> Result<()> {
-//             self.delete_record(RecordType::A, host)
-//         }
+        fn delete_a_record(&self, host: &str) -> Result<()> {
+            self.delete_record(RecordType::A, host)
+        }
     }
 }
 

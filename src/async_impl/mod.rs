@@ -1,8 +1,8 @@
-use std::fmt::Display;
+use std::{fmt::Display, net::Ipv4Addr};
 
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{errors::Result, Provider, RecordType};
+use crate::{errors::Result, RecordType};
 
 
 #[cfg(feature = "gandi")]
@@ -40,55 +40,21 @@ pub trait AsyncDnsProvider: Send + Sync {
     async fn delete_record(&self, rtype: RecordType, host: &String) -> Result<()>
     where Self: Sized;
 
+    async fn get_txt_record(&self, host: &String) -> Result<Option<String>>;
 
-    async fn get_txt_record(&self, host: &String) -> Result<Option<String>>
-    where Self: Sized
-    {
-        self.get_record::<String>(RecordType::TXT, host).await
-            .map(|opt| opt.map(|s| crate::strip_quotes(&s)))
-    }
+    async fn create_txt_record(&self, host: &String, record: &String) -> Result<()>;
 
-    async fn create_txt_record(&self, host: &String, record: &String) -> Result<()>
-    where Self: Sized
-    {
-        self.create_record(RecordType::TXT, host, record).await
-    }
+    async fn update_txt_record(&self, host: &String, record: &String) -> Result<()>;
 
-    async fn update_txt_record(&self, host: &String, record: &String) -> Result<()>
-    where Self: Sized
-    {
-        self.update_record(RecordType::TXT, host, record).await
-    }
+    async fn delete_txt_record(&self, host: &String) -> Result<()>;
 
-    async fn delete_txt_record(&self, host: &String) -> Result<()>
-    where Self: Sized
-    {
-        self.delete_record(RecordType::TXT, host).await
-    }
+    async fn get_a_record(&self, host: &String) -> Result<Option<Ipv4Addr>>;
 
-    async fn get_a_record(&self, host: &String) -> Result<Option<std::net::Ipv4Addr>>
-    where Self: Sized
-    {
-        self.get_record(RecordType::A, host).await
-    }
+    async fn create_a_record(&self, host: &String, record: &Ipv4Addr) -> Result<()>;
 
-    async fn create_a_record(&self, host: &String, record: &std::net::Ipv4Addr) -> Result<()>
-    where Self: Sized
-    {
-        self.create_record(RecordType::A, host, record).await
-    }
+    async fn update_a_record(&self, host: &String, record: &Ipv4Addr) -> Result<()>;
 
-    async fn update_a_record(&self, host: &String, record: &std::net::Ipv4Addr) -> Result<()>
-    where Self: Sized
-    {
-        self.update_record(RecordType::A, host, record).await
-    }
-
-    async fn delete_a_record(&self, host: &String) -> Result<()>
-    where Self: Sized
-    {
-        self.delete_record(RecordType::A, host).await
-    }
+    async fn delete_a_record(&self, host: &String) -> Result<()>;
 }
 
 #[macro_export]
@@ -133,88 +99,52 @@ macro_rules! async_provider_impl {
                 unblock(move || provider.delete_record(rtype, &host)).await
             }
 
+            async fn get_txt_record(&self, host: &String) -> Result<Option<String>>
+            {
+                self.get_record::<String>(RecordType::TXT, host).await
+                    .map(|opt| opt.map(|s| crate::strip_quotes(&s)))
+            }
+
+            async fn create_txt_record(&self, host: &String, record: &String) -> Result<()>
+            {
+                self.create_record(RecordType::TXT, host, record).await
+            }
+
+            async fn update_txt_record(&self, host: &String, record: &String) -> Result<()>
+            {
+                self.update_record(RecordType::TXT, host, record).await
+            }
+
+            async fn delete_txt_record(&self, host: &String) -> Result<()>
+            {
+                self.delete_record(RecordType::TXT, host).await
+            }
+
+            async fn get_a_record(&self, host: &String) -> Result<Option<std::net::Ipv4Addr>>
+            {
+                self.get_record(RecordType::A, host).await
+            }
+
+            async fn create_a_record(&self, host: &String, record: &std::net::Ipv4Addr) -> Result<()>
+            {
+                self.create_record(RecordType::A, host, record).await
+            }
+
+            async fn update_a_record(&self, host: &String, record: &std::net::Ipv4Addr) -> Result<()>
+            {
+                self.update_record(RecordType::A, host, record).await
+            }
+
+            async fn delete_a_record(&self, host: &String) -> Result<()>
+            {
+                self.delete_record(RecordType::A, host).await
+            }
+
         }
 
     };
 }
 pub use async_provider_impl;
-
-
-pub enum AsyncDnsProviderImpl {
-    Gandi(gandi::Gandi),
-    Dnsimple(dnsimple::Dnsimple),
-    DnsMadeEasy(dnsmadeeasy::DnsMadeEasy),
-    PorkBun(porkbun::Porkbun),
-}
-
-
-impl AsyncDnsProviderImpl {
-    pub fn new(provider: &Provider, conf: crate::Config) -> Self {
-        match provider {
-            #[cfg(feature = "gandi")]
-            Provider::Gandi(auth) => Self::Gandi(gandi::Gandi::new(conf, auth.clone())),
-            #[cfg(feature = "dnsimple")]
-            Provider::Dnsimple(auth) => Self::Dnsimple(dnsimple::Dnsimple::new(conf, auth.clone(), None)),
-            #[cfg(feature = "dnsmadeeasy")]
-            Provider::DnsMadeEasy(auth) => Self::DnsMadeEasy(dnsmadeeasy::DnsMadeEasy::new(conf, auth.clone())),
-            #[cfg(feature = "porkbun")]
-            Provider::PorkBun(auth) => Self::PorkBun(porkbun::Porkbun::new(conf, auth.clone())),
-        }
-    }
-}
-
-
-#[async_trait::async_trait]
-impl AsyncDnsProvider for AsyncDnsProviderImpl {
-
-    async fn get_record<T>(&self, rtype: RecordType, host: &String) -> Result<Option<T>>
-    where
-        T: DeserializeOwned + Send + Sync + 'static
-    {
-        match self {
-            Self::Gandi(imp) => imp.get_record(rtype, host).await,
-            Self::Dnsimple(imp) => imp.get_record(rtype, host).await,
-            Self::DnsMadeEasy(imp) => imp.get_record(rtype, host).await,
-            Self::PorkBun(imp) => imp.get_record(rtype, host).await,
-        }
-    }
-
-
-    async fn create_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> Result<()>
-    where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static
-    {
-        match self {
-            Self::Gandi(imp) => imp.create_record(rtype, host, record).await,
-            Self::Dnsimple(imp) => imp.create_record(rtype, host, record).await,
-            Self::DnsMadeEasy(imp) => imp.create_record(rtype, host, record).await,
-            Self::PorkBun(imp) => imp.create_record(rtype, host, record).await,
-        }
-    }
-
-
-    async fn update_record<T>(&self, rtype: RecordType, host: &String, record: &T) -> Result<()>
-    where
-        T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static
-    {
-        match self {
-            Self::Gandi(imp) => imp.update_record(rtype, host, record).await,
-            Self::Dnsimple(imp) => imp.update_record(rtype, host, record).await,
-            Self::DnsMadeEasy(imp) => imp.update_record(rtype, host, record).await,
-            Self::PorkBun(imp) => imp.update_record(rtype, host, record).await,
-        }
-    }
-
-    async fn delete_record(&self, rtype: RecordType, host: &String) -> Result<()>
-    {
-        match self {
-            Self::Gandi(imp) => imp.delete_record(rtype, host).await,
-            Self::Dnsimple(imp) => imp.delete_record(rtype, host).await,
-            Self::DnsMadeEasy(imp) => imp.delete_record(rtype, host).await,
-            Self::PorkBun(imp) => imp.delete_record(rtype, host).await,
-        }
-    }
-}
 
 
 #[cfg(test)]
