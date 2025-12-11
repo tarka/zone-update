@@ -1,15 +1,14 @@
-use std::{env, error::Error, net::{SocketAddr, ToSocketAddrs}, time::Duration};
+use std::{env, net::SocketAddr, time::Duration};
 
-use anyhow::{Result, anyhow};
-use async_trait::async_trait;
+use anyhow::Result;
 use dnsclient::{r#async::DNSClient, UpstreamServer};
 use instant_acme::{Account, AuthorizationStatus, ChallengeType, Identifier, LetsEncrypt, NewAccount, NewOrder, OrderStatus, RetryPolicy};
-use random_string::charsets::{ALPHANUMERIC, ALPHA_LOWER};
-use tracing::{info, level_filters::LevelFilter, Level};
-use zone_update::{Config, Providers, async_impl::AsyncDnsProvider, porkbun::Auth};
+use random_string::charsets::ALPHA_LOWER;
+use tracing::{info, level_filters::LevelFilter};
+use zone_update::{async_impl::{AsyncDnsProvider, AsyncDnsProviderImpl}, porkbun::Auth, Config, Provider};
 
 
-fn dns_client(domain: String, key: String, secret: String) -> Result<Box<dyn AsyncDnsProvider>> {
+fn dns_client(domain: String, key: String, secret: String) -> Result<AsyncDnsProviderImpl> {
     let auth = Auth {
         key,
         secret,
@@ -18,8 +17,8 @@ fn dns_client(domain: String, key: String, secret: String) -> Result<Box<dyn Asy
         domain: domain,
         dry_run: false,
     };
-    let dns_client = Providers::PorkBun(auth)
-        .async_impl(config);
+
+    let dns_client = AsyncDnsProviderImpl::new(&Provider::PorkBun(auth), config);
 
     Ok(dns_client)
 }

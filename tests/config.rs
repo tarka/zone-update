@@ -4,14 +4,14 @@ use std::fs::read_to_string;
 use anyhow::{Context, Result};
 use serde::Deserialize;
 
-use zone_update::{porkbun, Providers};
+use zone_update::Provider;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub struct Ddns {
     pub domain: String,
     pub host: String,
-    pub provider: Providers,
+    pub provider: Provider,
 }
 
 #[derive(Debug, Deserialize)]
@@ -32,7 +32,7 @@ fn test_config() -> Result<()> {
     let conf = corn::from_str::<Config>(&conf_s)?;
 
     match conf.ddns.provider {
-        Providers::PorkBun(auth) => {
+        Provider::PorkBun(auth) => {
             assert_eq!("a_key".to_string(), auth.key);
             assert_eq!("a_secret".to_string(), auth.secret);
         }
