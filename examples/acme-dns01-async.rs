@@ -1,11 +1,10 @@
-use std::{env, error::Error, net::{SocketAddr, ToSocketAddrs}, time::Duration};
+use std::{env, net::SocketAddr, time::Duration};
 
-use anyhow::{Result, anyhow};
-use async_trait::async_trait;
+use anyhow::Result;
 use dnsclient::{r#async::DNSClient, UpstreamServer};
 use instant_acme::{Account, AuthorizationStatus, ChallengeType, Identifier, LetsEncrypt, NewAccount, NewOrder, OrderStatus, RetryPolicy};
-use random_string::charsets::{ALPHANUMERIC, ALPHA_LOWER};
-use tracing::{info, level_filters::LevelFilter, Level};
+use random_string::charsets::ALPHA_LOWER;
+use tracing::{info, level_filters::LevelFilter};
 use zone_update::{Config, Provider, async_impl::AsyncDnsProvider, porkbun::Auth};
 
 
