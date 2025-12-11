@@ -10,7 +10,6 @@ jobs:
 
     strategy:
       matrix:
-        runtime: [smol, tokio]
         # DNSMadeEasy's staging servers seem to run legacy SSL which
         # rustls doesn't support, so we don't test here ATM.
         #
@@ -27,7 +26,7 @@ jobs:
       - name: Update Rust to latest
         run: rustup update
 
-      - name: Run ${{ matrix.runtime }} tests
+      - name: Run ${{ matrix.provider }} tests
         env:
           DNSIMPLE_TEST_DOMAIN: ${{ secrets.DNSIMPLE_TEST_DOMAIN }}
           DNSIMPLE_TOKEN: ${{ secrets.DNSIMPLE_TOKEN }}
@@ -35,4 +34,6 @@ jobs:
           DNSMADEEASY_KEY: ${{ secrets.DNSMADEEASY_KEY }}
           DNSMADEEASY_SECRET: ${{ secrets.DNSMADEEASY_SECRET }}
 
-        run: cargo test --features test_${{ matrix.runtime }},test_${{ matrix.provider }} -- --test-threads=1
+        # Most providers don't handle parallel updates so run everything in series
+        run: cargo test --features test_${{ matrix.provider }},test_smol -- --test-threads=1
+        run: cargo test --features test_${{ matrix.provdier }},test_tokio -- --test-threads=1
