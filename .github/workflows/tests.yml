@@ -35,5 +35,7 @@ jobs:
           DNSMADEEASY_SECRET: ${{ secrets.DNSMADEEASY_SECRET }}
 
         # Most providers don't handle parallel updates so run everything in series
-        run: cargo test --features test_${{ matrix.provider }},test_smol -- --test-threads=1
-        run: cargo test --features test_${{ matrix.provdier }},test_tokio -- --test-threads=1
+        run: >
+          cargo test --features test_${{ matrix.provider }},test_smol -- --test-threads=1
+          &&
+          cargo test --features test_${{ matrix.provdier }},test_tokio -- --test-threads=1
