@@ -1,0 +1,22 @@
+
+let {
+  // These can also be environment variables
+  $porkbun_key = "a_key"
+  $porkbun_secret = "a_secret"
+
+}  in {
+
+  log_level = "debug"
+  iface = "test0"
+
+  ddns = {
+    provider = {
+      name = "porkbun"
+      key = $porkbun_key
+      secret = $porkbun_secret
+    }
+
+    domain = "example.com"
+    host = "test"
+  }
+}
