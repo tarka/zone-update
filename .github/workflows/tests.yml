@@ -38,4 +38,4 @@ jobs:
         run: >
           cargo test --features test_${{ matrix.provider }},test_smol -- --test-threads=1
           &&
-          cargo test --features test_${{ matrix.provdier }},test_tokio -- --test-threads=1
+          cargo test --features test_${{ matrix.provider }},test_tokio -- --test-threads=1
