@@ -41,14 +41,14 @@ pub struct Config {
 /// selected provider.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "name")]
-pub enum Providers {
+pub enum Provider {
     Gandi(gandi::Auth),
     Dnsimple(dnsimple::Auth),
     DnsMadeEasy(dnsmadeeasy::Auth),
     PorkBun(porkbun::Auth),
 }
 
-impl Providers {
+impl Provider {
 
     /// Return a blocking (synchronous) implementation of the selected provider.
     ///
@@ -56,13 +56,13 @@ impl Providers {
     pub fn blocking_impl(&self, dns_conf: Config) -> Box<dyn DnsProvider> {
         match self {
             #[cfg(feature = "gandi")]
-            Providers::Gandi(auth) => Box::new(gandi::Gandi::new(dns_conf, auth.clone())),
+            Provider::Gandi(auth) => Box::new(gandi::Gandi::new(dns_conf, auth.clone())),
             #[cfg(feature = "dnsimple")]
-            Providers::Dnsimple(auth) => Box::new(dnsimple::Dnsimple::new(dns_conf, auth.clone(), None)),
+            Provider::Dnsimple(auth) => Box::new(dnsimple::Dnsimple::new(dns_conf, auth.clone(), None)),
             #[cfg(feature = "dnsmadeeasy")]
-            Providers::DnsMadeEasy(auth) => Box::new(dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
+            Provider::DnsMadeEasy(auth) => Box::new(dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
             #[cfg(feature = "porkbun")]
-            Providers::PorkBun(auth) => Box::new(porkbun::Porkbun::new(dns_conf, auth.clone())),
+            Provider::PorkBun(auth) => Box::new(porkbun::Porkbun::new(dns_conf, auth.clone())),
         }
     }
 
@@ -73,13 +73,13 @@ impl Providers {
     pub fn async_impl(&self, dns_conf: Config) -> Box<dyn async_impl::AsyncDnsProvider> {
         match self {
             #[cfg(feature = "gandi")]
-            Providers::Gandi(auth) => Box::new(async_impl::gandi::Gandi::new(dns_conf, auth.clone())),
+            Provider::Gandi(auth) => Box::new(async_impl::gandi::Gandi::new(dns_conf, auth.clone())),
             #[cfg(feature = "dnsimple")]
-            Providers::Dnsimple(auth) => Box::new(async_impl::dnsimple::Dnsimple::new(dns_conf, auth.clone(), None)),
+            Provider::Dnsimple(auth) => Box::new(async_impl::dnsimple::Dnsimple::new(dns_conf, auth.clone(), None)),
             #[cfg(feature = "dnsmadeeasy")]
-            Providers::DnsMadeEasy(auth) => Box::new(async_impl::dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
+            Provider::DnsMadeEasy(auth) => Box::new(async_impl::dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
             #[cfg(feature = "porkbun")]
-            Providers::PorkBun(auth) => Box::new(async_impl::porkbun::Porkbun::new(dns_conf, auth.clone())),
+            Provider::PorkBun(auth) => Box::new(async_impl::porkbun::Porkbun::new(dns_conf, auth.clone())),
         }
     }
 }
@@ -177,7 +177,15 @@ pub trait DnsProvider {
     fn delete_a_record(&self, host: &str) -> Result<()>;
 }
 
-
+/// A macro to generate default helper implementations for provider impls.
+///
+/// The reason for this macro is that traits don't play well with
+/// generics and Sized, preventing us from providing default
+/// implementations in the trait. There are ways around this, but they
+/// either involve messy downcasting or lots of match arms that need
+/// to be updated as providers are added. As we want to keep the
+/// process of adding providers as self-contained as possible this is
+/// the simplest method for now.
 #[macro_export]
 macro_rules! generate_helpers {
     () => {

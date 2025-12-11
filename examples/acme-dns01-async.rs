@@ -6,7 +6,7 @@ use dnsclient::{r#async::DNSClient, UpstreamServer};
 use instant_acme::{Account, AuthorizationStatus, ChallengeType, Identifier, LetsEncrypt, NewAccount, NewOrder, OrderStatus, RetryPolicy};
 use random_string::charsets::{ALPHANUMERIC, ALPHA_LOWER};
 use tracing::{info, level_filters::LevelFilter, Level};
-use zone_update::{Config, Providers, async_impl::AsyncDnsProvider, porkbun::Auth};
+use zone_update::{Config, Provider, async_impl::AsyncDnsProvider, porkbun::Auth};
 
 
 fn dns_client(domain: String, key: String, secret: String) -> Result<Box<dyn AsyncDnsProvider>> {
@@ -18,7 +18,7 @@ fn dns_client(domain: String, key: String, secret: String) -> Result<Box<dyn Asy
         domain: domain,
         dry_run: false,
     };
-    let dns_client = Providers::PorkBun(auth)
+    let dns_client = Provider::PorkBun(auth)
         .async_impl(config);
 
     Ok(dns_client)
