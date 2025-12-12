@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0](https://github.com/tarka/zone-update/compare/v0.7.0...v0.8.0) - 2025-12-12
+
+### Other
+
+- Add Cloudflare implementation.
+- Minor cleanup.
+
 ## [0.7.0](https://github.com/tarka/zone-update/compare/v0.6.0...v0.7.0) - 2025-12-11
 
 ### Other
