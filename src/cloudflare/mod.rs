@@ -2,7 +2,7 @@ mod types;
 
 use std::{fmt::{Debug, Display}, sync::Mutex};
 
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize};
 use tracing::{error, info, warn};
 
 use crate::{
@@ -49,7 +49,7 @@ impl Cloudflare {
         }
     }
 
-    fn get_upstream_record<T>(&self, rtype: &RecordType, host: &str) -> Result<Option<GetRecord<T>>>
+    fn get_upstream_record<T>(&self, _rtype: &RecordType, host: &str) -> Result<Option<GetRecord<T>>>
     where
         T: DeserializeOwned
     {

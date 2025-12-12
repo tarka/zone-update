@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use serde::{Deserialize, Serialize};
 
 use crate::RecordType;
