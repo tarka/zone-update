@@ -1,14 +1,22 @@
 ## DNS Provider Matrix
 
+### Supported Providers
+
+| Provider                  | Supported? | Sandbox? | Author | Maintainer | Notes                                                                                |
+|---------------------------|:----------:|:--------:|--------|------------|--------------------------------------------------------------------------------------|
+| Cloudflare                | ✅         | ❌       | tarka  | tarka      | Tested manually                                                                      |
+| DnSimple                  | ✅         | ✅       | tarka  | tarka      |                                                                                      |
+| Gandi                     | ✅         | ‼️        | tarka  |  tarka     | Tested manually. (Has a sandbox but is unusable in practice?)                        |
+| DNSMadeEasy               | ✅         | ✅       | tarka  | tarka      | Sandbox uses legacy ciphers and fails with rustls.                                   |
+| Porkbun                   | ✅         | ❌       | tarka  | tarka      |                                                                                      |
+
+### Unsupported Providers
+
 The following list is generated from [acme.sh](https://acme.sh) and may not be
 entirely accurate. Corrections and updates welcome.
 
 | Provider                  | Supported? | Sandbox? | Author | Maintainer | Notes                                                                                |
 |---------------------------|:----------:|:--------:|--------|------------|--------------------------------------------------------------------------------------|
-| DnSimple                  | ✅         | ✅       | tarka  | tarka      |                                                                                      |
-| Gandi                     | ✅         | ‼️        | tarka  |  tarka     | Tested manually. (Has a sandbox but is unusable in practice?)                        |
-| DNSMadeEasy               | ✅         | ✅       | tarka  | tarka      | Sandbox uses legacy ciphers and fails with rustls.                                   |
-| Porkbun                   | ✅         | ❌       | tarka  | tarka      |                                                                                      |
 | 1984Hosting               | ❌         | ❌       |        |            | Doesn't really have an API, but the web forms can be abused. See acme.sh.            |
 | ACME-DNS                  | ❌         | ✅       |        |            | Self-hosted DNS shim for DNS-01 support. Run locally for testing.                    |
 | AcmeProxy.pl              | ❌         | ✅       |        |            | Similar to ACME-DNS.                                                                 |
@@ -31,7 +39,6 @@ entirely accurate. Corrections and updates welcome.
 | Bunny                     | ❌         | ❔       |        |            |                                                                                      |
 | CloudDNS                  | ❌         | ❔       |        |            |                                                                                      |
 | ClouDNS.net               | ❌         | ❔       |        |            |                                                                                      |
-| Cloudflare                | ❌         | ❌       |        |            |                                                                                      |
 | ConoHa                    | ❌         | ❔       |        |            |                                                                                      |
 | Constellix                | ❌         | ❔       |        |            |                                                                                      |
 | cPanel                    | ❌         | ❔       |        |            |                                                                                      |

@@ -23,7 +23,8 @@ ureq = { version = "3.1.4", default-features = false, features = ["rustls", "gzi
 [features]
 default = ["all-providers"]
 async = ["dep:blocking"]
-all-providers = ["gandi", "dnsmadeeasy", "dnsimple", "porkbun"]
+all-providers = ["cloudflare", "gandi", "dnsmadeeasy", "dnsimple", "porkbun"]
+cloudflare = []
 dnsimple = []
 dnsmadeeasy = ["dep:hmac", "dep:sha1", "dep:hex"]
 gandi = []
@@ -32,6 +33,7 @@ porkbun = []
 # Test features
 # Disables http module tests that rely on external services
 test_offline = []
+test_cloudflare = ["cloudflare"]
 test_gandi = ["gandi"]
 test_dnsimple = ["dnsimple"]
 test_dnsmadeeasy = ["dnsmadeeasy"]

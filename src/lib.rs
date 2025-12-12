@@ -1,11 +1,11 @@
-
-
 pub mod errors;
 mod http;
 
 #[cfg(feature = "async")]
 pub mod async_impl;
 
+#[cfg(feature = "cloudflare")]
+pub mod cloudflare;
 #[cfg(feature = "dnsimple")]
 pub mod dnsimple;
 #[cfg(feature = "dnsmadeeasy")]
@@ -42,6 +42,7 @@ pub struct Config {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "name")]
 pub enum Provider {
+    Cloudflare(cloudflare::Auth),
     Gandi(gandi::Auth),
     Dnsimple(dnsimple::Auth),
     DnsMadeEasy(dnsmadeeasy::Auth),
@@ -55,6 +56,8 @@ impl Provider {
     /// The returned boxed trait object implements `DnsProvider`.
     pub fn blocking_impl(&self, dns_conf: Config) -> Box<dyn DnsProvider> {
         match self {
+            #[cfg(feature = "cloudflare")]
+            Provider::Cloudflare(auth) => Box::new(cloudflare::Cloudflare::new(dns_conf, auth.clone())),
             #[cfg(feature = "gandi")]
             Provider::Gandi(auth) => Box::new(gandi::Gandi::new(dns_conf, auth.clone())),
             #[cfg(feature = "dnsimple")]
@@ -72,6 +75,8 @@ impl Provider {
     #[cfg(feature = "async")]
     pub fn async_impl(&self, dns_conf: Config) -> Box<dyn async_impl::AsyncDnsProvider> {
         match self {
+            #[cfg(feature = "cloudflare")]
+            Provider::Cloudflare(auth) => Box::new(async_impl::cloudflare::Cloudflare::new(dns_conf, auth.clone())),
             #[cfg(feature = "gandi")]
             Provider::Gandi(auth) => Box::new(async_impl::gandi::Gandi::new(dns_conf, auth.clone())),
             #[cfg(feature = "dnsimple")]

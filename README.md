@@ -17,9 +17,10 @@ The library is async and supports both `smol` and `tokio`.
 
 Currently, Zone Update supports the following DNS providers:
 
-* Gandi
+* Cloudflare
 * Dnsimple
 * DnsMadeEasy
+* Gandi
 * Porkbun
 
 See the [DNS providers matrix](docs/PROVIDERS.md) for more details.

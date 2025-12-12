@@ -1,4 +1,3 @@
-
 use std::result;
 use thiserror::Error;
 
@@ -23,6 +22,9 @@ pub enum Error {
 
     #[error("Unexpected record value: {0}")]
     UnexpectedRecord(String),
+
+    #[error("Record not found: {0}")]
+    RecordNotFound(String),
 
     #[error(transparent)]
     AddrParseError(#[from] std::net::AddrParseError),
