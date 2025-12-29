@@ -41,6 +41,7 @@ pub struct Config {
 /// selected provider.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "name")]
+#[non_exhaustive]
 pub enum Provider {
     Cloudflare(cloudflare::Auth),
     Gandi(gandi::Auth),
