@@ -5,13 +5,13 @@
 [![GitHub CI](https://github.com/tarka/zone-update/actions/workflows/tests.yml/badge.svg)](https://github.com/tarka/zone-update/actions)
 [![License](https://img.shields.io/crates/l/zone-update)](https://github.com/tarka/zone-update/blob/main/README.md#License)
 
-A minimal Rust library for updating DNS records with various DNS providers.
+A minimal Rust library providing CRUD-like operations on DNS records with various DNS providers.
 
 ## Overview
 
 Zone Update is a lightweight library that provides a simple interface for
-programmatically managing DNS records through provider APIs.
-The library is async and supports both `smol` and `tokio`.
+programmatically managing DNS zone records through provider APIs.
+The library is both blocking and async, and supports both `smol` and `tokio`.
 
 ### Supported DNS providers
 
