@@ -32,13 +32,14 @@ pub struct Config {
     pub dry_run: bool,
 }
 
-// This can be used by dependents of this project as part of their
-// config-file, or directly. See the `netlink-ddns` project for an
-// example.
 /// DNS provider selection used by this crate.
 ///
 /// Each variant contains the authentication information for the
 /// selected provider.
+///
+/// This can be used by dependents of this project as part of their
+/// config-file, or directly. See the `netlink-ddns` project for an
+/// example.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "name")]
 #[non_exhaustive]
