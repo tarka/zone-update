@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1](https://github.com/tarka/zone-update/compare/v0.9.0...v0.9.1) - 2026-01-08
+
+### Other
+
+- Import README into the top-level docs.
+- Soften the tone in AI section.
+- Enhance README description of library features
+- Bump dependencies
+
 ## [0.9.0](https://github.com/tarka/zone-update/compare/v0.8.0...v0.9.0) - 2025-12-29
 
 ### Other
