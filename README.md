@@ -25,16 +25,6 @@ Currently, Zone Update supports the following DNS providers:
 
 See the [DNS providers matrix](docs/PROVIDERS.md) for more details.
 
-
-## Installation
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-zone-update = "0.1.0"
-```
-
 ## Usage
 
 ### Basic Example
