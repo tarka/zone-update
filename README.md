@@ -40,10 +40,10 @@ zone-update = "0.1.0"
 ### Basic Example
 
 ```rust
-use zone_update::{gandi, errors::Result};
+use zone_update::{gandi, DnsProvider, errors::Result};
 use std::net::Ipv4Addr;
 
-async fn update_gandi_record() -> Result<()> {
+fn update_gandi_record() -> Result<()> {
     let config = zone_update::Config {
         domain: "example.com".to_string(),
         dry_run: false,
@@ -56,7 +56,7 @@ async fn update_gandi_record() -> Result<()> {
     let new_ip = Ipv4Addr::new(192, 0, 2, 1);
 
     // Update the A record for www.example.com
-    client.update_v4_record(host, &new_ip).await?;
+    client.update_a_record(host, &new_ip)?;
     
     Ok(())
 }
@@ -81,7 +81,7 @@ submitter before raising a PR.
 
 This project is licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE-2.0.txt) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE-2.0.txt))
+- MIT license ([LICENSE-MIT](LICENSE-MIT))
 
 at your option.
