@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.9.3](https://github.com/tarka/zone-update/compare/v0.9.2...v0.9.3) - 2026-01-12
 
+### Notable Changes
+
+* Digital Ocean is now supported.
+* deSEC.io is now supported.
+* Improve handling of TXT records.
+
 ### Other
 
 - Update release-plz config to re-enable Other section
