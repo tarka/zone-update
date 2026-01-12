@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3](https://github.com/tarka/zone-update/compare/v0.9.2...v0.9.3) - 2026-01-12
+
+### Other
+
+- Update release-plz config to re-enable Other section
+- Add code of conduct file.
+- Simplify AI statement further
+- Add DigitalOcean to docs
+- Add DigitalOcean to provider enum
+- Add async version of API.
+- Blocking impl of Digital Ocean support.
+- Minor formatting.
+- Add async desec.io impl and update all necessary enums and docs.
+- Add start of desec.io support, and cleanup txt handling.
+- Copy release-plz config from vicarian
+- Remove installation section from README
+
 ## [0.9.2](https://github.com/tarka/zone-update/compare/v0.9.1...v0.9.2) - 2026-01-08
 
 ### Other
