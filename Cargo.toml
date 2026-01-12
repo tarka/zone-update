@@ -23,8 +23,9 @@ ureq = { version = "3.1.4", default-features = false, features = ["rustls", "gzi
 [features]
 default = ["all-providers"]
 async = ["dep:blocking"]
-all-providers = ["cloudflare", "gandi", "dnsmadeeasy", "dnsimple", "porkbun"]
+all-providers = ["cloudflare", "desec", "gandi", "dnsmadeeasy", "dnsimple", "porkbun"]
 cloudflare = []
+desec = []
 dnsimple = []
 dnsmadeeasy = ["dep:hmac", "dep:sha1", "dep:hex"]
 gandi = []
@@ -34,6 +35,7 @@ porkbun = []
 # Disables http module tests that rely on external services
 test_offline = []
 test_cloudflare = ["cloudflare"]
+test_desec = ["desec"]
 test_gandi = ["gandi"]
 test_dnsimple = ["dnsimple"]
 test_dnsmadeeasy = ["dnsmadeeasy"]
@@ -69,6 +71,7 @@ futures = "0.3.31"
 dnsclient = "0.2.0"
 instant-acme = "0.8.4"
 libcorn = "0.10.0"
+serial_test = "3.3.1"
 
 [[example]]
 name = "acme-dns01-async"

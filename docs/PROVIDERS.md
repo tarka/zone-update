@@ -4,11 +4,12 @@
 
 | Provider                  | Supported? | Sandbox? | Author | Maintainer | Notes                                                                                |
 |---------------------------|:----------:|:--------:|--------|------------|--------------------------------------------------------------------------------------|
-| Cloudflare                | ✅         | ❌       | tarka  | tarka      | Tested manually                                                                      |
+| Cloudflare                | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
+| deSEC.io                  | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
 | DnSimple                  | ✅         | ✅       | tarka  | tarka      |                                                                                      |
-| Gandi                     | ✅         | ‼️        | tarka  |  tarka     | Tested manually. (Has a sandbox but is unusable in practice?)                        |
+| Gandi                     | ✅         | ‼️        | tarka  |  tarka     | Tested against personal account. (Has a sandbox but is unusable in practice?)       |
 | DNSMadeEasy               | ✅         | ✅       | tarka  | tarka      | Sandbox uses legacy ciphers and fails with rustls.                                   |
-| Porkbun                   | ✅         | ❌       | tarka  | tarka      |                                                                                      |
+| Porkbun                   | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
 
 ### Unsupported Providers
 
@@ -43,7 +44,6 @@ entirely accurate. Corrections and updates welcome.
 | Constellix                | ❌         | ❔       |        |            |                                                                                      |
 | cPanel                    | ❌         | ❔       |        |            |                                                                                      |
 | DDNSS.de                  | ❌         | ❔       |        |            |                                                                                      |
-| deSEC.io                  | ❌         | ❔       |        |            |                                                                                      |
 | DigitalOcean              | ❌         | ❔       |        |            |                                                                                      |
 | DirectAdmin               | ❌         | ❔       |        |            |                                                                                      |
 | dns.la                    | ❌         | ❔       |        |            |                                                                                      |

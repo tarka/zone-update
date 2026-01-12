@@ -9,6 +9,8 @@ pub mod async_impl;
 
 #[cfg(feature = "cloudflare")]
 pub mod cloudflare;
+#[cfg(feature = "desec")]
+pub mod desec;
 #[cfg(feature = "dnsimple")]
 pub mod dnsimple;
 #[cfg(feature = "dnsmadeeasy")]
@@ -48,6 +50,7 @@ pub struct Config {
 #[non_exhaustive]
 pub enum Provider {
     Cloudflare(cloudflare::Auth),
+    DeSec(desec::Auth),
     Gandi(gandi::Auth),
     Dnsimple(dnsimple::Auth),
     DnsMadeEasy(dnsmadeeasy::Auth),
@@ -63,6 +66,8 @@ impl Provider {
         match self {
             #[cfg(feature = "cloudflare")]
             Provider::Cloudflare(auth) => Box::new(cloudflare::Cloudflare::new(dns_conf, auth.clone())),
+            #[cfg(feature = "desec")]
+            Provider::DeSec(auth) => Box::new(desec::DeSec::new(dns_conf, auth.clone())),
             #[cfg(feature = "gandi")]
             Provider::Gandi(auth) => Box::new(gandi::Gandi::new(dns_conf, auth.clone())),
             #[cfg(feature = "dnsimple")]
@@ -82,6 +87,8 @@ impl Provider {
         match self {
             #[cfg(feature = "cloudflare")]
             Provider::Cloudflare(auth) => Box::new(async_impl::cloudflare::Cloudflare::new(dns_conf, auth.clone())),
+            #[cfg(feature = "desec")]
+            Provider::DeSec(auth) => Box::new(async_impl::desec::DeSec::new(dns_conf, auth.clone())),
             #[cfg(feature = "gandi")]
             Provider::Gandi(auth) => Box::new(async_impl::gandi::Gandi::new(dns_conf, auth.clone())),
             #[cfg(feature = "dnsimple")]
@@ -206,11 +213,11 @@ macro_rules! generate_helpers {
         }
 
         fn create_txt_record(&self, host: &str, record: &String) -> Result<()> {
-            self.create_record(RecordType::TXT, host, record)
+            self.create_record(RecordType::TXT, host, &crate::ensure_quotes(record))
         }
 
         fn update_txt_record(&self, host: &str, record: &String) -> Result<()> {
-            self.update_record(RecordType::TXT, host, record)
+            self.update_record(RecordType::TXT, host, &crate::ensure_quotes(record))
         }
 
         fn delete_txt_record(&self, host: &str) -> Result<()> {
@@ -235,6 +242,17 @@ macro_rules! generate_helpers {
     }
 }
 
+fn ensure_quotes(record: &String) -> String {
+    let starts = record.starts_with('"');
+    let ends = record.ends_with('"');
+
+    match (starts, ends) {
+        (true, true)   => record.clone(),
+        (true, false)  => format!("{}\"", record),
+        (false, true)  => format!("\"{}", record),
+        (false, false) => format!("\"{}\"", record),
+    }
+}
 
 fn strip_quotes(record: &str) -> String {
     let chars = record.chars();
@@ -263,15 +281,59 @@ mod tests {
     use tracing::info;
 
     #[test]
-    fn test_strip_quotes() -> Result<()> {
+    fn test_strip_quotes() {
         assert_eq!("abc123".to_string(), strip_quotes("\"abc123\""));
         assert_eq!("abc123\"", strip_quotes("abc123\""));
         assert_eq!("\"abc123", strip_quotes("\"abc123"));
         assert_eq!("abc123", strip_quotes("abc123"));
-
-        Ok(())
     }
 
+    #[test]
+    fn test_already_quoted() {
+        assert_eq!(ensure_quotes(&"\"hello\"".to_string()), "\"hello\"");
+        assert_eq!(ensure_quotes(&"\"\"".to_string()), "\"\"");
+        assert_eq!(ensure_quotes(&"\"a\"".to_string()), "\"a\"");
+        assert_eq!(ensure_quotes(&"\"quoted \" string\"".to_string()), "\"quoted \" string\"");
+    }
+
+    #[test]
+    fn test_no_quotes() {
+        assert_eq!(ensure_quotes(&"hello".to_string()), "\"hello\"");
+        assert_eq!(ensure_quotes(&"".to_string()), "\"\"");
+        assert_eq!(ensure_quotes(&"a".to_string()), "\"a\"");
+        assert_eq!(ensure_quotes(&"hello world".to_string()), "\"hello world\"");
+    }
+
+    #[test]
+    fn test_only_starting_quote() {
+        assert_eq!(ensure_quotes(&"\"hello".to_string()), "\"hello\"");
+        assert_eq!(ensure_quotes(&"\"test case".to_string()), "\"test case\"");
+    }
+
+    #[test]
+    fn test_only_ending_quote() {
+        assert_eq!(ensure_quotes(&"hello\"".to_string()), "\"hello\"");
+        assert_eq!(ensure_quotes(&"test case\"".to_string()), "\"test case\"");
+    }
+
+    #[test]
+    fn test_whitespace_handling() {
+        // Empty and whitespace-only strings become empty quoted strings
+        assert_eq!(ensure_quotes(&"".to_string()), "\"\"");
+        assert_eq!(ensure_quotes(&"   ".to_string()), "\"   \"");
+        assert_eq!(ensure_quotes(&"\t\n".to_string()), "\"\t\n\"");
+        // Whitespace within content is preserved
+        assert_eq!(ensure_quotes(&" hello ".to_string()), "\" hello \"");
+        assert_eq!(ensure_quotes(&"\" hello ".to_string()), "\" hello \"");
+        assert_eq!(ensure_quotes(&" hello \"".to_string()), "\" hello \"");
+    }
+
+    #[test]
+    fn test_special_characters() {
+        assert_eq!(ensure_quotes(&"hello\nworld".to_string()), "\"hello\nworld\"");
+        assert_eq!(ensure_quotes(&"hello\tworld".to_string()), "\"hello\tworld\"");
+        assert_eq!(ensure_quotes(&"123!@#$%^&*()".to_string()), "\"123!@#$%^&*()\"");
+    }
 
     pub(crate) fn test_create_update_delete_ipv4(client: impl DnsProvider) -> Result<()> {
 
@@ -279,7 +341,7 @@ mod tests {
 
         // Create
         info!("Creating IPv4 {host}");
-        let ip: Ipv4Addr = "1.1.1.1".parse()?;
+        let ip: Ipv4Addr = "10.9.8.7".parse()?;
         client.create_record(RecordType::A, &host, &ip)?;
         let cur = client.get_record(RecordType::A, &host)?;
         assert_eq!(Some(ip), cur);
@@ -287,7 +349,7 @@ mod tests {
 
         // Update
         info!("Updating IPv4 {host}");
-        let ip: Ipv4Addr = "2.2.2.2".parse()?;
+        let ip: Ipv4Addr = "10.10.9.8".parse()?;
         client.update_record(RecordType::A, &host, &ip)?;
         let cur = client.get_record(RecordType::A, &host)?;
         assert_eq!(Some(ip), cur);
@@ -307,20 +369,23 @@ mod tests {
         let host = random_string::generate(16, ALPHA_LOWER);
 
         // Create
-        let txt = "a text reference".to_string();
+        let txt = "\"a text reference\"".to_string();
+        println!("CREATE");
         client.create_record(RecordType::TXT, &host, &txt)?;
         let cur: Option<String> = client.get_record(RecordType::TXT, &host)?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap()));
+        assert_eq!(txt, cur.unwrap());
 
 
         // Update
-        let txt = "another text reference".to_string();
+        let txt = "\"another text reference\"".to_string();
+        println!("UPDATE");
         client.update_record(RecordType::TXT, &host, &txt)?;
         let cur: Option<String> = client.get_record(RecordType::TXT, &host)?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap()));
+        assert_eq!(txt, cur.unwrap());
 
 
         // Delete
+        println!("DELETE");
         client.delete_record(RecordType::TXT, &host)?;
         let del: Option<String> = client.get_record(RecordType::TXT, &host)?;
         assert!(del.is_none());
@@ -389,8 +454,10 @@ mod tests {
     #[macro_export]
     macro_rules! generate_tests {
         ($feat:literal) => {
+            use serial_test::serial;
 
             #[test_log::test]
+            #[serial]
             #[cfg_attr(not(feature = $feat), ignore = "API test")]
             fn create_update_v4() -> Result<()> {
                 test_create_update_delete_ipv4(get_client())?;
@@ -398,6 +465,7 @@ mod tests {
             }
 
             #[test_log::test]
+            #[serial]
             #[cfg_attr(not(feature = $feat), ignore = "API test")]
             fn create_update_txt() -> Result<()> {
                 test_create_update_delete_txt(get_client())?;
@@ -405,6 +473,7 @@ mod tests {
             }
 
             #[test_log::test]
+            #[serial]
             #[cfg_attr(not(feature = $feat), ignore = "API test")]
             fn create_update_default() -> Result<()> {
                 test_create_update_delete_txt_default(get_client())?;

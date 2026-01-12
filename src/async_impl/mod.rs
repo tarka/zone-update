@@ -7,6 +7,8 @@ use crate::{errors::Result, RecordType};
 
 #[cfg(feature = "cloudflare")]
 pub mod cloudflare;
+#[cfg(feature = "desec")]
+pub mod desec;
 #[cfg(feature = "gandi")]
 pub mod gandi;
 #[cfg(feature = "dnsmadeeasy")]
@@ -109,12 +111,12 @@ macro_rules! async_provider_impl {
 
             async fn create_txt_record(&self, host: &String, record: &String) -> Result<()>
             {
-                self.create_record(RecordType::TXT, host, record).await
+                self.create_record(RecordType::TXT, host, &crate::ensure_quotes(record)).await
             }
 
             async fn update_txt_record(&self, host: &String, record: &String) -> Result<()>
             {
-                self.update_record(RecordType::TXT, host, record).await
+                self.update_record(RecordType::TXT, host, &crate::ensure_quotes(record)).await
             }
 
             async fn delete_txt_record(&self, host: &String) -> Result<()>
@@ -163,14 +165,14 @@ mod tests {
         let host = random_string::generate(16, ALPHA_LOWER);
 
         // Create
-        let ip: Ipv4Addr = "1.1.1.1".parse()?;
+        let ip: Ipv4Addr = "10.9.8.7".parse()?;
         client.create_record(RecordType::A, &host, &ip).await?;
         let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
 
 
         // Update
-        let ip: Ipv4Addr = "2.2.2.2".parse()?;
+        let ip: Ipv4Addr = "10.1.2.3".parse()?;
         client.update_record(RecordType::A, &host, &ip).await?;
         let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
@@ -190,17 +192,17 @@ mod tests {
         let host = random_string::generate(16, ALPHA_LOWER);
 
         // Create
-        let txt = "a text reference".to_string();
+        let txt = "\"a text reference\"".to_string();
         client.create_record(RecordType::TXT, &host, &txt).await?;
         let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap()));
+        assert_eq!(txt, cur.unwrap());
 
 
         // Update
-        let txt = "another text reference".to_string();
+        let txt = "\"another text reference\"".to_string();
         client.update_record(RecordType::TXT, &host, &txt).await?;
         let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
-        assert_eq!(txt, strip_quotes(&cur.unwrap()));
+        assert_eq!(txt, cur.unwrap());
 
 
         // Delete
@@ -288,6 +290,7 @@ mod tests {
 
                 #[apply(test!)]
                 #[test_log::test]
+                #[serial_test::serial]
                 #[cfg_attr(not(feature = $feat), ignore = "API test")]
                 async fn create_update_v4() -> Result<()> {
                     test_create_update_delete_ipv4(get_client()).await?;
@@ -296,6 +299,7 @@ mod tests {
 
                 #[apply(test!)]
                 #[test_log::test]
+                #[serial_test::serial]
                 #[cfg_attr(not(feature = $feat), ignore = "API test")]
                 async fn create_update_txt() -> Result<()> {
                     test_create_update_delete_txt(get_client()).await?;
@@ -318,6 +322,7 @@ mod tests {
 
                 #[tokio::test]
                 #[test_log::test]
+                #[serial_test::serial]
                 #[cfg_attr(not(feature = $feat), ignore = "API test")]
                 async fn create_update_v4() -> Result<()> {
                     test_create_update_delete_ipv4(get_client()).await?;
@@ -326,6 +331,7 @@ mod tests {
 
                 #[tokio::test]
                 #[test_log::test]
+                #[serial_test::serial]
                 #[cfg_attr(not(feature = $feat), ignore = "API test")]
                 async fn create_update_txt() -> Result<()> {
                     test_create_update_delete_txt(get_client()).await?;
@@ -334,6 +340,7 @@ mod tests {
 
                 #[tokio::test]
                 #[test_log::test]
+                #[serial_test::serial]
                 #[cfg_attr(not(feature = $feat), ignore = "API test")]
                 async fn create_update_default() -> Result<()> {
                     test_create_update_delete_txt_default(get_client()).await?;
