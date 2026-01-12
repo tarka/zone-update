@@ -44,7 +44,9 @@ Each DNS provider is gated behind their name, however all provider are enabled
 by default. To limit the providers you can add `zone-update` to your
 `Cargo.toml` in the following format:
 
-    zone-update = { version = "*", default-features = false, features = ["digitalocean", "desec"] }
+```text
+zone-update = { version = "*", default-features = false, features = ["digitalocean", "desec"] }
+```
 
 The other notable flag is `async`, which is not enabled by default.
 
