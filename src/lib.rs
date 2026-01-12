@@ -1,4 +1,3 @@
-
 #![doc = include_str!("../README.md")]
 
 pub mod errors;
@@ -11,6 +10,8 @@ pub mod async_impl;
 pub mod cloudflare;
 #[cfg(feature = "desec")]
 pub mod desec;
+#[cfg(feature = "digitalocean")]
+pub mod digitalocean;
 #[cfg(feature = "dnsimple")]
 pub mod dnsimple;
 #[cfg(feature = "dnsmadeeasy")]
