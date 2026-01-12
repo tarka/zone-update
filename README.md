@@ -11,7 +11,8 @@ A minimal Rust library providing CRUD-like operations on DNS records with variou
 
 Zone Update is a lightweight library that provides a simple interface for
 programmatically managing DNS zone records through provider APIs.
-The library is both blocking and async, and supports both `smol` and `tokio`.
+The library is both blocking and async, and supports multiple async runtimes
+(see below).
 
 ### Supported DNS providers
 
@@ -26,6 +27,26 @@ Currently, Zone Update supports the following DNS providers:
 * Porkbun
 
 See the [DNS providers matrix](docs/PROVIDERS.md) for more details.
+
+### Supported Runtimes
+
+`zone-update` supports both blocking and async APIs. For async the library
+attempts to be as provider-agnostic; it is known (tested) to work with the
+following runtimes:
+
+* [tokio](https://tokio.rs/)
+* [smol](https://docs.rs/smol/)
+* [compio](https://compio.rs/)
+
+### Feature flags
+
+Each DNS provider is gated behind their name, however all provider are enabled
+by default. To limit the providers you can add `zone-update` to your
+`Cargo.toml` in the following format:
+
+    zone-update = { version = "*", default-features = false, features = ["digitalocean", "desec"] }
+
+The other notable flag is `async`, which is not enabled by default.
 
 ## Usage
 

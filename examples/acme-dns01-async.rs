@@ -27,14 +27,15 @@ fn dns_client(domain: String, key: String, secret: String) -> Result<Box<dyn Asy
 async fn get_cert() -> Result<()> {
     info!("Starting get_cert()");
 
+    let domain = env::var("PORKBUN_TEST_DOMAIN")?;
+    let dns_secret = env::var("PORKBUN_SECRET")?;
+
     let hostname = random_string::generate(16, ALPHA_LOWER);
     //let hostname = "plug-01";
-    let domain = env::var("PORKBUN_TEST_DOMAIN").unwrap();
     let fqdn = format!("{hostname}.{domain}");
     let contact = format!("mailto:{}", env::var("EXAMPLE_EMAIL").unwrap());
     let txt_name = format!("_acme-challenge.{hostname}");
 
-    let dns_secret = env::var("PORKBUN_SECRET")?;
 
     let dns_key = env::var("PORKBUN_KEY")?;
 
