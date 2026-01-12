@@ -9,6 +9,8 @@ use crate::{errors::Result, RecordType};
 pub mod cloudflare;
 #[cfg(feature = "desec")]
 pub mod desec;
+#[cfg(feature = "digitalocean")]
+pub mod digitalocean;
 #[cfg(feature = "gandi")]
 pub mod gandi;
 #[cfg(feature = "dnsmadeeasy")]
