@@ -6,6 +6,7 @@
 |---------------------------|:----------:|:--------:|--------|------------|--------------------------------------------------------------------------------------|
 | Cloudflare                | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
 | deSEC.io                  | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
+| DigitalOcean              | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
 | DnSimple                  | ✅         | ✅       | tarka  | tarka      |                                                                                      |
 | Gandi                     | ✅         | ‼️        | tarka  |  tarka     | Tested against personal account. (Has a sandbox but is unusable in practice?)       |
 | DNSMadeEasy               | ✅         | ✅       | tarka  | tarka      | Sandbox uses legacy ciphers and fails with rustls.                                   |
@@ -44,7 +45,6 @@ entirely accurate. Corrections and updates welcome.
 | Constellix                | ❌         | ❔       |        |            |                                                                                      |
 | cPanel                    | ❌         | ❔       |        |            |                                                                                      |
 | DDNSS.de                  | ❌         | ❔       |        |            |                                                                                      |
-| DigitalOcean              | ❌         | ❔       |        |            |                                                                                      |
 | DirectAdmin               | ❌         | ❔       |        |            |                                                                                      |
 | dns.la                    | ❌         | ❔       |        |            |                                                                                      |
 | DNS.Services              | ❌         | ❔       |        |            |                                                                                      |
