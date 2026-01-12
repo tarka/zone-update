@@ -1,4 +1,3 @@
-
 mod types;
 
 use std::{fmt::Display, sync::Mutex};
@@ -284,4 +283,3 @@ mod tests {
 
     generate_tests!("test_dnsimple");
 }
-

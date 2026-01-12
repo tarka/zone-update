@@ -1,4 +1,3 @@
-
 mod types;
 
 use std::fmt::Display;
@@ -6,8 +5,13 @@ use std::fmt::Display;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tracing::{error, info, warn};
 
-use crate::{desec::types::{CreateUpdateRRSet, RRSet}, errors::{Error, Result}, generate_helpers, http::{self, ResponseToOption, WithHeaders}, Config, DnsProvider, RecordType};
-
+use crate::{
+    Config, DnsProvider, RecordType,
+    desec::types::{CreateUpdateRRSet, RRSet},
+    errors::{Error, Result},
+    generate_helpers,
+    http::{self, ResponseToOption, WithHeaders},
+};
 
 const API_BASE: &'static str = "https://desec.io/api/v1";
 
@@ -84,7 +88,6 @@ impl DnsProvider for DeSec {
         T: Serialize + DeserializeOwned + Display + Clone
     {
         let url = format!("{API_BASE}/domains/{}/rrsets/", self.config.domain);
-        println!("POSTING {url}");
 
         let record = CreateUpdateRRSet {
             subname: host.to_string(),

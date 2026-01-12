@@ -1,4 +1,3 @@
-
 use std::sync::Arc;
 use std::fmt::Display;
 
@@ -59,4 +58,3 @@ mod tests {
     generate_async_tests!("test_gandi");
 
 }
-

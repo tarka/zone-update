@@ -1,4 +1,3 @@
-
 use std::fs::read_to_string;
 
 use anyhow::{Context, Result};
@@ -41,4 +40,3 @@ fn test_config() -> Result<()> {
 
     Ok(())
 }
-

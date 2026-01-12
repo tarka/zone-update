@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 
 // See https://api.gandi.net/docs/livedns/
