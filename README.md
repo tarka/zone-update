@@ -19,6 +19,7 @@ Currently, Zone Update supports the following DNS providers:
 
 * Cloudflare
 * deSEC
+* DigitalOcean
 * Dnsimple
 * DnsMadeEasy
 * Gandi
