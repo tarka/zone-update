@@ -172,13 +172,11 @@ mod tests {
         let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
 
-
         // Update
         let ip: Ipv4Addr = "10.1.2.3".parse()?;
         client.update_record(RecordType::A, &host, &ip).await?;
         let cur = client.get_record(RecordType::A, &host).await?;
         assert_eq!(Some(ip), cur);
-
 
         // Delete
         client.delete_record(RecordType::A, &host).await?;
@@ -199,13 +197,11 @@ mod tests {
         let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
         assert_eq!(txt, cur.unwrap());
 
-
         // Update
         let txt = "\"another text reference\"".to_string();
         client.update_record(RecordType::TXT, &host, &txt).await?;
         let cur: Option<String> = client.get_record(RecordType::TXT, &host).await?;
         assert_eq!(txt, cur.unwrap());
-
 
         // Delete
         client.delete_record(RecordType::TXT, &host).await?;
@@ -226,13 +222,11 @@ mod tests {
         let cur = client.get_txt_record(&host).await?;
         assert_eq!(txt, strip_quotes(&cur.unwrap()));
 
-
         // Update
         let txt = "another text reference".to_string();
         client.update_txt_record(&host, &txt).await?;
         let cur = client.get_txt_record(&host).await?;
         assert_eq!(txt, strip_quotes(&cur.unwrap()));
-
 
         // Delete
         client.delete_txt_record(&host).await?;
@@ -342,6 +336,36 @@ mod tests {
 
                 #[tokio::test]
                 #[test_log::test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                async fn create_update_default() -> Result<()> {
+                    test_create_update_delete_txt_default(get_client()).await?;
+                    Ok(())
+                }
+            }
+
+            #[cfg(feature = "test_compio")]
+            mod compio_tests {
+                use super::*;
+                use crate::async_impl::tests::*;
+
+                #[compio::test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                async fn create_update_v4() -> Result<()> {
+                    test_create_update_delete_ipv4(get_client()).await?;
+                    Ok(())
+                }
+
+                #[compio::test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                async fn create_update_txt() -> Result<()> {
+                    test_create_update_delete_txt(get_client()).await?;
+                    Ok(())
+                }
+
+                #[compio::test]
                 #[serial_test::serial]
                 #[cfg_attr(not(feature = $feat), ignore = "API test")]
                 async fn create_update_default() -> Result<()> {
