@@ -50,6 +50,7 @@ pub struct Config {
 #[non_exhaustive]
 pub enum Provider {
     Cloudflare(cloudflare::Auth),
+    DeSec(desec::Auth),
     Gandi(gandi::Auth),
     Dnsimple(dnsimple::Auth),
     DnsMadeEasy(dnsmadeeasy::Auth),
@@ -65,6 +66,8 @@ impl Provider {
         match self {
             #[cfg(feature = "cloudflare")]
             Provider::Cloudflare(auth) => Box::new(cloudflare::Cloudflare::new(dns_conf, auth.clone())),
+            #[cfg(feature = "desec")]
+            Provider::DeSec(auth) => Box::new(desec::DeSec::new(dns_conf, auth.clone())),
             #[cfg(feature = "gandi")]
             Provider::Gandi(auth) => Box::new(gandi::Gandi::new(dns_conf, auth.clone())),
             #[cfg(feature = "dnsimple")]
@@ -84,6 +87,8 @@ impl Provider {
         match self {
             #[cfg(feature = "cloudflare")]
             Provider::Cloudflare(auth) => Box::new(async_impl::cloudflare::Cloudflare::new(dns_conf, auth.clone())),
+            #[cfg(feature = "desec")]
+            Provider::DeSec(auth) => Box::new(async_impl::desec::DeSec::new(dns_conf, auth.clone())),
             #[cfg(feature = "gandi")]
             Provider::Gandi(auth) => Box::new(async_impl::gandi::Gandi::new(dns_conf, auth.clone())),
             #[cfg(feature = "dnsimple")]

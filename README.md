@@ -18,6 +18,7 @@ The library is both blocking and async, and supports both `smol` and `tokio`.
 Currently, Zone Update supports the following DNS providers:
 
 * Cloudflare
+* deSEC
 * Dnsimple
 * DnsMadeEasy
 * Gandi
