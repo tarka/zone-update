@@ -11,7 +11,7 @@ use ureq::{
     Agent, Body, RequestBuilder, ResponseExt
 };
 
-use crate::errors::{Error, Result};
+use crate::{errors::{Error, Result}};
 
 
 /// Extension trait for converting ureq HTTP responses to optional
@@ -59,27 +59,28 @@ pub(crate) trait ResponseToOption: Sized {
     /// - `Ok(Self)` if the response was successful.
     /// - `Err(Error::HttpError)` if the response status indicates an error.
     fn check_error(self) -> Result<Self>;
+
 }
 
 
 
 impl ResponseToOption for Response<Body> {
+
     fn to_option<T>(&mut self) -> Result<Option<T>>
     where
         T: DeserializeOwned
     {
+        let body = self.body_mut().read_to_string()?;
         match self.status() {
             StatusCode::OK => {
-                let body = self.body_mut().read_to_string()?;
                 let obj: T = serde_json::from_str(&body)?;
                 Ok(Some(obj))
             }
             StatusCode::NOT_FOUND => {
-                warn!("Record doesn't exist: {}", self.get_uri());
+                warn!("Record doesn't exist: {} -> {body}", self.get_uri());
                 Ok(None)
             }
             _ => {
-                let body = self.body_mut().read_to_string()?;
                 Err(Error::ApiError(format!("Api Error: {} -> {body}", self.status())))
             }
         }

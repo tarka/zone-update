@@ -38,7 +38,7 @@ pub struct DigitalOcean {
 }
 
 impl DigitalOcean {
-    /// Create a new `deSEC` provider instance.
+    /// Create a new `Digital Ocean` provider instance.
     pub fn new(config: Config, auth: Auth) -> Self {
         Self {
             config,

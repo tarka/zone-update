@@ -18,6 +18,8 @@ pub mod dnsimple;
 pub mod dnsmadeeasy;
 #[cfg(feature = "gandi")]
 pub mod gandi;
+#[cfg(feature = "linode")]
+pub mod linode;
 #[cfg(feature = "porkbun")]
 pub mod porkbun;
 
@@ -53,9 +55,10 @@ pub enum Provider {
     Cloudflare(cloudflare::Auth),
     DeSec(desec::Auth),
     DigitalOcean(digitalocean::Auth),
-    Gandi(gandi::Auth),
-    Dnsimple(dnsimple::Auth),
     DnsMadeEasy(dnsmadeeasy::Auth),
+    Dnsimple(dnsimple::Auth),
+    Gandi(gandi::Auth),
+    Linode(linode::Auth),
     PorkBun(porkbun::Auth),
 }
 
@@ -80,6 +83,8 @@ impl Provider {
             Provider::DnsMadeEasy(auth) => Box::new(dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
             #[cfg(feature = "porkbun")]
             Provider::PorkBun(auth) => Box::new(porkbun::Porkbun::new(dns_conf, auth.clone())),
+            #[cfg(feature = "linode")]
+            Provider::Linode(auth) => Box::new(linode::Linode::new(dns_conf, auth.clone())),
         }
     }
 
@@ -103,13 +108,15 @@ impl Provider {
             Provider::DnsMadeEasy(auth) => Box::new(async_impl::dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
             #[cfg(feature = "porkbun")]
             Provider::PorkBun(auth) => Box::new(async_impl::porkbun::Porkbun::new(dns_conf, auth.clone())),
+            #[cfg(feature = "linode")]
+            Provider::Linode(auth) => Box::new(async_impl::linode::Linode::new(dns_conf, auth.clone())),
         }
     }
 }
 
 
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum RecordType {
     A,
     AAAA,
@@ -349,6 +356,7 @@ mod tests {
         info!("Creating IPv4 {host}");
         let ip: Ipv4Addr = "10.9.8.7".parse()?;
         client.create_record(RecordType::A, &host, &ip)?;
+        info!("Checking IPv4 {host}");
         let cur = client.get_record(RecordType::A, &host)?;
         assert_eq!(Some(ip), cur);
 
@@ -357,6 +365,7 @@ mod tests {
         info!("Updating IPv4 {host}");
         let ip: Ipv4Addr = "10.10.9.8".parse()?;
         client.update_record(RecordType::A, &host, &ip)?;
+        info!("Checking IPv4 {host}");
         let cur = client.get_record(RecordType::A, &host)?;
         assert_eq!(Some(ip), cur);
 
@@ -376,7 +385,6 @@ mod tests {
 
         // Create
         let txt = "\"a text reference\"".to_string();
-        println!("CREATE");
         client.create_record(RecordType::TXT, &host, &txt)?;
         let cur: Option<String> = client.get_record(RecordType::TXT, &host)?;
         assert_eq!(txt, cur.unwrap());
@@ -384,14 +392,12 @@ mod tests {
 
         // Update
         let txt = "\"another text reference\"".to_string();
-        println!("UPDATE");
         client.update_record(RecordType::TXT, &host, &txt)?;
         let cur: Option<String> = client.get_record(RecordType::TXT, &host)?;
         assert_eq!(txt, cur.unwrap());
 
 
         // Delete
-        println!("DELETE");
         client.delete_record(RecordType::TXT, &host)?;
         let del: Option<String> = client.get_record(RecordType::TXT, &host)?;
         assert!(del.is_none());

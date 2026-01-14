@@ -13,6 +13,8 @@ pub mod desec;
 pub mod digitalocean;
 #[cfg(feature = "gandi")]
 pub mod gandi;
+#[cfg(feature = "linode")]
+pub mod linode;
 #[cfg(feature = "dnsmadeeasy")]
 pub mod dnsmadeeasy;
 #[cfg(feature = "dnsimple")]

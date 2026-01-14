@@ -23,13 +23,23 @@ ureq = { version = "3.1.4", default-features = false, features = ["rustls", "gzi
 [features]
 default = ["all-providers"]
 async = ["dep:blocking"]
-all-providers = ["cloudflare", "desec", "digitalocean", "gandi", "dnsmadeeasy", "dnsimple", "porkbun"]
+all-providers = [
+    "cloudflare",
+    "desec",
+    "digitalocean",
+    "dnsimple",
+    "dnsmadeeasy",
+    "gandi",
+    "linode",
+    "porkbun",
+]
 cloudflare = []
 desec = []
 digitalocean = []
 dnsimple = []
 dnsmadeeasy = ["dep:hmac", "dep:sha1", "dep:hex"]
 gandi = []
+linode = []
 porkbun = []
 
 # Test features
@@ -39,17 +49,16 @@ test_cloudflare = ["cloudflare"]
 test_desec = ["desec"   ]
 test_digitalocean = ["digitalocean"]
 test_gandi = ["gandi"]
+test_linode = ["linode"]
 test_dnsimple = ["dnsimple"]
 test_dnsmadeeasy = ["dnsmadeeasy"]
 test_porkbun = ["porkbun"]
+
 test_compio = ["async"]
 test_glommio = ["async"]
 test_monoio = ["async"]
 test_smol = ["async"]
 test_tokio = ["async"]
-hmac = ["dep:hmac"]
-hex = ["dep:hex"]
-
 
 [dev-dependencies]
 anyhow = "1.0.100"
