@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/tarka/zone-update/compare/v0.9.3...v0.10.0) - 2026-01-14
+
+* Add Linode support
+
+### Other
+
+- Allow unused in Record
+- Handle deserialisation errors correctly
+- Cleanups and optimisations
+- Add Linode async impl and update docs.
+- Working sync version of Linode.
+- Add glommio as a tested runtime.
+- Add testing of monoio
+- Mark cargo fragement at text to avoid doctests
+- Add additional information about runtimes and feature-flags.
+- More fine-grained testing steps.
+- Add DigitalOcean and compio into test rotation.
+- Add testing of running against compio
+- Use external rust action support.
+
 ## [0.9.3](https://github.com/tarka/zone-update/compare/v0.9.2...v0.9.3) - 2026-01-12
 
 ### Notable Changes
