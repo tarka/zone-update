@@ -55,15 +55,6 @@ pub(crate) struct Domain {
 //   "pages": 1,
 //   "results": 1
 // }
-// #[derive(Deserialize, Debug, Clone)]
-// pub(crate) struct Record<T> {
-//     pub(crate) id: u64,
-//     pub(crate) name: String,
-//     pub(crate) target: T,
-//     #[serde(rename = "type")]
-//     pub(crate) rtype: RecordType,
-// }
-
 #[derive(Deserialize, Debug, Clone)]
 pub(crate) struct Record<T> {
     pub(crate) id: u64,
@@ -72,27 +63,6 @@ pub(crate) struct Record<T> {
     #[serde(rename = "type")]
     pub(crate) rtype: RecordType,
 }
-
-// #[derive(Deserialize, Debug, Clone)]
-// #[serde(tag = "rtype", content = "target")]
-// pub(crate) enum TaggedTarget {
-//     A(Ipv4Addr),
-//     AAAA(Ipv6Addr),
-//     TXT(String),
-//     Other,
-// }
-
-// // There's no simple method to filter returned values by RecordType in
-// // the Linode API, so we accept raw string `target` here and
-// // deserialise in `get_upstream_record()` once RecordType is known.
-// #[derive(Deserialize, Debug, Clone)]
-// pub(crate) struct RawRecord {
-//     pub(crate) id: u64,
-//     pub(crate) name: String,
-//     pub(crate) target: String,
-//     #[serde(rename = "type")]
-//     pub(crate) rtype: RecordType,
-// }
 
 // {
 //   "created": "2018-01-01T00:01:01",

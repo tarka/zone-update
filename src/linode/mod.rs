@@ -94,21 +94,19 @@ impl Linode {
         // we filter on the raw json values before deserialising
         // properly.
         let body = response.body_mut().read_to_string()?;
-        let values: serde_json::Value = serde_json::from_str(&body)?;
+        let srtype = rtype.to_string();
 
+        let values: serde_json::Value = serde_json::from_str(&body)?;
         let data = values["data"].as_array()
             .ok_or(Error::ApiError("Data field not found".to_string()))?;
-        let srtype = rtype.to_string();
-        let filtered = data.into_iter()
+        let record = data.into_iter()
             .filter_map(|obj| match &obj["type"] {
-                serde_json::Value::String(t) if t == &srtype => Some(serde_json::from_value(obj.clone()).unwrap()),
+                serde_json::Value::String(t)
+                    if t == &srtype
+                    && obj["name"] == host
+                    => Some(serde_json::from_value(obj.clone()).expect("Failed to deserialise value")),
                 _ => None,
             })
-            .collect::<Vec<Record<T>>>();
-
-
-        let record = filtered.into_iter()
-            .filter(|rec| &rec.name == host)
             .next();
 
         Ok(record)
@@ -124,7 +122,7 @@ impl Linode {
 
 impl DnsProvider for Linode {
 
-    fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>> 
+    fn get_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<T>>
     where
         T: DeserializeOwned
     {
