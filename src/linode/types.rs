@@ -55,6 +55,7 @@ pub(crate) struct Domain {
 //   "pages": 1,
 //   "results": 1
 // }
+#[allow(unused)]
 #[derive(Deserialize, Debug, Clone)]
 pub(crate) struct Record<T> {
     pub(crate) id: u64,
