@@ -102,12 +102,12 @@ impl Linode {
         let record = data.into_iter()
             .filter_map(|obj| match &obj["type"] {
                 serde_json::Value::String(t)
-                    if t == &srtype
-                    && obj["name"] == host
-                    => Some(serde_json::from_value(obj.clone()).expect("Failed to deserialise value")),
+                    if t == &srtype && obj["name"] == host
+                    => Some(serde_json::from_value(obj.clone())),
                 _ => None,
             })
-            .next();
+            .next()
+            .transpose()?;
 
         Ok(record)
     }
