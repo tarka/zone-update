@@ -1,7 +1,7 @@
 [package]
 name = "zone-update"
 version = "0.9.3"
-description = "A minimal library of DNS provider utilities"
+description = "A library of CRUD-like operations on DNS zones for multiple providers"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/tarka/zone-update"
 edition = "2024"
@@ -43,10 +43,12 @@ test_dnsimple = ["dnsimple"]
 test_dnsmadeeasy = ["dnsmadeeasy"]
 test_porkbun = ["porkbun"]
 test_compio = ["async"]
+test_monoio = ["async"]
 test_smol = ["async"]
 test_tokio = ["async"]
 hmac = ["dep:hmac"]
 hex = ["dep:hex"]
+
 
 [dev-dependencies]
 anyhow = "1.0.100"
@@ -77,6 +79,8 @@ futures = "0.3.31"
 dnsclient = "0.2.0"
 
 compio = { version = "0.17.0", features = ["macros"] }
+
+monoio = { version = "0.2.4", features = ["sync"] }
 
 [[example]]
 name = "acme-dns01-async"

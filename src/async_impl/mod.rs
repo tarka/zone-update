@@ -372,7 +372,36 @@ mod tests {
                     test_create_update_delete_txt_default(get_client()).await?;
                     Ok(())
                 }
+            }
 
+            #[cfg(feature = "test_monoio")]
+            mod monoio_tests {
+                use super::*;
+                use crate::async_impl::tests::*;
+
+                #[monoio::test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                async fn create_update_v4() -> Result<()> {
+                    test_create_update_delete_ipv4(get_client()).await?;
+                    Ok(())
+                }
+
+                #[monoio::test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                async fn create_update_txt() -> Result<()> {
+                    test_create_update_delete_txt(get_client()).await?;
+                    Ok(())
+                }
+
+                #[monoio::test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                async fn create_update_default() -> Result<()> {
+                    test_create_update_delete_txt_default(get_client()).await?;
+                    Ok(())
+                }
             }
         }
     }
