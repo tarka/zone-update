@@ -37,3 +37,6 @@ jobs:
 
       - name: Run ${{ matrix.provider }} monoio tests
         run: cargo test --features test_${{ matrix.provider }},test_monoio -- --test-threads=1
+
+      - name: Run ${{ matrix.provider }} glommio tests
+        run: cargo test --features test_${{ matrix.provider }},test_glommio -- --test-threads=1

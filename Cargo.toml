@@ -43,6 +43,7 @@ test_dnsimple = ["dnsimple"]
 test_dnsmadeeasy = ["dnsmadeeasy"]
 test_porkbun = ["porkbun"]
 test_compio = ["async"]
+test_glommio = ["async"]
 test_monoio = ["async"]
 test_smol = ["async"]
 test_tokio = ["async"]
@@ -79,8 +80,8 @@ futures = "0.3.31"
 dnsclient = "0.2.0"
 
 compio = { version = "0.17.0", features = ["macros"] }
-
 monoio = { version = "0.2.4", features = ["sync"] }
+glommio = "0.9.0"
 
 [[example]]
 name = "acme-dns01-async"

@@ -403,6 +403,45 @@ mod tests {
                     Ok(())
                 }
             }
+
+            #[cfg(feature = "test_glommio")]
+            mod glommio_tests {
+                use super::*;
+                use crate::async_impl::tests::*;
+
+                #[test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                fn create_update_v4() -> Result<()> {
+                    let ex = glommio::LocalExecutorBuilder::new(glommio::Placement::Fixed(0)).make().unwrap();
+                    ex.run(async move {
+                        test_create_update_delete_ipv4(get_client()).await
+                    })?;
+                    Ok(())
+                }
+
+                #[test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                fn create_update_txt() -> Result<()> {
+                    let ex = glommio::LocalExecutorBuilder::new(glommio::Placement::Fixed(0)).make().unwrap();
+                    ex.run(async move {
+                        test_create_update_delete_txt(get_client()).await
+                    })?;
+                    Ok(())
+                }
+
+                #[test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                fn create_update_default() -> Result<()> {
+                    let ex = glommio::LocalExecutorBuilder::new(glommio::Placement::Fixed(0)).make().unwrap();
+                    ex.run(async move {
+                        test_create_update_delete_txt_default(get_client()).await
+                    })?;
+                    Ok(())
+                }
+            }
         }
     }
 }

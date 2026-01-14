@@ -37,7 +37,8 @@ following runtimes:
 * [tokio](https://tokio.rs/)
 * [smol](https://docs.rs/smol/)
 * [compio](https://compio.rs/)
-* [monoio](https://github.com/bytedance/monoio/)
+* [monoio](https://github.com/bytedance/monoio)
+* [glommio](https://github.com/DataDog/glommio)
 
 ### Feature flags
 
