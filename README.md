@@ -24,6 +24,7 @@ Currently, Zone Update supports the following DNS providers:
 * Dnsimple
 * DnsMadeEasy
 * Gandi
+* Linode
 * Porkbun
 
 See the [DNS providers matrix](docs/PROVIDERS.md) for more details.

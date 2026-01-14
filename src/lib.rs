@@ -55,9 +55,10 @@ pub enum Provider {
     Cloudflare(cloudflare::Auth),
     DeSec(desec::Auth),
     DigitalOcean(digitalocean::Auth),
-    Gandi(gandi::Auth),
-    Dnsimple(dnsimple::Auth),
     DnsMadeEasy(dnsmadeeasy::Auth),
+    Dnsimple(dnsimple::Auth),
+    Gandi(gandi::Auth),
+    Linode(linode::Auth),
     PorkBun(porkbun::Auth),
 }
 
@@ -82,6 +83,8 @@ impl Provider {
             Provider::DnsMadeEasy(auth) => Box::new(dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
             #[cfg(feature = "porkbun")]
             Provider::PorkBun(auth) => Box::new(porkbun::Porkbun::new(dns_conf, auth.clone())),
+            #[cfg(feature = "linode")]
+            Provider::Linode(auth) => Box::new(linode::Linode::new(dns_conf, auth.clone())),
         }
     }
 
@@ -105,6 +108,8 @@ impl Provider {
             Provider::DnsMadeEasy(auth) => Box::new(async_impl::dnsmadeeasy::DnsMadeEasy::new(dns_conf, auth.clone())),
             #[cfg(feature = "porkbun")]
             Provider::PorkBun(auth) => Box::new(async_impl::porkbun::Porkbun::new(dns_conf, auth.clone())),
+            #[cfg(feature = "linode")]
+            Provider::Linode(auth) => Box::new(async_impl::linode::Linode::new(dns_conf, auth.clone())),
         }
     }
 }

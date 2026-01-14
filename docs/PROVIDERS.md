@@ -10,6 +10,7 @@
 | DnSimple                  | ✅         | ✅       | tarka  | tarka      |                                                                                      |
 | Gandi                     | ✅         | ‼️        | tarka  |  tarka     | Tested against personal account. (Has a sandbox but is unusable in practice?)       |
 | DNSMadeEasy               | ✅         | ✅       | tarka  | tarka      | Sandbox uses legacy ciphers and fails with rustls.                                   |
+| Linode                    | ✅         | ❌       | tarka  | tarka      |                                                                                      |
 | Porkbun                   | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
 
 ### Unsupported Providers
@@ -92,7 +93,6 @@ entirely accurate. Corrections and updates welcome.
 | KingHost                  | ❌         | ❔       |        |            |                                                                                      |
 | Leaseweb.com              | ❌         | ❔       |        |            |                                                                                      |
 | Lima-City                 | ❌         | ❔       |        |            |                                                                                      |
-| Linode                    | ❌         | ❔       |        |            |                                                                                      |
 | Loopia                    | ❌         | ❔       |        |            |                                                                                      |
 | LuaDNS                    | ❌         | ❔       |        |            |                                                                                      |
 | MailinaBox                | ❌         | ❔       |        |            |                                                                                      |
