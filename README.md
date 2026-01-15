@@ -80,6 +80,51 @@ fn update_gandi_record() -> Result<()> {
 }
 ```
 
+### Provider lookup from configuration file
+
+```rust
+use serde::Deserialize;
+use zone_update::{Provider, errors::Result};
+use std::net::Ipv4Addr;
+
+const CONFIG_TOML: &str = r#"
+domain = "example.com"
+dry_run = true
+
+[provider]
+name = "porkbun"
+key = "my_key"
+secret = "my_secret"
+"#;
+
+#[derive(Deserialize)]
+pub struct MyConfig {
+    domain: String,
+    dry_run: bool,
+    provider: Provider,
+}
+
+fn update_website_record() -> Result<()> {
+    let config: MyConfig = toml::from_str(CONFIG_TOML).unwrap();
+
+    let zu_config = zone_update::Config {
+        domain: config.domain,
+        dry_run: config.dry_run,
+    };
+
+    let client = config.provider
+        .blocking_impl(zu_config);
+
+    let host = "www";
+    let new_ip = Ipv4Addr::new(192, 0, 2, 1);
+
+    // Update the A record for www.example.com
+    client.update_a_record(host, &new_ip)?;
+
+    Ok(())
+}
+```
+
 See the `examples` directory for other use-cases.
 
 ## Contributing

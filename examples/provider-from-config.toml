@@ -1,0 +1,8 @@
+
+domain = "example.com"
+dry_run = true
+
+[provider]
+name = "porkbun"
+key = "my_key"
+secret = "my_secret"
