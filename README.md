@@ -82,6 +82,9 @@ fn update_gandi_record() -> Result<()> {
 
 ### Provider lookup from configuration file
 
+The `Provider` enum supports deserialisation with serde, which allows runtime
+lookup of DNS providers from a configuration file:
+
 ```rust
 use serde::Deserialize;
 use zone_update::{Provider, errors::Result};
