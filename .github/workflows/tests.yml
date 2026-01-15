@@ -2,12 +2,13 @@ name: Tests
 
 on: [push]
 
+env:
+  DNSIMPLE_TEST_DOMAIN: ${{ secrets.DNSIMPLE_TEST_DOMAIN }}
+  DNSIMPLE_TOKEN: ${{ secrets.DNSIMPLE_TOKEN }}
+  DIGITALOCEAN_TEST_DOMAIN: ${{ secrets.DIGITALOCEAN_TEST_DOMAIN }}
+  DIGITALOCEAN_API_KEY: ${{ secrets.DIGITALOCEAN_API_KEY }}
+
 jobs:
-  env:
-    DNSIMPLE_TEST_DOMAIN: ${{ secrets.DNSIMPLE_TEST_DOMAIN }}
-    DNSIMPLE_TOKEN: ${{ secrets.DNSIMPLE_TOKEN }}
-    DIGITALOCEAN_TEST_DOMAIN: ${{ secrets.DIGITALOCEAN_TEST_DOMAIN }}
-    DIGITALOCEAN_API_KEY: ${{ secrets.DIGITALOCEAN_API_KEY }}
 
   linux:
     runs-on: ubuntu-latest
