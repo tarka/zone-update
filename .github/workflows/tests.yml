@@ -1,11 +1,15 @@
-
 name: Tests
 
 on: [push]
 
 jobs:
+  env:
+    DNSIMPLE_TEST_DOMAIN: ${{ secrets.DNSIMPLE_TEST_DOMAIN }}
+    DNSIMPLE_TOKEN: ${{ secrets.DNSIMPLE_TOKEN }}
+    DIGITALOCEAN_TEST_DOMAIN: ${{ secrets.DIGITALOCEAN_TEST_DOMAIN }}
+    DIGITALOCEAN_API_KEY: ${{ secrets.DIGITALOCEAN_API_KEY }}
 
-  test-runtime:
+  linux:
     runs-on: ubuntu-latest
 
     strategy:
@@ -13,14 +17,8 @@ jobs:
         # A couple of providers that are 'known good' for testing
         provider: [dnsimple, digitalocean]
 
-    env:
-      DNSIMPLE_TEST_DOMAIN: ${{ secrets.DNSIMPLE_TEST_DOMAIN }}
-      DNSIMPLE_TOKEN: ${{ secrets.DNSIMPLE_TOKEN }}
-      DIGITALOCEAN_TEST_DOMAIN: ${{ secrets.DIGITALOCEAN_TEST_DOMAIN }}
-      DIGITALOCEAN_API_KEY: ${{ secrets.DIGITALOCEAN_API_KEY }}
 
     steps:
-      
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
@@ -40,3 +38,29 @@ jobs:
 
       - name: Run ${{ matrix.provider }} glommio tests
         run: cargo test --features test_${{ matrix.provider }},test_glommio -- --test-threads=1
+
+
+  macos:
+    needs: linux
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run digitalocean smol tests
+        run: cargo test --features test_digitalocean,test_smol -- --test-threads=1
+
+
+  windows:
+    needs: macos
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run digitalocean smol tests
+        run: cargo test --features test_digitalocean,test_smol -- --test-threads=1
