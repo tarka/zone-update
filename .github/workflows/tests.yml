@@ -41,6 +41,8 @@ jobs:
         run: cargo test --features test_${{ matrix.provider }},test_glommio -- --test-threads=1
 
 
+  # Run these in parallel after Linux but use different providers
+
   macos:
     needs: linux
     runs-on: macos-latest
@@ -55,7 +57,7 @@ jobs:
 
 
   windows:
-    needs: macos
+    needs: linux
     runs-on: windows-latest
 
     steps:
@@ -63,5 +65,5 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
-      - name: Run digitalocean smol tests
-        run: cargo test --features test_digitalocean,test_smol -- --test-threads=1
+      - name: Run dnsimple tokio tests
+        run: cargo test --features test_dnsimple,test_tokio -- --test-threads=1
