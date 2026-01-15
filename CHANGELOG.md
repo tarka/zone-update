@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1](https://github.com/tarka/zone-update/compare/v0.10.0...v0.10.1) - 2026-01-15
+
+### <!-- 3 -->Documentation
+
+- Explain the config example.
+- Add examples for provider-lookup from configuration file.
+- Add notes on adding a provider to README.
+
+### Other
+
+- Add note about testing mac/win.
+- Fix dependency issue on mac and allow parallel runs of mac/win.
+- Move env declaration to the root.
+- Add windows and mac test runners.
+
 ## [0.10.0](https://github.com/tarka/zone-update/compare/v0.9.3...v0.10.0) - 2026-01-14
 
 * Add Linode support
