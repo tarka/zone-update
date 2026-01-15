@@ -29,7 +29,7 @@ Currently, Zone Update supports the following DNS providers:
 
 See the [DNS providers matrix](docs/PROVIDERS.md) for more details.
 
-### Supported Runtimes
+### Supported platforms
 
 `zone-update` supports both blocking and async APIs. For async the library
 attempts to be as provider-agnostic; it is known (tested) to work with the
@@ -40,6 +40,8 @@ following runtimes:
 * [compio](https://compio.rs/)
 * [monoio](https://github.com/bytedance/monoio)
 * [glommio](https://github.com/DataDog/glommio)
+
+`zone-update` is tested against Linux, Mac & Windows.
 
 ### Feature flags
 
