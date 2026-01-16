@@ -6,6 +6,8 @@ mod http;
 #[cfg(feature = "async")]
 pub mod async_impl;
 
+#[cfg(feature = "bunny")]
+pub mod bunny;
 #[cfg(feature = "cloudflare")]
 pub mod cloudflare;
 #[cfg(feature = "desec")]
@@ -116,7 +118,7 @@ impl Provider {
 
 
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum RecordType {
     A,
