@@ -1,6 +1,6 @@
 [package]
 name = "zone-update"
-version = "0.10.1"
+version = "0.11.0"
 description = "A library of CRUD-like operations on DNS zones for multiple providers"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/tarka/zone-update"
