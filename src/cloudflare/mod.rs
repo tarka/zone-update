@@ -11,7 +11,7 @@ use crate::{
 };
 
 
-const API_BASE: &'static str = "https://api.cloudflare.com/client/v4";
+const API_BASE: &str = "https://api.cloudflare.com/client/v4";
 
 
 /// Authentication credentials for the Cloudflare API.

@@ -9,7 +9,7 @@ use crate::{
     errors::{Error, Result}, generate_helpers, http::{self, ResponseToOption, WithHeaders}, linode::types::{CreateUpdate, Domain, List, Record}, Config, DnsProvider, RecordType
 };
 
-const API_BASE: &'static str = "https://api.linode.com/v4/domains";
+const API_BASE: &str = "https://api.linode.com/v4/domains";
 
 /// Authentication credentials for the Linode API.
 ///

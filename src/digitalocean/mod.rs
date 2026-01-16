@@ -13,7 +13,7 @@ use crate::{
     http::{self, ResponseToOption, WithHeaders},
 };
 
-const API_BASE: &'static str = "https://api.digitalocean.com/v2/domains";
+const API_BASE: &str = "https://api.digitalocean.com/v2/domains";
 
 /// Authentication credentials for the Digital Ocean API.
 ///

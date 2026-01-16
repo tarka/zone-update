@@ -13,7 +13,7 @@ use crate::{
     http::{self, ResponseToOption, WithHeaders},
 };
 
-const API_BASE: &'static str = "https://desec.io/api/v1";
+const API_BASE: &str = "https://desec.io/api/v1";
 
 /// Authentication credentials for the deSEC API.
 ///

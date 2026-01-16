@@ -9,7 +9,7 @@ use crate::{
     errors::{Error, Result}, generate_helpers, http::{self, ResponseToOption, WithHeaders}, Config, DnsProvider, RecordType
 };
 
-pub(crate) const API_BASE: &str = "https://api.gandi.net/v5/livedns";
+const API_BASE: &str = "https://api.gandi.net/v5/livedns";
 
 /// Authentication options for the Gandi provider.
 ///

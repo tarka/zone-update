@@ -15,7 +15,7 @@ use crate::{
 };
 
 
-pub(crate) const API_BASE: &str = "https://api.porkbun.com/api/json/v3/dns";
+const API_BASE: &str = "https://api.porkbun.com/api/json/v3/dns";
 
 /// Authentication credentials for the Porkbun API.
 ///
