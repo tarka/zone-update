@@ -117,20 +117,19 @@ impl Provider {
 
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum RecordType {
     A,
     AAAA,
     CAA,
     CNAME,
-    HINFO,
     MX,
-    NAPTR,
     NS,
     PTR,
     SRV,
-    SPF,
-    SSHFP,
     TXT,
+    SVCB,
+    HTTPS,
 }
 
 impl Display for RecordType {
