@@ -70,7 +70,7 @@ entirely accurate. Corrections and updates welcome.
 | Futurehosting             | ❌         | ❔       |        |            |                                                                                      |
 | GCore                     | ❌         | ❔       |        |            |                                                                                      |
 | Geoscaling                | ❌         | ❔       |        |            |                                                                                      |
-| GoDaddy.com               | ❌         | ❔       |        |            |                                                                                      |
+| GoDaddy.com               | ❌         | ✅       |        |            | API access is restricted to accounts with 10+ domains.                               |
 | Google                    | ❌         | ❔       |        |            |                                                                                      |
 | HE                        | ❌         | ❔       |        |            |                                                                                      |
 | Hetzner                   | ❌         | ❔       |        |            |                                                                                      |
