@@ -18,6 +18,7 @@ The library is both blocking and async, and supports multiple async runtimes
 
 Currently, Zone Update supports the following DNS providers:
 
+* Bunny
 * Cloudflare
 * deSEC
 * DigitalOcean

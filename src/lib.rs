@@ -6,6 +6,8 @@ mod http;
 #[cfg(feature = "async")]
 pub mod async_impl;
 
+#[cfg(feature = "bunny")]
+pub mod bunny;
 #[cfg(feature = "cloudflare")]
 pub mod cloudflare;
 #[cfg(feature = "desec")]
@@ -52,6 +54,7 @@ pub struct Config {
 #[serde(rename_all = "lowercase", tag = "name")]
 #[non_exhaustive]
 pub enum Provider {
+    Bunny(bunny::Auth),
     Cloudflare(cloudflare::Auth),
     DeSec(desec::Auth),
     DigitalOcean(digitalocean::Auth),
@@ -69,6 +72,8 @@ impl Provider {
     /// The returned boxed trait object implements `DnsProvider`.
     pub fn blocking_impl(&self, dns_conf: Config) -> Box<dyn DnsProvider> {
         match self {
+            #[cfg(feature = "bunny")]
+            Provider::Bunny(auth) => Box::new(bunny::Bunny::new(dns_conf, auth.clone())),
             #[cfg(feature = "cloudflare")]
             Provider::Cloudflare(auth) => Box::new(cloudflare::Cloudflare::new(dns_conf, auth.clone())),
             #[cfg(feature = "desec")]
@@ -94,6 +99,8 @@ impl Provider {
     #[cfg(feature = "async")]
     pub fn async_impl(&self, dns_conf: Config) -> Box<dyn async_impl::AsyncDnsProvider> {
         match self {
+            #[cfg(feature = "bunny")]
+            Provider::Bunny(auth) => Box::new(async_impl::bunny::Bunny::new(dns_conf, auth.clone())),
             #[cfg(feature = "cloudflare")]
             Provider::Cloudflare(auth) => Box::new(async_impl::cloudflare::Cloudflare::new(dns_conf, auth.clone())),
             #[cfg(feature = "desec")]
@@ -116,21 +123,20 @@ impl Provider {
 
 
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum RecordType {
     A,
     AAAA,
     CAA,
     CNAME,
-    HINFO,
     MX,
-    NAPTR,
     NS,
     PTR,
     SRV,
-    SPF,
-    SSHFP,
     TXT,
+    SVCB,
+    HTTPS,
 }
 
 impl Display for RecordType {
