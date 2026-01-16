@@ -4,6 +4,7 @@
 
 | Provider                  | Supported? | Sandbox? | Author | Maintainer | Notes                                                                                |
 |---------------------------|:----------:|:--------:|--------|------------|--------------------------------------------------------------------------------------|
+| Bunny                     | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
 | Cloudflare                | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
 | deSEC.io                  | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
 | DigitalOcean              | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
@@ -39,7 +40,6 @@ entirely accurate. Corrections and updates welcome.
 | Azure                     | ❌         | ❔       |        |            |                                                                                      |
 | Beget.com                 | ❌         | ❔       |        |            |                                                                                      |
 | bookmyname                | ❌         | ❔       |        |            |                                                                                      |
-| Bunny                     | ❌         | ❔       |        |            |                                                                                      |
 | CloudDNS                  | ❌         | ❔       |        |            |                                                                                      |
 | ClouDNS.net               | ❌         | ❔       |        |            |                                                                                      |
 | ConoHa                    | ❌         | ❔       |        |            |                                                                                      |

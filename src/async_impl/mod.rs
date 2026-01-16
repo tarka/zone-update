@@ -5,6 +5,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use crate::{errors::Result, RecordType};
 
 
+#[cfg(feature = "bunny")]
+pub mod bunny;
 #[cfg(feature = "cloudflare")]
 pub mod cloudflare;
 #[cfg(feature = "desec")]
