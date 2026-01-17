@@ -147,5 +147,5 @@ fn ser_recordtype<S>(rt: &RecordType, serializer: S) -> std::result::Result<S::O
 where
     S: serde::Serializer,
 {
-    u64::from(rt.clone()).serialize(serializer)
+    u64::from(*rt).serialize(serializer)
 }

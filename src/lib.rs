@@ -228,15 +228,15 @@ macro_rules! generate_helpers {
 
         fn get_txt_record(&self, host: &str) -> Result<Option<String>> {
             self.get_record::<String>(RecordType::TXT, host)
-                .map(|opt| opt.map(|s| crate::strip_quotes(&s)))
+                .map(|opt| opt.map(|s| $crate::strip_quotes(&s)))
         }
 
         fn create_txt_record(&self, host: &str, record: &String) -> Result<()> {
-            self.create_record(RecordType::TXT, host, &crate::ensure_quotes(record))
+            self.create_record(RecordType::TXT, host, &$crate::ensure_quotes(record))
         }
 
         fn update_txt_record(&self, host: &str, record: &String) -> Result<()> {
-            self.update_record(RecordType::TXT, host, &crate::ensure_quotes(record))
+            self.update_record(RecordType::TXT, host, &$crate::ensure_quotes(record))
         }
 
         fn delete_txt_record(&self, host: &str) -> Result<()> {

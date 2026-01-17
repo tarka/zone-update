@@ -62,7 +62,7 @@ impl Bunny {
 
         let zone = self.get_zone_info()?;
         let id = zone.id;
-        *id_p = Some(id.clone());
+        *id_p = Some(id);
 
         Ok(id)
     }
@@ -78,8 +78,7 @@ impl Bunny {
             .ok_or(Error::RecordNotFound(format!("Couldn't fetch zone info for {}", self.config.domain)))?
             .items;
         let zone = zones.into_iter()
-            .filter(|z| z.domain == self.config.domain)
-            .next()
+            .find(|z| z.domain == self.config.domain)
             .ok_or(Error::RecordNotFound(format!("Couldn't fetch zone info for {}", self.config.domain)))?;
 
         Ok(zone)
@@ -108,7 +107,7 @@ impl Bunny {
         let values: serde_json::Value = serde_json::from_str(&body)?;
         let data = values["Records"].as_array()
             .ok_or(Error::ApiError("Data field not found".to_string()))?;
-        let record = data.into_iter()
+        let record = data.iter()
             .filter_map(|obj| match &obj["Type"] {
                 serde_json::Value::Number(n)
                     if n.as_u64().is_some_and(|v| v == u64rtype) && obj["Name"] == host
@@ -186,7 +185,7 @@ impl DnsProvider for Bunny {
 
         let record = CreateUpdate {
             name: host.to_string(),
-            rtype: rtype,
+            rtype,
             value: urec.to_string(),
             ttl: 300,
         };

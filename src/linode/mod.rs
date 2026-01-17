@@ -54,8 +54,7 @@ impl Linode {
             .ok_or(Error::ApiError("No domains returned from upstream".to_string()))?;
 
         let domain = list.data.into_iter()
-            .filter(|d| d.domain == self.config.domain)
-            .next()
+            .find(|d| d.domain == self.config.domain)
             .ok_or(Error::RecordNotFound(self.config.domain.clone()))?;
 
         Ok(domain)
@@ -99,7 +98,7 @@ impl Linode {
         let values: serde_json::Value = serde_json::from_str(&body)?;
         let data = values["data"].as_array()
             .ok_or(Error::ApiError("Data field not found".to_string()))?;
-        let record = data.into_iter()
+        let record = data.iter()
             .filter_map(|obj| match &obj["type"] {
                 serde_json::Value::String(t)
                     if t == &srtype && obj["name"] == host
