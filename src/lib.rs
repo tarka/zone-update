@@ -180,12 +180,12 @@ pub trait DnsProvider {
     /// Create a new TXT record.
     ///
     /// This is a helper method that calls `create_record` with the `TXT` record type.
-    fn create_txt_record(&self, host: &str, record: &String) -> Result<()>;
+    fn create_txt_record(&self, host: &str, record: &str) -> Result<()>;
 
     /// Update a TXT record.
     ///
     /// This is a helper method that calls `update_record` with the `TXT` record type.
-    fn update_txt_record(&self, host: &str, record: &String) -> Result<()>;
+    fn update_txt_record(&self, host: &str, record: &str) -> Result<()>;
 
     /// Delete a TXT record.
     ///
@@ -231,11 +231,11 @@ macro_rules! generate_helpers {
                 .map(|opt| opt.map(|s| $crate::strip_quotes(&s)))
         }
 
-        fn create_txt_record(&self, host: &str, record: &String) -> Result<()> {
+        fn create_txt_record(&self, host: &str, record: &str) -> Result<()> {
             self.create_record(RecordType::TXT, host, &$crate::ensure_quotes(record))
         }
 
-        fn update_txt_record(&self, host: &str, record: &String) -> Result<()> {
+        fn update_txt_record(&self, host: &str, record: &str) -> Result<()> {
             self.update_record(RecordType::TXT, host, &$crate::ensure_quotes(record))
         }
 
@@ -261,12 +261,12 @@ macro_rules! generate_helpers {
     }
 }
 
-fn ensure_quotes(record: &String) -> String {
+fn ensure_quotes(record: &str) -> String {
     let starts = record.starts_with('"');
     let ends = record.ends_with('"');
 
     match (starts, ends) {
-        (true, true)   => record.clone(),
+        (true, true)   => record.to_string(),
         (true, false)  => format!("{}\"", record),
         (false, true)  => format!("\"{}", record),
         (false, false) => format!("\"{}\"", record),
