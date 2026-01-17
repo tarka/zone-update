@@ -9,7 +9,7 @@
 | deSEC.io                  | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
 | DigitalOcean              | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
 | DnSimple                  | ✅         | ✅       | tarka  | tarka      |                                                                                      |
-| Gandi                     | ✅         | ‼️        | tarka  |  tarka     | Tested against personal account. (Has a sandbox but is unusable in practice?)       |
+| Gandi                     | ✅         | ‼️       | tarka  | tarka      | Tested against personal account. (Has a sandbox but is unusable in practice?)        |
 | DNSMadeEasy               | ✅         | ✅       | tarka  | tarka      | Sandbox uses legacy ciphers and fails with rustls.                                   |
 | Linode                    | ✅         | ❌       | tarka  | tarka      |                                                                                      |
 | Porkbun                   | ✅         | ❌       | tarka  | tarka      | Tested against personal account                                                      |
@@ -62,7 +62,7 @@ entirely accurate. Corrections and updates welcome.
 | dyndnsfree                | ❌         | ❔       |        |            |                                                                                      |
 | Dynu                      | ❌         | ❔       |        |            |                                                                                      |
 | dynv6                     | ❌         | ❔       |        |            |                                                                                      |
-| easyDNS.net               | ❌         | ✅       |        |            |                                                                                      |
+| easyDNS.net               | ❌         | ‼️       |        |            | API access is limited and requires explicitly requesting early access.               |
 | Euserv.eu                 | ❌         | ❔       |        |            |                                                                                      |
 | Exoscale                  | ❌         | ❔       |        |            |                                                                                      |
 | fornex.com                | ❌         | ❔       |        |            |                                                                                      |
@@ -70,7 +70,7 @@ entirely accurate. Corrections and updates welcome.
 | Futurehosting             | ❌         | ❔       |        |            |                                                                                      |
 | GCore                     | ❌         | ❔       |        |            |                                                                                      |
 | Geoscaling                | ❌         | ❔       |        |            |                                                                                      |
-| GoDaddy.com               | ❌         | ✅       |        |            | API access is restricted to accounts with 10+ domains.                               |
+| GoDaddy.com               | ❌         | ‼️       |        |            | API access is restricted to accounts with 10+ domains.                               |
 | Google                    | ❌         | ❔       |        |            |                                                                                      |
 | HE                        | ❌         | ❔       |        |            |                                                                                      |
 | Hetzner                   | ❌         | ❔       |        |            |                                                                                      |
