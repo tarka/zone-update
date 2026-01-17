@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1](https://github.com/tarka/zone-update/compare/v0.11.0...v0.11.1) - 2026-01-17
+
+### <!-- 3 -->Documentation
+
+- Minor providers update.
+
+### Other
+
+- Fix README AI section.
+- Use &str more consistently
+- Minor cleanups.
+
 ## [0.11.0](https://github.com/tarka/zone-update/compare/v0.10.1...v0.11.0) - 2026-01-16
 
 * Add support for Bunny
