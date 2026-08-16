@@ -284,7 +284,7 @@ mod tests {
             #[cfg(feature = "test_smol")]
             mod smol_tests {
                 use super::*;
-                use crate::async_impl::tests::*;
+                use $crate::async_impl::tests::*;
                 use macro_rules_attribute::apply;
                 use smol_macros::test;
 
@@ -318,7 +318,7 @@ mod tests {
             #[cfg(feature = "test_tokio")]
             mod tokio_tests {
                 use super::*;
-                use crate::async_impl::tests::*;
+                use $crate::async_impl::tests::*;
 
                 #[tokio::test]
                 #[test_log::test]
@@ -351,7 +351,7 @@ mod tests {
             #[cfg(feature = "test_compio")]
             mod compio_tests {
                 use super::*;
-                use crate::async_impl::tests::*;
+                use $crate::async_impl::tests::*;
 
                 #[compio::test]
                 #[serial_test::serial]
@@ -381,7 +381,7 @@ mod tests {
             #[cfg(feature = "test_monoio")]
             mod monoio_tests {
                 use super::*;
-                use crate::async_impl::tests::*;
+                use $crate::async_impl::tests::*;
 
                 #[monoio::test]
                 #[serial_test::serial]
@@ -411,7 +411,7 @@ mod tests {
             #[cfg(feature = "test_glommio")]
             mod glommio_tests {
                 use super::*;
-                use crate::async_impl::tests::*;
+                use $crate::async_impl::tests::*;
 
                 #[test]
                 #[serial_test::serial]

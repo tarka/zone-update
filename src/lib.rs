@@ -54,14 +54,23 @@ pub struct Config {
 #[serde(rename_all = "lowercase", tag = "name")]
 #[non_exhaustive]
 pub enum Provider {
+    #[cfg(feature = "bunny")]
     Bunny(bunny::Auth),
+    #[cfg(feature = "cloudflare")]
     Cloudflare(cloudflare::Auth),
+    #[cfg(feature = "desec")]
     DeSec(desec::Auth),
+    #[cfg(feature = "digitalocean")]
     DigitalOcean(digitalocean::Auth),
+    #[cfg(feature = "dnsmadeeasy")]
     DnsMadeEasy(dnsmadeeasy::Auth),
+    #[cfg(feature = "dnsimple")]
     Dnsimple(dnsimple::Auth),
+    #[cfg(feature = "gandi")]
     Gandi(gandi::Auth),
+    #[cfg(feature = "linode")]
     Linode(linode::Auth),
+    #[cfg(feature = "porkbun")]
     PorkBun(porkbun::Auth),
 }
 
