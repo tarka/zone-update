@@ -3,7 +3,7 @@ mod types;
 use std::{fmt::Display, sync::Mutex};
 
 use chrono::Utc;
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, KeyInit, Mac};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sha1::Sha1;
 use tracing::{error, info, warn};
