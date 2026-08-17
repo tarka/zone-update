@@ -108,7 +108,7 @@ impl Dnsimple {
         Ok(id)
     }
 
-    fn get_upstream_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<GetRecord<T>>>
+    fn get_upstream_records<T>(&self, rtype: RecordType, host: &str) -> Result<Vec<GetRecord<T>>>
     where
         T: DeserializeOwned
     {
@@ -120,15 +120,24 @@ impl Dnsimple {
             .with_auth(self.auth.get_header())
             .call()?
             .to_option::<Records<T>>()?;
-        let mut recs: Records<T> = match response {
+        let recs: Records<T> = match response {
             Some(rec) => rec,
-            None => return Ok(None)
+            None => return Ok(vec![])
         };
+
+        Ok(recs.records)
+    }
+
+    fn get_upstream_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<GetRecord<T>>>
+    where
+        T: DeserializeOwned
+    {
+        let mut recs = self.get_upstream_records(rtype, host)?;
 
         // FIXME: Assumes no or single address (which probably makes
         // sense for DDNS and DNS-01, but may cause issues with
         // malformed zones).
-        let nr = recs.records.len();
+        let nr = recs.len();
         if nr > 1 {
             error!("Returned number of IPs is {}, should be 1", nr);
             return Err(Error::UnexpectedRecord(format!("Returned number of records is {nr}, should be 1")));
@@ -137,7 +146,23 @@ impl Dnsimple {
             return Ok(None);
         }
 
-        Ok(Some(recs.records.remove(0)))
+        Ok(Some(recs.remove(0)))
+    }
+
+    fn do_delete(&self, rec: GetRecord<String>) -> Result<()> {
+        let acc_id = self.get_id()?;
+        let url = format!("{}/{acc_id}/zones/{}/records/{}", self.endpoint, self.config.domain, rec.id);
+        if self.config.dry_run {
+            info!("DRY-RUN: Would have sent DELETE to {url}");
+            return Ok(())
+        }
+
+        http::client().delete(url)
+            .with_json_headers()
+            .with_auth(self.auth.get_header())
+            .call()?;
+
+        Ok(())
     }
 
 }
@@ -231,19 +256,17 @@ impl DnsProvider for Dnsimple {
             }
         };
 
-        let acc_id = self.get_id()?;
-        let rid = rec.id;
+        self.do_delete(rec)?;
 
-        let url = format!("{}/{acc_id}/zones/{}/records/{rid}", self.endpoint, self.config.domain);
-        if self.config.dry_run {
-            info!("DRY-RUN: Would have sent DELETE to {url}");
-            return Ok(())
+        Ok(())
+    }
+
+    fn delete_all_records(&self, rtype: RecordType, host: &str) -> Result<()>
+    {
+        let recs: Vec<GetRecord<String>> = self.get_upstream_records(rtype, host)?;
+        for rec in recs {
+            self.do_delete(rec)?;
         }
-
-        http::client().delete(url)
-            .with_json_headers()
-            .with_auth(self.auth.get_header())
-            .call()?;
 
         Ok(())
     }
