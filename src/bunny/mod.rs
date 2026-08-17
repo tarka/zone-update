@@ -3,7 +3,7 @@ mod types;
 use std::{fmt::{Debug, Display}, sync::Mutex};
 
 use serde::{de::DeserializeOwned, Deserialize};
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use crate::{
     Config, DnsProvider, RecordType,
@@ -84,7 +84,7 @@ impl Bunny {
         Ok(zone)
     }
 
-    fn get_upstream_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<Record<T>>>
+    fn get_upstream_records<T>(&self, rtype: RecordType, host: &str) -> Result<Vec<Record<T>>>
     where
         T: DeserializeOwned
     {
@@ -107,18 +107,54 @@ impl Bunny {
         let values: serde_json::Value = serde_json::from_str(&body)?;
         let data = values["Records"].as_array()
             .ok_or(Error::ApiError("Data field not found".to_string()))?;
-        let record = data.iter()
+        let records = data.iter()
             .filter_map(|obj| match &obj["Type"] {
                 serde_json::Value::Number(n)
                     if n.as_u64().is_some_and(|v| v == u64rtype) && obj["Name"] == host
                     => Some(serde_json::from_value(obj.clone())),
                 _ => None,
             })
-            .next()
-            .transpose()?;
+            .collect::<std::result::Result<Vec<Record<T>>, _>>()?;
         println!("DONE");
 
-        Ok(record)
+        Ok(records)
+    }
+
+    fn get_upstream_record<T>(&self, rtype: RecordType, host: &str) -> Result<Option<Record<T>>>
+    where
+        T: DeserializeOwned
+    {
+        let mut recs = self.get_upstream_records(rtype, host)?;
+
+        // FIXME: Assumes no or single address (which probably makes
+        // sense for DDNS and DNS-01, but may cause issues with
+        // malformed zones).
+        let nr = recs.len();
+        if nr > 1 {
+            error!("Returned number of records is {}, should be 1", nr);
+            return Err(Error::UnexpectedRecord(format!("Returned number of records is {nr}, should be 1")));
+        } else if nr == 0 {
+            warn!("No record returned for {host}, continuing");
+            return Ok(None);
+        }
+
+        Ok(Some(recs.remove(0)))
+    }
+
+    fn do_delete(&self, rec: Record<String>) -> Result<()> {
+        let zone_id = self.get_zone_id()?;
+        let url = format!("{API_BASE}/{zone_id}/records/{}", rec.id);
+        if self.config.dry_run {
+            info!("DRY-RUN: Would have sent DELETE to {url}");
+            return Ok(())
+        }
+
+        http::client().delete(url)
+            .with_json_headers()
+            .header("AccessKey", self.auth.get_header())
+            .call()?;
+
+        Ok(())
     }
 
 }
@@ -206,7 +242,7 @@ impl DnsProvider for Bunny {
 
     fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>
     {
-        let rec: Record<String> = match self.get_upstream_record(rtype, host)? {
+        let rec = match self.get_upstream_record(rtype, host)? {
             Some(rec) => rec,
             None => {
                 warn!("DELETE: Record {host} doesn't exist");
@@ -214,22 +250,17 @@ impl DnsProvider for Bunny {
             }
         };
 
-        let rec_id = rec.id;
-        let zone_id = self.get_zone_id()?;
-        let url = format!("{API_BASE}/{zone_id}/records/{rec_id}");
+        self.do_delete(rec)
+    }
 
-        if self.config.dry_run {
-            info!("DRY-RUN: Would have sent DELETE to {url}");
-            return Ok(())
+    fn delete_all_records(&self, rtype: RecordType, host: &str) -> Result<()>
+    {
+        let recs: Vec<Record<String>> = self.get_upstream_records(rtype, host)?;
+        for rec in recs {
+            self.do_delete(rec)?;
         }
 
-        http::client().delete(url)
-            .with_json_headers()
-            .header("AccessKey", self.auth.get_header())
-            .call()?;
-
         Ok(())
-
     }
 
     generate_helpers!();

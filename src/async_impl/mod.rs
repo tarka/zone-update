@@ -50,6 +50,9 @@ pub trait AsyncDnsProvider: Send + Sync {
     async fn delete_record(&self, rtype: RecordType, host: &String) -> Result<()>
     where Self: Sized;
 
+    async fn delete_all_records(&self, rtype: RecordType, host: &String) -> Result<()>
+    where Self: Sized;
+
     async fn get_txt_record(&self, host: &String) -> Result<Option<String>>;
 
     async fn create_txt_record(&self, host: &String, record: &String) -> Result<()>;
@@ -109,20 +112,27 @@ macro_rules! async_provider_impl {
                 unblock(move || provider.delete_record(rtype, &host)).await
             }
 
+            async fn delete_all_records(&self, rtype: RecordType, host: &String) -> Result<()>
+            {
+                let provider = self.inner.clone();
+                let host = host.clone();
+                unblock(move || provider.delete_all_records(rtype, &host)).await
+            }
+
             async fn get_txt_record(&self, host: &String) -> Result<Option<String>>
             {
                 self.get_record::<String>(RecordType::TXT, host).await
-                    .map(|opt| opt.map(|s| crate::strip_quotes(&s)))
+                    .map(|opt| opt.map(|s| $crate::strip_quotes(&s)))
             }
 
             async fn create_txt_record(&self, host: &String, record: &String) -> Result<()>
             {
-                self.create_record(RecordType::TXT, host, &crate::ensure_quotes(record)).await
+                self.create_record(RecordType::TXT, host, &$crate::ensure_quotes(record)).await
             }
 
             async fn update_txt_record(&self, host: &String, record: &String) -> Result<()>
             {
-                self.update_record(RecordType::TXT, host, &crate::ensure_quotes(record)).await
+                self.update_record(RecordType::TXT, host, &$crate::ensure_quotes(record)).await
             }
 
             async fn delete_txt_record(&self, host: &String) -> Result<()>
@@ -240,15 +250,35 @@ mod tests {
         Ok(())
     }
 
+    #[allow(unused)]
+    pub async fn test_delete_all_records(client: impl AsyncDnsProvider) -> Result<()> {
+
+        let host = random_string::generate(16, ALPHA_LOWER);
+
+        // Create
+        let txt = "\"first text reference\"".to_string();
+        client.create_record(RecordType::TXT, &host, &txt).await?;
+        let txt = "\"second text reference\"".to_string();
+        client.create_record(RecordType::TXT, &host, &txt).await?;
+
+        // Delete all
+        client.delete_all_records(RecordType::TXT, &host).await?;
+        let del: Option<String> = client.get_record(RecordType::TXT, &host).await?;
+        assert!(del.is_none());
+
+        Ok(())
+    }
+
 
     /// A macro to generate a standard set of tests for an async DNS provider.
     ///
     /// This macro generates a suite of tests that are run against two different async runtimes: `smol` and `tokio`.
     ///
-    /// For each runtime, it generates three tests:
+    /// For each runtime, it generates four tests:
     /// - `create_update_v4`: tests creating, updating, and deleting an A record.
     /// - `create_update_txt`: tests creating, updating, and deleting a TXT record.
     /// - `create_update_default`: tests creating, updating, and deleting a TXT record using the default provider methods.
+    /// - `delete_all_records`: tests deleting all TXT records for a host.
     ///
     /// The tests are conditionally compiled based on the feature flag passed as an argument, and the
     /// `test_smol` and `test_tokio` features, which enable the tests for the respective runtimes.
@@ -313,6 +343,15 @@ mod tests {
                     test_create_update_delete_txt_default(get_client()).await?;
                     Ok(())
                 }
+
+                #[apply(test!)]
+                #[test_log::test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                async fn delete_all_records() -> Result<()> {
+                    test_delete_all_records(get_client()).await?;
+                    Ok(())
+                }
             }
 
             #[cfg(feature = "test_tokio")]
@@ -346,6 +385,15 @@ mod tests {
                     test_create_update_delete_txt_default(get_client()).await?;
                     Ok(())
                 }
+
+                #[tokio::test]
+                #[test_log::test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                async fn delete_all_records() -> Result<()> {
+                    test_delete_all_records(get_client()).await?;
+                    Ok(())
+                }
             }
 
             #[cfg(feature = "test_compio")]
@@ -376,6 +424,14 @@ mod tests {
                     test_create_update_delete_txt_default(get_client()).await?;
                     Ok(())
                 }
+
+                #[compio::test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                async fn delete_all_records() -> Result<()> {
+                    test_delete_all_records(get_client()).await?;
+                    Ok(())
+                }
             }
 
             #[cfg(feature = "test_monoio")]
@@ -404,6 +460,14 @@ mod tests {
                 #[cfg_attr(not(feature = $feat), ignore = "API test")]
                 async fn create_update_default() -> Result<()> {
                     test_create_update_delete_txt_default(get_client()).await?;
+                    Ok(())
+                }
+
+                #[monoio::test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                async fn delete_all_records() -> Result<()> {
+                    test_delete_all_records(get_client()).await?;
                     Ok(())
                 }
             }
@@ -442,6 +506,17 @@ mod tests {
                     let ex = glommio::LocalExecutorBuilder::new(glommio::Placement::Fixed(0)).make().unwrap();
                     ex.run(async move {
                         test_create_update_delete_txt_default(get_client()).await
+                    })?;
+                    Ok(())
+                }
+
+                #[test]
+                #[serial_test::serial]
+                #[cfg_attr(not(feature = $feat), ignore = "API test")]
+                fn delete_all_records() -> Result<()> {
+                    let ex = glommio::LocalExecutorBuilder::new(glommio::Placement::Fixed(0)).make().unwrap();
+                    ex.run(async move {
+                        test_delete_all_records(get_client()).await
                     })?;
                     Ok(())
                 }

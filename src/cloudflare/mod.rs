@@ -49,7 +49,7 @@ impl Cloudflare {
         }
     }
 
-    fn get_upstream_record<T>(&self, _rtype: &RecordType, host: &str) -> Result<Option<GetRecord<T>>>
+    fn get_upstream_records<T>(&self, _rtype: &RecordType, host: &str) -> Result<Vec<GetRecord<T>>>
     where
         T: DeserializeOwned
     {
@@ -61,7 +61,16 @@ impl Cloudflare {
             .with_auth(self.auth.get_header())
             .call()?
             .to_option::<Response<GetRecords<T>>>()?;
-        let mut recs = check_response(response)?;
+        let recs = check_response(response)?;
+
+        Ok(recs)
+    }
+
+    fn get_upstream_record<T>(&self, _rtype: &RecordType, host: &str) -> Result<Option<GetRecord<T>>>
+    where
+        T: DeserializeOwned
+    {
+        let mut recs = self.get_upstream_records(_rtype, host)?;
 
         // FIXME: Assumes no or single address (which probably makes
         // sense for DDNS and DNS-01, but may cause issues with
@@ -104,6 +113,21 @@ impl Cloudflare {
         let mut zones = check_response(resp)?;
 
         Ok(zones.remove(0))
+    }
+
+    fn do_delete(&self, rec: GetRecord<String>) -> Result<()> {
+        let url = format!("{API_BASE}/zones/{}/dns_records/{}", self.get_zone_id()?, rec.id);
+
+        if self.config.dry_run {
+            info!("DRY-RUN: Would have sent DELETE to {url}");
+            return Ok(())
+        }
+
+        http::client().delete(url)
+            .with_json_headers()
+            .with_auth(self.auth.get_header())
+            .call()?;
+        Ok(())
     }
 
 }
@@ -209,26 +233,23 @@ impl DnsProvider for Cloudflare {
             }
         };
 
-        let rec_id = rec.id;
-        let zone_id = self.get_zone_id()?;
-        let url = format!("{API_BASE}/zones/{zone_id}/dns_records/{rec_id}");
-
-        if self.config.dry_run {
-            info!("DRY-RUN: Would have sent DELETE to {url}");
-            return Ok(())
-        }
-
-        http::client().delete(url)
-            .with_json_headers()
-            .with_auth(self.auth.get_header())
-            .call()?;
+        self.do_delete(rec)?;
 
         Ok(())
 
     }
 
-    generate_helpers!();
+    fn delete_all_records(&self, rtype: RecordType, host: &str) -> Result<()>
+    {
+        let recs: Vec<GetRecord<String>> = self.get_upstream_records(&rtype, host)?;
+        for rec in recs {
+            self.do_delete(rec)?;
+        }
 
+        Ok(())
+    }
+
+    generate_helpers!();
 }
 
 #[cfg(test)]
