@@ -3,7 +3,7 @@ mod types;
 use std::{fmt::{Debug, Display}, sync::Mutex};
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use crate::{
     errors::{Error, Result}, generate_helpers, http::{self, ResponseToOption, WithHeaders}, linode::types::{CreateUpdate, Domain, List, Record}, Config, DnsProvider, RecordType
@@ -77,7 +77,7 @@ impl Linode {
         Ok(id)
     }
 
-    fn get_upstream_record<T>(&self, rtype: &RecordType, host: &str) -> Result<Option<Record<T>>>
+    fn get_upstream_records<T>(&self, rtype: &RecordType, host: &str) -> Result<Vec<Record<T>>>
         where T: DeserializeOwned
     {
         let did = self.get_domain_id()?;
@@ -98,23 +98,52 @@ impl Linode {
         let values: serde_json::Value = serde_json::from_str(&body)?;
         let data = values["data"].as_array()
             .ok_or(Error::ApiError("Data field not found".to_string()))?;
-        let record = data.iter()
+        let records = data.iter()
             .filter_map(|obj| match &obj["type"] {
                 serde_json::Value::String(t)
                     if t == &srtype && obj["name"] == host
                     => Some(serde_json::from_value(obj.clone())),
                 _ => None,
             })
-            .next()
-            .transpose()?;
+            .collect::<std::result::Result<Vec<Record<T>>, _>>()?;
 
-        Ok(record)
+        Ok(records)
     }
 
-    fn get_record_id(&self, rtype: &RecordType, host: &str) -> Result<Option<u64>>
+    fn get_upstream_record<T>(&self, rtype: &RecordType, host: &str) -> Result<Option<Record<T>>>
+        where T: DeserializeOwned
     {
-        Ok(self.get_upstream_record::<String>(rtype, host)?
-           .map(|r| r.id))
+        let mut recs = self.get_upstream_records(rtype, host)?;
+
+        // FIXME: Assumes no or single address (which probably makes
+        // sense for DDNS and DNS-01, but may cause issues with
+        // malformed zones).
+        let nr = recs.len();
+        if nr > 1 {
+            error!("Returned number of records is {}, should be 1", nr);
+            return Err(Error::UnexpectedRecord(format!("Returned number of records is {nr}, should be 1")));
+        } else if nr == 0 {
+            warn!("No record returned for {host}, continuing");
+            return Ok(None);
+        }
+
+        Ok(Some(recs.remove(0)))
+    }
+
+    fn do_delete(&self, rec: Record<String>) -> Result<()> {
+        let did = self.get_domain_id()?;
+        let url = format!("{API_BASE}/{did}/records/{}", rec.id);
+        if self.config.dry_run {
+            info!("DRY-RUN: Would have sent DELETE to {url}");
+            return Ok(())
+        }
+
+        http::client().delete(url)
+            .with_auth(self.auth.get_header())
+            .with_json_headers()
+            .call()?;
+
+        Ok(())
     }
 }
 
@@ -166,9 +195,9 @@ impl DnsProvider for Linode {
         T: Serialize + DeserializeOwned + Display + Clone
     {
         let did = self.get_domain_id()?;
-        let id = self.get_record_id(&rtype, host)?
+        let rec: Record<T> = self.get_upstream_record(&rtype, host)?
             .ok_or(Error::RecordNotFound(host.to_string()))?;
-        let url = format!("{API_BASE}/{did}/records/{id}");
+        let url = format!("{API_BASE}/{did}/records/{}", rec.id);
 
         let update = CreateUpdate {
             name: host.to_string(),
@@ -194,25 +223,23 @@ impl DnsProvider for Linode {
 
     fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>
     {
-        let id = match self.get_record_id(&rtype, host)? {
-            Some(id) => id,
+        let rec = match self.get_upstream_record(&rtype, host)? {
+            Some(rec) => rec,
             None => {
                 warn!("No {rtype} record to delete for {host}");
                 return Ok(());
             }
         };
 
-        let did = self.get_domain_id()?;
-        let url = format!("{API_BASE}/{did}/records/{id}");
-        if self.config.dry_run {
-            info!("DRY-RUN: Would have sent DELETE to {url}");
-            return Ok(())
-        }
+        self.do_delete(rec)
+    }
 
-        http::client().delete(url)
-            .with_auth(self.auth.get_header())
-            .with_json_headers()
-            .call()?;
+    fn delete_all_records(&self, rtype: RecordType, host: &str) -> Result<()>
+    {
+        let recs: Vec<Record<String>> = self.get_upstream_records(&rtype, host)?;
+        for rec in recs {
+            self.do_delete(rec)?;
+        }
 
         Ok(())
     }
