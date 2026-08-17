@@ -450,12 +450,32 @@ mod tests {
         Ok(())
     }
 
+    pub(crate) fn test_delete_all_records(client: impl DnsProvider) -> Result<()> {
+
+        let host = random_string::generate(16, ALPHA_LOWER);
+
+        // Create
+        let txt = "\"first text reference\"".to_string();
+        client.create_record(RecordType::TXT, &host, &txt)?;
+        let txt = "\"second text reference\"".to_string();
+        client.create_record(RecordType::TXT, &host, &txt)?;
+
+
+        // Delete all
+        client.delete_all_records(RecordType::TXT, &host)?;
+        let del: Option<String> = client.get_record(RecordType::TXT, &host)?;
+        assert!(del.is_none());
+
+        Ok(())
+    }
+
     /// A macro to generate a standard set of tests for a DNS provider.
     ///
-    /// This macro generates three tests:
+    /// This macro generates four tests:
     /// - `create_update_v4`: tests creating, updating, and deleting an A record.
     /// - `create_update_txt`: tests creating, updating, and deleting a TXT record.
     /// - `create_update_default`: tests creating, updating, and deleting a TXT record using the default provider methods.
+    /// - `delete_all_records`: tests deleting all TXT records for a host.
     ///
     /// The tests are conditionally compiled based on the feature flag passed as an argument.
     ///
@@ -508,6 +528,14 @@ mod tests {
             #[cfg_attr(not(feature = $feat), ignore = "API test")]
             fn create_update_default() -> Result<()> {
                 test_create_update_delete_txt_default(get_client())?;
+                Ok(())
+            }
+
+            #[test_log::test]
+            #[serial]
+            #[cfg_attr(not(feature = $feat), ignore = "API test")]
+            fn delete_all_records() -> Result<()> {
+                test_delete_all_records(get_client())?;
                 Ok(())
             }
         }
