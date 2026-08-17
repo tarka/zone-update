@@ -155,7 +155,7 @@ impl DnsProvider for DeSec {
     }
 
     fn delete_all_records(&self, rtype: RecordType, host: &str) -> Result<()>
-where Self: Sized
+    where Self: Sized
     {
         // Desec deletes all members of an RRset by default
         self.delete_record(rtype, host)
