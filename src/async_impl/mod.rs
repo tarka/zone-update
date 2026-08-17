@@ -47,11 +47,9 @@ pub trait AsyncDnsProvider: Send + Sync {
         T: Serialize + DeserializeOwned + Display + Clone + Send + Sync + 'static,
         Self: Sized;
 
-    async fn delete_record(&self, rtype: RecordType, host: &String) -> Result<()>
-    where Self: Sized;
+    async fn delete_record(&self, rtype: RecordType, host: &String) -> Result<()>;
 
-    async fn delete_all_records(&self, rtype: RecordType, host: &String) -> Result<()>
-    where Self: Sized;
+    async fn delete_all_records(&self, rtype: RecordType, host: &String) -> Result<()>;
 
     async fn get_txt_record(&self, host: &String) -> Result<Option<String>>;
 

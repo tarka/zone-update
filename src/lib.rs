@@ -178,12 +178,11 @@ pub trait DnsProvider {
           Self: Sized;
 
     /// Delete a DNS record by host and record type.
-    fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>
-    where Self: Sized;
+    fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>;
 
     /// Delete all DNS records matching host and record type.
-    fn delete_all_records(&self, rtype: RecordType, host: &str) -> Result<()>
-    where Self: Sized;
+    fn delete_all_records(&self, rtype: RecordType, host: &str) -> Result<()>;
+
 
     /// Get a TXT record.
     ///
