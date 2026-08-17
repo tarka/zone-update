@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0](https://github.com/tarka/zone-update/compare/v0.11.0...v0.12.0) - 2026-08-17
+
+### <!-- 0 -->Features
+
+- Add bunny delete-all support
+- Add linode delete-all support
+- Add gandi delete-all support
+- Add desec delete-all support
+- Add Dnsimple delete-all support
+- Add DnsMadeEasy delete-all support
+- Add Digital Ocean delete-all support
+- Add cloudflare delete-all impl and clean-up porkbun one.
+- Add initial support for deleting all host records. More provider support is required.
+
+### <!-- 3 -->Documentation
+
+- Update AI policy.
+- Minor providers update.
+
+### <!-- 6 -->Testing
+
+- Remove some legacy PoC tests
+- Add tests for new mult-record deletion.
+
+### <!-- 7 -->Miscellaneous Tasks
+
+- Update dependencies.
+
+### Other
+
+- Apply per-provider feature-flags in addtiional places.
+- Fix README AI section.
+- Use &str more consistently
+- Minor cleanups.
+
 ## [0.11.0](https://github.com/tarka/zone-update/compare/v0.10.1...v0.11.0) - 2026-01-16
 
 * Add support for Bunny
