@@ -181,6 +181,10 @@ pub trait DnsProvider {
     fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>
     where Self: Sized;
 
+    /// Delete all DNS records matching host and record type.
+    fn delete_all_records(&self, rtype: RecordType, host: &str) -> Result<()>
+    where Self: Sized;
+
     /// Get a TXT record.
     ///
     /// This is a helper method that calls `get_record` with the `TXT` record type.

@@ -43,7 +43,7 @@ impl Porkbun {
         }
     }
 
-    fn get_upstream_record<T>(&self, rtype: &RecordType, host: &str) -> Result<Option<Record<T>>>
+    fn get_upstream_records<T>(&self, rtype: &RecordType, host: &str) -> Result<Vec<Record<T>>>
     where
         T: DeserializeOwned
     {
@@ -57,15 +57,24 @@ impl Porkbun {
             .to_option()?;
 
         // FIXME: Similar to other impls, can dedup?
-        let mut recs: Records<T> = match response {
+        let recs: Records<T> = match response {
             Some(rec) => rec,
-            None => return Ok(None)
+            None => return Ok(vec![])
         };
 
-        // FIXME: Assumes no or single address (which probably makes
+        Ok(recs.records)
+    }
+
+    fn get_upstream_record<T>(&self, rtype: &RecordType, host: &str) -> Result<Option<Record<T>>>
+    where
+        T: DeserializeOwned
+    {
+        let mut recs = self.get_upstream_records(rtype, host)?;
+
+        // FIXME (?): Assumes no or single address (which probably makes
         // sense for DDNS and DNS-01, but may cause issues with
         // malformed zones).
-        let nr = recs.records.len();
+        let nr = recs.len();
         if nr > 1 {
             error!("Returned number of records is {}, should be 1", nr);
             return Err(Error::UnexpectedRecord(format!("Returned number of records is {nr}, should be 1")));
@@ -74,14 +83,9 @@ impl Porkbun {
             return Ok(None);
         }
 
-        Ok(Some(recs.records.remove(0)))
+        Ok(Some(recs.remove(0)))
     }
 
-    fn get_record_id(&self, rtype: &RecordType, host: &str) -> Result<Option<u64>> {
-        let id_p = self.get_upstream_record::<String>(rtype, host)?
-            .map(|r| r.id);
-        Ok(id_p)
-    }
 
 }
 
@@ -167,15 +171,17 @@ impl DnsProvider for Porkbun {
 
     fn delete_record(&self, rtype: RecordType, host: &str) -> Result<()>
     {
-        let id = match self.get_record_id(&rtype, host)? {
-            Some(id) => id,
-            None => {
-                warn!("No {rtype} record to delete for {host}");
-                return Ok(());
-            }
-        };
+        let recs: Vec<Record<String>> = self.get_upstream_records(&rtype, host)?;
+        if recs.len() > 1 {
+            error!("Returned number of records is {}, should be 1", recs.len());
+            return Err(Error::UnexpectedRecord(format!("Returned number of records is {}, should be 1", recs.len())));
+         } else if recs.len() == 0 {
+             warn!("No IP returned for {host}, continuing");
+             return Ok(());
+        }
 
-        let url = format!("{API_BASE}/delete/{}/{id}", self.config.domain);
+        let id = recs[0].id;
+        let url = format!("{API_BASE}/delete/{}/{}", self.config.domain, id);
         if self.config.dry_run {
             info!("DRY-RUN: Would have sent DELETE to {url}");
             return Ok(())
@@ -186,6 +192,26 @@ impl DnsProvider for Porkbun {
         http::client().post(url)
             .with_json_headers()
             .send(body)?;
+
+        Ok(())
+    }
+
+    fn delete_all_records(&self, rtype: RecordType, host: &str) -> Result<()>
+    {
+        let recs: Vec<Record<String>> = self.get_upstream_records(&rtype, host)?;
+        for rec in recs {
+            let url = format!("{API_BASE}/delete/{}/{}", self.config.domain, rec.id);
+            if self.config.dry_run {
+                info!("DRY-RUN: Would have sent DELETE to {url}");
+                return Ok(())
+            }
+
+            let auth = AuthOnly::from(self.auth.clone());
+            let body = serde_json::to_string(&auth)?;
+            http::client().post(url)
+                .with_json_headers()
+                .send(body)?;
+        }
 
         Ok(())
     }

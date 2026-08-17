@@ -61,17 +61,20 @@ The other notable flag is `async`, which is not enabled by default.
 ### Basic Example
 
 ```rust
-use zone_update::{gandi, DnsProvider, errors::Result};
+use zone_update::{porkbun, DnsProvider, errors::Result};
 use std::net::Ipv4Addr;
 
-fn update_gandi_record() -> Result<()> {
+fn update_dns_record() -> Result<()> {
     let config = zone_update::Config {
         domain: "example.com".to_string(),
         dry_run: false,
     };
     
-    let auth = gandi::Auth::ApiKey("your-api-key".to_string());
-    let client = gandi::Gandi::new(config, auth);
+    let auth = porkbun::Auth { 
+        key: "your-api-key".to_string(),
+        secret: "your-api-secret".to_string(),
+    };
+    let client = porkbun::Porkbun::new(config, auth);
     
     let host = "www";
     let new_ip = Ipv4Addr::new(192, 0, 2, 1);

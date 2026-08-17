@@ -7,7 +7,7 @@ mod sync {
     use zone_update::DnsProvider;
     #[cfg(feature = "dnsimple")]
     use zone_update::dnsimple;
-    #[cfg(target_feature = "dnsmadeeasy")]
+    #[cfg(feature = "dnsmadeeasy")]
     use zone_update::dnsmadeeasy;
     #[cfg(feature = "gandi")]
     use zone_update::gandi;
@@ -22,7 +22,7 @@ mod sync {
         Gandi(gandi::Auth),
         #[cfg(feature = "dnsimple")]
         Dnsimple(dnsimple::Auth),
-        #[cfg(target_feature = "dnsmadeeasy")]
+        #[cfg(feature = "dnsmadeeasy")]
         DnsMadeEasy(dnsmadeeasy::Auth),
         #[cfg(feature = "porkbun")]
         PorkBun(porkbun::Auth),
