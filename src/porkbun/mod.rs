@@ -86,7 +86,21 @@ impl Porkbun {
         Ok(Some(recs.remove(0)))
     }
 
+    fn do_delete(&self, rec: &Record<String>) -> Result<()> {
+        let url = format!("{API_BASE}/delete/{}/{}", self.config.domain, rec.id);
+        if self.config.dry_run {
+            info!("DRY-RUN: Would have sent DELETE to {url}");
+            return Ok(())
+        }
 
+        let auth = AuthOnly::from(self.auth.clone());
+        let body = serde_json::to_string(&auth)?;
+        http::client().post(url)
+            .with_json_headers()
+            .send(body)?;
+
+        Ok(())
+    }
 }
 
 
@@ -180,18 +194,7 @@ impl DnsProvider for Porkbun {
              return Ok(());
         }
 
-        let id = recs[0].id;
-        let url = format!("{API_BASE}/delete/{}/{}", self.config.domain, id);
-        if self.config.dry_run {
-            info!("DRY-RUN: Would have sent DELETE to {url}");
-            return Ok(())
-        }
-
-        let auth = AuthOnly::from(self.auth.clone());
-        let body = serde_json::to_string(&auth)?;
-        http::client().post(url)
-            .with_json_headers()
-            .send(body)?;
+        self.do_delete(&recs[0])?;
 
         Ok(())
     }
@@ -200,17 +203,7 @@ impl DnsProvider for Porkbun {
     {
         let recs: Vec<Record<String>> = self.get_upstream_records(&rtype, host)?;
         for rec in recs {
-            let url = format!("{API_BASE}/delete/{}/{}", self.config.domain, rec.id);
-            if self.config.dry_run {
-                info!("DRY-RUN: Would have sent DELETE to {url}");
-                return Ok(())
-            }
-
-            let auth = AuthOnly::from(self.auth.clone());
-            let body = serde_json::to_string(&auth)?;
-            http::client().post(url)
-                .with_json_headers()
-                .send(body)?;
+            self.do_delete(&rec)?;
         }
 
         Ok(())
