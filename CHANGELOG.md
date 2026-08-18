@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1](https://github.com/tarka/zone-update/compare/v0.12.0...v0.12.1) - 2026-08-17
+
+### <!-- 1 -->Bug Fixes
+
+- Remove unnecessary Sized constraint on delete trait members.
+
+### <!-- 6 -->Testing
+
+- Revert removal of dyn and config tests.
+
 ## [0.12.0](https://github.com/tarka/zone-update/compare/v0.11.0...v0.12.0) - 2026-08-17
 
 ### <!-- 0 -->Features
