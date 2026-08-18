@@ -149,6 +149,7 @@ impl Bunny {
             return Ok(())
         }
 
+        info!("Deleting DNS {} record {}", rec.rtype, rec.name);
         http::client().delete(url)
             .with_json_headers()
             .header("AccessKey", self.auth.get_header())

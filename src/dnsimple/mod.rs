@@ -157,6 +157,7 @@ impl Dnsimple {
             return Ok(())
         }
 
+        info!("Deleting DNS {} record {}", rec.rtype, rec.name);
         http::client().delete(url)
             .with_json_headers()
             .with_auth(self.auth.get_header())

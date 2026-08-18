@@ -161,6 +161,7 @@ impl DnsMadeEasy {
             return Ok(())
         }
 
+        info!("Deleting DNS {} record {}", rec.rtype, rec.name);
         let _response = http::client().delete(url)
             .with_json_headers()
             .with_headers(self.auth.get_headers()?)?

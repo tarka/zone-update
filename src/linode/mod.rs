@@ -138,6 +138,7 @@ impl Linode {
             return Ok(())
         }
 
+        info!("Deleting DNS {} record {}", rec.rtype, rec.name);
         http::client().delete(url)
             .with_auth(self.auth.get_header())
             .with_json_headers()

@@ -93,6 +93,7 @@ impl Porkbun {
             return Ok(())
         }
 
+        info!("Deleting DNS {} record {}", rec.rtype, rec.name);
         let auth = AuthOnly::from(self.auth.clone());
         let body = serde_json::to_string(&auth)?;
         http::client().post(url)
